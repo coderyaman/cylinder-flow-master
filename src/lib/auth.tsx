@@ -83,10 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = session?.user.id ?? null;
 
+  const emailConfirmed = !!(session?.user.email_confirmed_at ?? session?.user.confirmed_at);
+
   const accountQuery = useQuery({
-    queryKey: ["account", userId],
+    queryKey: ["account", userId, emailConfirmed],
     enabled: !!userId,
-    queryFn: () => loadAccount(userId!),
+    queryFn: async () => {
+      // Davet yalnızca e-posta sahipliği doğrulandıktan sonra rol verir; kontrol sunucudadır.
+      if (emailConfirmed) await supabase.rpc("claim_invite");
+      return loadAccount(userId!);
+    },
   });
 
   const account = accountQuery.data ?? emptyAccount;

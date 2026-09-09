@@ -1,23 +1,62 @@
 /**
  * Aşama 1 güvenlik regresyon testleri — doğrudan API/veritabanı seviyesinde.
  *
- * Çalıştırma:  bun tests/asama1-guvenlik.test.mjs
+ * ÖNEMLİ: Bu testler YALNIZCA ayrı bir test veritabanında çalışır.
+ * Gerçek/üretim projesi hedeflendiğinde hiçbir değişiklik yapmadan durur.
  *
- * Kapsam:
- *  - Denetim kaydı yazılamazsa değişikliğin geri alınması (atomiklik)
- *  - İstemcinin denetim tablosuna doğrudan yazamaması
- *  - Pasif kullanıcının korumalı işlem yapamaması / kendini aktifleştirememesi
- *  - Kişisel izinle admin.configure kaldırıldığında sunucunun da reddetmesi
- *  - Rol atanmamış kullanıcının personel bilgilerini okuyamaması
- *  - Son aktif Admin'in kaldırılamaması ve eşzamanlı işlemlerde kilitleme
- *  - Davet olmadan kayıt olunamaması, davetli kullanıcıya rolün otomatik verilmesi
+ * Gerekli ortam değişkenleri:
+ *   TEST_SUPABASE_URL
+ *   TEST_SUPABASE_PUBLISHABLE_KEY
+ *   TEST_SUPABASE_SERVICE_ROLE_KEY
+ *   TEST_SUPABASE_DB_URL           (denetim geri alma testi için, psql)
+ *
+ * Çalıştırma:  bun run test:security
  */
 import { createClient } from "@supabase/supabase-js";
-const URL = process.env.SUPABASE_URL;
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PUBLISHABLE = process.env.SUPABASE_PUBLISHABLE_KEY;
+import { execFileSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
+
+const TEST_DOMAIN = "@rotagravur.test";
+const PASSWORD = "TestParola!2026";
+
+const URL = process.env.TEST_SUPABASE_URL;
+const SERVICE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY;
+const PUBLISHABLE = process.env.TEST_SUPABASE_PUBLISHABLE_KEY;
+const DB_URL = process.env.TEST_SUPABASE_DB_URL;
+
+function halt(reason) {
+  console.log(`DURDURULDU (hiçbir değişiklik yapılmadı): ${reason}`);
+  process.exit(78);
+}
+
+if (!URL || !SERVICE || !PUBLISHABLE) {
+  halt("TEST_SUPABASE_* ortam değişkenleri tanımlı değil. Ayrı bir test projesi gerekir.");
+}
+
+// Üretim/proje ortamı hedeflenmişse kesinlikle çalışma.
+for (const file of [".env", ".env.local"]) {
+  if (!existsSync(file)) continue;
+  const text = readFileSync(file, "utf8");
+  for (const m of text.matchAll(/^\s*[A-Z_]*SUPABASE_URL\s*=\s*"?([^"\n]+)"?/gm)) {
+    if (m[1].trim().replace(/\/$/, "") === URL.replace(/\/$/, "")) {
+      halt("Hedef, projenin gerçek Supabase ortamı. Testler yalnızca ayrı test projesinde çalışır.");
+    }
+  }
+}
 
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
+
+// Güvenlik kilidi: test projesinde test hesapları dışında kullanıcı bulunmamalı.
+{
+  const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) halt(`Test projesine bağlanılamadı: ${error.message}`);
+  const foreign = data.users.filter((u) => !(u.email ?? "").endsWith(TEST_DOMAIN));
+  if (foreign.length) {
+    halt(
+      `Hedef veritabanında gerçek hesaplar var (${foreign.length} adet). Testler gerçek verilere dokunmaz.`,
+    );
+  }
+}
 
 const results = [];
 function check(name, ok, detail = "") {
@@ -25,78 +64,135 @@ function check(name, ok, detail = "") {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
 }
 
-const PASSWORD = "TestParola!2026";
-const ACCOUNTS = {
-  admin: { email: "test.admin@rotagravur.test", role: "admin" },
-  admin2: { email: "test.admin2@rotagravur.test", role: "admin" },
-  operator: { email: "test.operator@rotagravur.test", role: "operator" },
-  norole: { email: "test.norole@rotagravur.test", role: null },
+const stamp = Date.now();
+const emails = {
+  admin: `admin.${stamp}${TEST_DOMAIN}`,
+  admin2: `admin2.${stamp}${TEST_DOMAIN}`,
+  operator: `operator.${stamp}${TEST_DOMAIN}`,
+  norole: `norole.${stamp}${TEST_DOMAIN}`,
+  davetli: `davetli.${stamp}${TEST_DOMAIN}`,
+  sahtekar: `sahtekar.${stamp}${TEST_DOMAIN}`,
 };
 
-async function ensureUser(acc) {
-  const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  const found = list.users.find((u) => u.email === acc.email);
-  if (found) {
-    await admin.from("profiles").update({ is_active: true }).eq("id", found.id);
-    if (acc.role) {
-      await admin.from("user_roles").upsert(
-        { user_id: found.id, role: acc.role },
-        { onConflict: "user_id,role" },
-      );
-    }
-    await admin.from("user_permission_overrides").delete().eq("user_id", found.id);
-    return found.id;
-  }
-  // Davet olmadan kayıt engelli: önce davet satırı.
-  await admin.from("user_invites").upsert(
-    { email: acc.email, role: acc.role, full_name: acc.email },
-    { onConflict: "email" },
-  );
-  const { data, error } = await admin.auth.admin.createUser({
-    email: acc.email,
+function anonClient() {
+  return createClient(URL, PUBLISHABLE, { auth: { persistSession: false } });
+}
+
+async function invite(email, role) {
+  const { error } = await admin
+    .from("user_invites")
+    .upsert({ email, role, full_name: email }, { onConflict: "email" });
+  if (error) throw new Error(`Davet oluşturulamadı: ${error.message}`);
+}
+
+/** Gerçek kullanıcı akışı: kayıt → e-posta doğrulama bağlantısı → oturum. */
+async function signUpAndConfirm(email) {
+  const c = anonClient();
+  const { error } = await c.auth.signUp({ email, password: PASSWORD });
+  if (error) throw new Error(`Kayıt yapılamadı (${email}): ${error.message}`);
+  const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
+    type: "signup",
+    email,
     password: PASSWORD,
-    email_confirm: true,
   });
-  if (error) throw new Error(`Test kullanıcısı oluşturulamadı: ${error.message}`);
-  return data.user.id;
+  if (linkErr) throw new Error(`Doğrulama bağlantısı üretilemedi: ${linkErr.message}`);
+  const verifier = anonClient();
+  const { error: vErr } = await verifier.auth.verifyOtp({
+    token_hash: link.properties.hashed_token,
+    type: "signup",
+  });
+  if (vErr) throw new Error(`E-posta doğrulanamadı: ${vErr.message}`);
+  return verifier;
 }
 
 async function signIn(email) {
-  const c = createClient(URL, PUBLISHABLE, { auth: { persistSession: false } });
+  const c = anonClient();
   const { error } = await c.auth.signInWithPassword({ email, password: PASSWORD });
   if (error) throw new Error(`Giriş yapılamadı (${email}): ${error.message}`);
   return c;
 }
 
+async function userId(email) {
+  const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  return data.users.find((u) => u.email === email)?.id ?? null;
+}
+
 async function main() {
   const ids = {};
-  for (const [key, acc] of Object.entries(ACCOUNTS)) ids[key] = await ensureUser(acc);
 
-  const asAdmin = await signIn(ACCOUNTS.admin.email);
-  const asAdmin2 = await signIn(ACCOUNTS.admin2.email);
-  const asOperator = await signIn(ACCOUNTS.operator.email);
-  const asNoRole = await signIn(ACCOUNTS.norole.email);
+  // --- Davetin uçtan uca gerçek kullanıcı akışı ---------------------------
+  await invite(emails.davetli, "operator");
 
-  // 1) Davetli kullanıcı rolünü otomatik almış olmalı
+  // (a) Davet adresini bilen ama posta kutusuna erişemeyen kişi
   {
-    const { data } = await admin.from("user_roles").select("role").eq("user_id", ids.operator);
-    check(
-      "Davetli kullanıcı davetteki rolü otomatik alır",
-      (data ?? []).some((r) => r.role === "operator"),
-    );
-  }
-
-  // 2) Davetsiz kayıt engellenir
-  {
-    const anon = createClient(URL, PUBLISHABLE, { auth: { persistSession: false } });
-    const { error } = await anon.auth.signUp({
-      email: `davetsiz.${Date.now()}@rotagravur.test`,
+    const c = anonClient();
+    const { error: suErr } = await c.auth.signUp({
+      email: emails.sahtekar,
       password: PASSWORD,
     });
-    check("Davetsiz açık kayıt engellenir", !!error, error?.message ?? "hata yok");
+    check("Davetsiz adresle kayıt engellenir", !!suErr, suErr?.message ?? "hata yok");
+
+    const c2 = anonClient();
+    await c2.auth.signUp({ email: emails.davetli, password: PASSWORD });
+    const { data: sess } = await c2.auth.getSession();
+    let claimErr = null;
+    let roles = [];
+    if (sess.session) {
+      const r = await c2.rpc("claim_invite");
+      claimErr = r.error;
+    }
+    ids.davetli = await userId(emails.davetli);
+    if (ids.davetli) {
+      const { data } = await admin.from("user_roles").select("role").eq("user_id", ids.davetli);
+      roles = data ?? [];
+    }
+    check(
+      "E-posta doğrulanmadan davet üstlenilemez",
+      !sess.session || !!claimErr,
+      claimErr?.message ?? (sess.session ? "hata yok" : "doğrulanmamış hesaba oturum verilmedi"),
+    );
+    check("Doğrulanmamış hesaba rol verilmez", roles.length === 0, `${roles.length} rol`);
   }
 
-  // 3) İstemci denetim tablosuna doğrudan yazamaz
+  // (b) Posta kutusunun gerçek sahibi doğrulama bağlantısını kullanır
+  {
+    const verified = await signUpAndConfirm(emails.davetli);
+    ids.davetli = await userId(emails.davetli);
+    const claim = await verified.rpc("claim_invite");
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", ids.davetli);
+    check("Doğrulanmış davetli rolünü alır", !claim.error && (roles ?? []).some((r) => r.role === "operator"), claim.error?.message ?? "");
+    const { data: inv } = await admin
+      .from("user_invites")
+      .select("accepted_at, accepted_user_id")
+      .eq("email", emails.davetli)
+      .single();
+    check("Davet kabul edilmiş olarak işaretlenir", !!inv?.accepted_at && inv.accepted_user_id === ids.davetli);
+    const again = await verified.rpc("claim_invite");
+    check("Kullanılmış davet ikinci kez rol vermez", !again.error && again.data?.claimed === false);
+  }
+
+  // --- Diğer test hesapları (gerçek akışla oluşturulur) -------------------
+  for (const [key, role] of [
+    ["admin", "admin"],
+    ["admin2", "admin"],
+    ["operator", "operator"],
+    ["norole", null],
+  ]) {
+    await invite(emails[key], role);
+    const c = await signUpAndConfirm(emails[key]);
+    await c.rpc("claim_invite");
+    ids[key] = await userId(emails[key]);
+  }
+
+  const asAdmin = await signIn(emails.admin);
+  const asAdmin2 = await signIn(emails.admin2);
+  const asOperator = await signIn(emails.operator);
+  const asNoRole = await signIn(emails.norole);
+
+  // 1) İstemci denetim tablosuna doğrudan yazamaz / silemez
   {
     const { error } = await asOperator.from("audit_log").insert({
       actor_id: ids.operator,
@@ -108,11 +204,9 @@ async function main() {
     check("Admin dahil denetim kaydı silinemez", !!del.error || del.count === 0);
   }
 
-  // 4) Yetkisiz kullanıcı rol atayamaz, denetim kaydı da oluşmaz
+  // 2) Yetkisiz kullanıcı rol atayamaz, denetim kaydı da oluşmaz
   {
-    const before = await admin
-      .from("audit_log")
-      .select("id", { count: "exact", head: true });
+    const before = await admin.from("audit_log").select("id", { count: "exact", head: true });
     const { error } = await asOperator.rpc("admin_set_user_role", {
       _user_id: ids.norole,
       _role: "depo",
@@ -125,7 +219,7 @@ async function main() {
     check("Reddedilen işlem denetim kaydı üretmez", before.count === after.count);
   }
 
-  // 5) Admin rol atar, denetim kaydı aynı işlemde oluşur
+  // 3) Admin rol atar, denetim kaydı aynı işlemde oluşur
   {
     const { error } = await asAdmin.rpc("admin_set_user_role", {
       _user_id: ids.norole,
@@ -148,7 +242,7 @@ async function main() {
     await asAdmin.rpc("admin_set_user_role", { _user_id: ids.norole, _role: "depo", _on: false });
   }
 
-  // 6) Rol atanmamış kullanıcı personel bilgilerini okuyamaz
+  // 4) Rol atanmamış kullanıcı personel bilgilerini okuyamaz
   {
     const p = await asNoRole.from("profiles").select("id");
     const r = await asNoRole.from("user_roles").select("user_id");
@@ -162,9 +256,13 @@ async function main() {
     check("Rol atanmamış kullanıcı istasyon tanımlarını göremez", (s.data ?? []).length === 0);
   }
 
-  // 7) Pasif kullanıcı korumalı işlem yapamaz ve kendini aktifleştiremez
+  // 5) Pasif kullanıcı korumalı işlem yapamaz ve kendini aktifleştiremez
   {
-    await admin.from("profiles").update({ is_active: false }).eq("id", ids.admin2);
+    await asAdmin.rpc("admin_set_user_active", {
+      _user_id: ids.admin2,
+      _active: false,
+      _reason: "Test",
+    });
     const rpc = await asAdmin2.rpc("admin_set_user_role", {
       _user_id: ids.norole,
       _role: "depo",
@@ -183,10 +281,10 @@ async function main() {
       prof.is_active === false,
       upd.error?.message ?? "sessiz reddedildi",
     );
-    await admin.from("profiles").update({ is_active: true }).eq("id", ids.admin2);
+    await asAdmin.rpc("admin_set_user_active", { _user_id: ids.admin2, _active: true });
   }
 
-  // 8) admin.configure kişisel izinle kaldırıldığında sunucu da reddeder
+  // 6) admin.configure kişisel izinle kaldırıldığında sunucu da reddeder
   {
     const set = await asAdmin.rpc("admin_set_permission_override", {
       _user_id: ids.admin2,
@@ -208,32 +306,9 @@ async function main() {
     });
   }
 
-  // 9) Denetim kaydı yazılamazsa değişiklik geri alınır (atomiklik)
+  // 7) Son aktif Admin kaldırılamaz / pasifleştirilemez
   {
-    const probe = await asAdmin.rpc("audit_atomicity_probe", { _user_id: ids.norole });
-    const roles = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", ids.norole)
-      .eq("role", "grafik");
-    check("Denetim kaydı yazılamazsa işlem hata verir", !!probe.error, probe.error?.message ?? "hata yok");
-    check("Denetim hatasında değişiklik geri alınır", (roles.data ?? []).length === 0);
-  }
-
-  // 10) Son aktif Admin kaldırılamaz / pasifleştirilemez
-  const { data: adminRows } = await admin.from("user_roles").select("user_id").eq("role", "admin");
-  const adminIds = (adminRows ?? []).map((r) => r.user_id);
-  const { data: activeRows } = await admin
-    .from("profiles")
-    .select("id, is_active")
-    .in("id", adminIds);
-  const previouslyActive = (activeRows ?? []).filter((p) => p.is_active).map((p) => p.id);
-
-  try {
-    // Yalnızca test.admin aktif Admin kalacak şekilde geçici durum
-    const others = previouslyActive.filter((id) => id !== ids.admin);
-    if (others.length) await admin.from("profiles").update({ is_active: false }).in("id", others);
-    await admin.from("profiles").update({ is_active: true }).eq("id", ids.admin);
+    await asAdmin.rpc("admin_set_user_role", { _user_id: ids.admin2, _role: "admin", _on: false });
 
     const revoke = await asAdmin.rpc("admin_set_user_role", {
       _user_id: ids.admin,
@@ -246,7 +321,10 @@ async function main() {
       revoke.error?.message ?? "hata yok",
     );
 
-    const deact = await asAdmin.rpc("admin_set_user_active", { _user_id: ids.admin, _active: false });
+    const deact = await asAdmin.rpc("admin_set_user_active", {
+      _user_id: ids.admin,
+      _active: false,
+    });
     check("Son aktif Admin kendini pasifleştiremez", !!deact.error, deact.error?.message ?? "hata yok");
 
     const stillAdmin = await admin
@@ -255,14 +333,11 @@ async function main() {
       .eq("user_id", ids.admin)
       .eq("role", "admin");
     check("Engellenen işlem sonrası Admin rolü yerinde", (stillAdmin.data ?? []).length === 1);
+  }
 
-    // 11) Eşzamanlılık: iki Admin aynı anda birbirinin rolünü almaya çalışır
-    await admin.from("profiles").update({ is_active: true }).eq("id", ids.admin2);
-    await admin.from("user_roles").upsert(
-      { user_id: ids.admin2, role: "admin" },
-      { onConflict: "user_id,role" },
-    );
-
+  // 8) Eşzamanlılık: iki Admin aynı anda birbirinin rolünü almaya çalışır
+  {
+    await asAdmin.rpc("admin_set_user_role", { _user_id: ids.admin2, _role: "admin", _on: true });
     const [r1, r2] = await Promise.all([
       asAdmin.rpc("admin_set_user_role", { _user_id: ids.admin2, _role: "admin", _on: false }),
       asAdmin2.rpc("admin_set_user_role", { _user_id: ids.admin, _role: "admin", _on: false }),
@@ -278,28 +353,44 @@ async function main() {
       successes === 1 && (remaining.data ?? []).length === 1,
       `${successes} başarılı, kalan admin: ${(remaining.data ?? []).length}`,
     );
-  } finally {
-    // Geri yükleme: test admin rolleri ve önceki aktiflik durumları
-    for (const id of [ids.admin, ids.admin2]) {
-      await admin.from("user_roles").upsert({ user_id: id, role: "admin" }, { onConflict: "user_id,role" });
-    }
-    if (previouslyActive.length) {
-      await admin.from("profiles").update({ is_active: true }).in("id", previouslyActive);
-    }
-    const restored = await admin
-      .from("profiles")
-      .select("id")
-      .in("id", previouslyActive)
-      .eq("is_active", true);
-    check(
-      "Gerçek Admin hesapları eski durumuna döndürüldü",
-      (restored.data ?? []).length === previouslyActive.length,
-    );
+    // admin rolünü test yöneticisine geri ver
+    const survivor = (remaining.data ?? [])[0]?.user_id;
+    const asSurvivor = survivor === ids.admin ? asAdmin : asAdmin2;
+    await asSurvivor.rpc("admin_set_user_role", {
+      _user_id: survivor === ids.admin ? ids.admin2 : ids.admin,
+      _role: "admin",
+      _on: true,
+    });
   }
 
-  // Temizlik: test hesapları pasifleştirilir (denetim kaydı silinemediği için hesaplar korunur)
-  for (const id of Object.values(ids)) {
-    await admin.from("profiles").update({ is_active: false }).eq("id", id);
+  // 9) Denetim kaydı yazılamazsa değişiklik geri alınır (gerçek yönetim fonksiyonu)
+  {
+    if (!DB_URL) {
+      check("Denetim hatasında işlem geri alınır", false, "TEST_SUPABASE_DB_URL tanımlı değil");
+    } else {
+      try {
+        const out = execFileSync(
+          "psql",
+          [
+            DB_URL,
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-v",
+            `admin_id=${ids.admin}`,
+            "-v",
+            `target_id=${ids.norole}`,
+            "-v",
+            `jwt_claims={"sub":"${ids.admin}","role":"authenticated"}`,
+            "-f",
+            "tests/audit-rollback.sql",
+          ],
+          { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+        );
+        check("Denetim hatasında işlem geri alınır", out.includes("AUDIT_ROLLBACK_OK"), out.trim());
+      } catch (e) {
+        check("Denetim hatasında işlem geri alınır", false, String(e.stderr ?? e.message).trim());
+      }
+    }
   }
 
   const failed = results.filter((r) => !r.ok);

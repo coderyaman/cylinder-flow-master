@@ -385,9 +385,9 @@ export type Database = {
       }
       assert_admin_caller: { Args: never; Returns: string }
       assert_admin_remains: { Args: { _target: string }; Returns: undefined }
-      audit_atomicity_probe: { Args: { _user_id: string }; Returns: undefined }
       caller_is_admin: { Args: never; Returns: boolean }
       can_read_directory: { Args: never; Returns: boolean }
+      claim_invite: { Args: never; Returns: Json }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
         Args: { _permission: string; _user_id: string }
