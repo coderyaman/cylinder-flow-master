@@ -10,33 +10,108 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedKayitlarRouteImport } from './routes/_authenticated/kayitlar'
+import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
+import { Route as AuthenticatedAdminIstasyonlarRouteImport } from './routes/_authenticated/admin/istasyonlar'
+import { Route as AuthenticatedAdminKullanicilarRouteImport } from './routes/_authenticated/admin/kullanicilar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedKayitlarRoute = AuthenticatedKayitlarRouteImport.update({
+  id: '/kayitlar',
+  path: '/kayitlar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPanelRoute = AuthenticatedPanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIstasyonlarRoute =
+  AuthenticatedAdminIstasyonlarRouteImport.update({
+    id: '/admin/istasyonlar',
+    path: '/admin/istasyonlar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminKullanicilarRoute =
+  AuthenticatedAdminKullanicilarRouteImport.update({
+    id: '/admin/kullanicilar',
+    path: '/admin/kullanicilar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/kayitlar': typeof AuthenticatedKayitlarRoute
+  '/panel': typeof AuthenticatedPanelRoute
+  '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
+  '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/kayitlar': typeof AuthenticatedKayitlarRoute
+  '/panel': typeof AuthenticatedPanelRoute
+  '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
+  '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/kayitlar': typeof AuthenticatedKayitlarRoute
+  '/_authenticated/panel': typeof AuthenticatedPanelRoute
+  '/_authenticated/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
+  '/_authenticated/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/kayitlar'
+    | '/panel'
+    | '/admin/istasyonlar'
+    | '/admin/kullanicilar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/kayitlar'
+    | '/panel'
+    | '/admin/istasyonlar'
+    | '/admin/kullanicilar'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/kayitlar'
+    | '/_authenticated/panel'
+    | '/_authenticated/admin/istasyonlar'
+    | '/_authenticated/admin/kullanicilar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +123,72 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/kayitlar': {
+      id: '/_authenticated/kayitlar'
+      path: '/kayitlar'
+      fullPath: '/kayitlar'
+      preLoaderRoute: typeof AuthenticatedKayitlarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/panel': {
+      id: '/_authenticated/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof AuthenticatedPanelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/istasyonlar': {
+      id: '/_authenticated/admin/istasyonlar'
+      path: '/admin/istasyonlar'
+      fullPath: '/admin/istasyonlar'
+      preLoaderRoute: typeof AuthenticatedAdminIstasyonlarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/kullanicilar': {
+      id: '/_authenticated/admin/kullanicilar'
+      path: '/admin/kullanicilar'
+      fullPath: '/admin/kullanicilar'
+      preLoaderRoute: typeof AuthenticatedAdminKullanicilarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedKayitlarRoute: typeof AuthenticatedKayitlarRoute
+  AuthenticatedPanelRoute: typeof AuthenticatedPanelRoute
+  AuthenticatedAdminIstasyonlarRoute: typeof AuthenticatedAdminIstasyonlarRoute
+  AuthenticatedAdminKullanicilarRoute: typeof AuthenticatedAdminKullanicilarRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedKayitlarRoute: AuthenticatedKayitlarRoute,
+  AuthenticatedPanelRoute: AuthenticatedPanelRoute,
+  AuthenticatedAdminIstasyonlarRoute: AuthenticatedAdminIstasyonlarRoute,
+  AuthenticatedAdminKullanicilarRoute: AuthenticatedAdminKullanicilarRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
