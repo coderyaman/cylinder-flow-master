@@ -71,6 +71,116 @@ export type Database = {
         }
         Relationships: []
       }
+      command_log: {
+        Row: {
+          actor_id: string | null
+          command: string
+          created_at: string
+          id: string
+          idempotency_key: string
+          result_ref: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          command: string
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          result_ref?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          command?: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          result_ref?: string | null
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          normalized_name: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          normalized_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          normalized_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      graphic_assets: {
+        Row: {
+          byte_size: number
+          checksum: string | null
+          content_type: string
+          filename: string
+          id: string
+          is_current: boolean
+          order_id: string
+          revision_no: number
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          byte_size: number
+          checksum?: string | null
+          content_type: string
+          filename: string
+          id?: string
+          is_current?: boolean
+          order_id: string
+          revision_no: number
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          byte_size?: number
+          checksum?: string | null
+          content_type?: string
+          filename?: string
+          id?: string
+          is_current?: boolean
+          order_id?: string
+          revision_no?: number
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "graphic_assets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machines: {
         Row: {
           code: string
@@ -102,6 +212,95 @@ export type Database = {
             columns: ["station_id"]
             isOneToOne: false
             referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          closure_status: Database["public"]["Enums"]["order_closure_status"]
+          created_at: string
+          created_by: string | null
+          critical_note: string | null
+          customer_id: string
+          due_on: string
+          graphic_status: Database["public"]["Enums"]["graphic_status"]
+          id: string
+          name: string
+          nominal_circumference_mm: number
+          normalized_work_order_no: string | null
+          note: string | null
+          ordered_on: string
+          priority: Database["public"]["Enums"]["order_priority"]
+          quantity: number
+          row_version: number
+          supply_status: Database["public"]["Enums"]["supply_status"]
+          target_length_mm: number
+          updated_at: string
+          updated_by: string | null
+          work_order_no: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closure_status?: Database["public"]["Enums"]["order_closure_status"]
+          created_at?: string
+          created_by?: string | null
+          critical_note?: string | null
+          customer_id: string
+          due_on: string
+          graphic_status?: Database["public"]["Enums"]["graphic_status"]
+          id?: string
+          name: string
+          nominal_circumference_mm: number
+          normalized_work_order_no?: string | null
+          note?: string | null
+          ordered_on?: string
+          priority?: Database["public"]["Enums"]["order_priority"]
+          quantity: number
+          row_version?: number
+          supply_status?: Database["public"]["Enums"]["supply_status"]
+          target_length_mm: number
+          updated_at?: string
+          updated_by?: string | null
+          work_order_no: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          closure_status?: Database["public"]["Enums"]["order_closure_status"]
+          created_at?: string
+          created_by?: string | null
+          critical_note?: string | null
+          customer_id?: string
+          due_on?: string
+          graphic_status?: Database["public"]["Enums"]["graphic_status"]
+          id?: string
+          name?: string
+          nominal_circumference_mm?: number
+          normalized_work_order_no?: string | null
+          note?: string | null
+          ordered_on?: string
+          priority?: Database["public"]["Enums"]["order_priority"]
+          quantity?: number
+          row_version?: number
+          supply_status?: Database["public"]["Enums"]["supply_status"]
+          target_length_mm?: number
+          updated_at?: string
+          updated_by?: string | null
+          work_order_no?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -327,6 +526,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_customer: { Args: { _name: string }; Returns: string }
       admin_create_machine: {
         Args: { _code: string; _name: string; _station_id: string }
         Returns: string
@@ -344,6 +544,10 @@ export type Database = {
         Returns: string
       }
       admin_revoke_invite: { Args: { _invite_id: string }; Returns: undefined }
+      admin_set_customer_active: {
+        Args: { _active: boolean; _customer_id: string }
+        Returns: undefined
+      }
       admin_set_machine_active: {
         Args: { _active: boolean; _machine_id: string }
         Returns: undefined
@@ -383,11 +587,62 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_update_customer: {
+        Args: { _customer_id: string; _name: string }
+        Returns: undefined
+      }
       assert_admin_caller: { Args: never; Returns: string }
       assert_admin_remains: { Args: { _target: string }; Returns: undefined }
+      assert_permission: { Args: { _permission: string }; Returns: string }
+      attach_graphic_revision: {
+        Args: {
+          _byte_size: number
+          _checksum?: string
+          _content_type: string
+          _filename: string
+          _idempotency_key?: string
+          _order_id: string
+          _storage_path: string
+        }
+        Returns: Json
+      }
       caller_is_admin: { Args: never; Returns: boolean }
       can_read_directory: { Args: never; Returns: boolean }
+      can_read_orders: { Args: never; Returns: boolean }
+      cancel_order: {
+        Args: { _order_id: string; _reason: string; _row_version: number }
+        Returns: number
+      }
       claim_invite: { Args: never; Returns: Json }
+      command_begin: {
+        Args: { _command: string; _key: string }
+        Returns: {
+          is_new: boolean
+          prior: string
+        }[]
+      }
+      command_finish: {
+        Args: { _key: string; _result: string }
+        Returns: undefined
+      }
+      create_order: {
+        Args: {
+          _critical_note?: string
+          _customer_id: string
+          _due_on: string
+          _idempotency_key?: string
+          _name: string
+          _nominal_circumference_mm: number
+          _note?: string
+          _ordered_on?: string
+          _priority?: Database["public"]["Enums"]["order_priority"]
+          _quantity: number
+          _supply_status?: Database["public"]["Enums"]["supply_status"]
+          _target_length_mm: number
+          _work_order_no: string
+        }
+        Returns: string
+      }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
         Args: { _permission: string; _user_id: string }
@@ -406,6 +661,33 @@ export type Database = {
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      set_graphic_status: {
+        Args: {
+          _order_id: string
+          _reason?: string
+          _row_version: number
+          _status: Database["public"]["Enums"]["graphic_status"]
+        }
+        Returns: number
+      }
+      update_order: {
+        Args: {
+          _critical_note?: string
+          _due_on: string
+          _name: string
+          _nominal_circumference_mm: number
+          _note?: string
+          _order_id: string
+          _priority: Database["public"]["Enums"]["order_priority"]
+          _quantity: number
+          _reason?: string
+          _row_version: number
+          _supply_status: Database["public"]["Enums"]["supply_status"]
+          _target_length_mm: number
+          _work_order_no: string
+        }
+        Returns: number
+      }
       write_audit: {
         Args: {
           _action: string
@@ -428,6 +710,20 @@ export type Database = {
         | "patron"
         | "muhasebe"
         | "admin"
+      graphic_status:
+        | "dosya_bekleniyor"
+        | "renk_ayrimi"
+        | "musteri_onayi"
+        | "revize"
+        | "grafik_hazir"
+      order_closure_status: "acik" | "iptal"
+      order_priority: "normal" | "yuksek" | "acil"
+      supply_status:
+        | "belirsiz"
+        | "depoda_mevcut"
+        | "silindir_bekleniyor"
+        | "yeni_imalat"
+        | "kismi"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -564,6 +860,22 @@ export const Constants = {
         "patron",
         "muhasebe",
         "admin",
+      ],
+      graphic_status: [
+        "dosya_bekleniyor",
+        "renk_ayrimi",
+        "musteri_onayi",
+        "revize",
+        "grafik_hazir",
+      ],
+      order_closure_status: ["acik", "iptal"],
+      order_priority: ["normal", "yuksek", "acil"],
+      supply_status: [
+        "belirsiz",
+        "depoda_mevcut",
+        "silindir_bekleniyor",
+        "yeni_imalat",
+        "kismi",
       ],
     },
   },

@@ -18,10 +18,13 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/panel", label: "Genel" },
+  { to: "/siparisler", label: "Siparişler" },
+  { to: "/admin/musteriler", label: "Müşteriler", permission: "admin.configure" },
   { to: "/admin/kullanicilar", label: "Kullanıcılar", permission: "admin.configure" },
   { to: "/admin/istasyonlar", label: "İstasyonlar", permission: "admin.configure" },
   { to: "/kayitlar", label: "Denetim kaydı", permission: "audit.read" },
 ] as const;
+
 
 function AppShell() {
   const { profile, roles, hasPermission, signOut } = useAuth();
