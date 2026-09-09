@@ -26,13 +26,60 @@ npm run dev
 Bağlayıcı gereksinim belgesi depoda saklanır:
 [docs/Rotagravur_MES_PRD_Vibe_Coding_v2.0.md](docs/Rotagravur_MES_PRD_Vibe_Coding_v2.0.md)
 
+## Davet ve e-posta doğrulama akışı
+
+- Kayıt yalnızca yönetici daveti ile açıktır (`app_settings.signup_open = false`).
+- Kayıt anında **rol verilmez**. Davetteki rol, kullanıcı e-posta adresini doğrulama
+  bağlantısıyla onayladıktan sonra `claim_invite()` ile verilir ve aynı işlemde denetim
+  kaydı oluşur.
+- Doğrulanmamış hesap `claim_invite()` çağırdığında `EPOSTA_DOGRULANMADI` hatası alır;
+  davet adresini bilen ancak posta kutusuna erişemeyen kişi hesabı sahiplenemez.
+- Auth ayarında otomatik e-posta onayı (`mailer_autoconfirm`) kapatılmıştır.
+
 ## Güvenlik testleri
 
-Aşama 1 yetki, denetim ve eşzamanlılık senaryoları doğrudan API/veritabanı seviyesinde test edilir:
+Aşama 1 yetki, denetim ve eşzamanlılık senaryoları doğrudan API/veritabanı seviyesinde
+test edilir. **Testler yalnızca ayrı bir test projesinde çalışır**; gerçek proje
+hedeflendiğinde hiçbir değişiklik yapmadan durur (çıkış kodu 78).
 
 ```sh
+TEST_SUPABASE_URL=... \
+TEST_SUPABASE_PUBLISHABLE_KEY=... \
+TEST_SUPABASE_SERVICE_ROLE_KEY=... \
+TEST_SUPABASE_DB_URL=postgresql://... \
 bun run test:security
 ```
+
+Güvenlik kilitleri:
+
+- `.env` içindeki gerçek Supabase adresi hedeflenirse test durur.
+- Hedef veritabanında `@rotagravur.test` dışında bir hesap varsa test durur.
+- Test hesapları gerçek kullanıcı akışıyla (kayıt → doğrulama bağlantısı → oturum)
+  oluşturulur; gerçek hesaplar hiçbir zaman pasifleştirilmez veya değiştirilmez.
+- Denetim geri alma testi (`tests/audit-rollback.sql`) gerçek `admin_set_user_role`
+  fonksiyonunu kullanır; denetim yazımı tek transaction içinde kontrollü olarak
+  başarısız kılınır, beklenen hata türü doğrulanır ve transaction geri alınır.
+  Eksik fonksiyon, yetki veya bağlantı hatası testi geçirmez.
+
+## Güvenlik uyarıları (Supabase linter)
+
+Tek uyarı türü kalmıştır: *Signed-In Users Can Execute SECURITY DEFINER Function*.
+Gerekçeler:
+
+- `admin_*` fonksiyonları: yönetim işlemleri kasıtlı olarak yalnızca bu fonksiyonlarla
+  yapılır; her biri `assert_admin_caller()` ile aktif Admin ve `admin.configure` iznini
+  doğrular ve denetim kaydını aynı transaction'da yazar.
+- `has_role`, `has_permission`, `has_station_scope`, `is_admin`, `is_active_user`,
+  `has_any_role`, `caller_is_admin`, `can_read_directory`: RLS politikalarının çalışması
+  için gereklidir; başka kullanıcı kimliğiyle sorgulama Admin veya kişinin kendisiyle
+  sınırlıdır.
+- `claim_invite`: davet sahibinin kendi hesabıyla çağırması gerekir; e-posta doğrulaması
+  sunucuda `auth.users` üzerinden kontrol edilir.
+- `write_audit`, `assert_admin_remains`, `set_updated_at`, `handle_new_user`: yalnızca
+  diğer fonksiyonlar/tetikleyiciler tarafından kullanılır ve tek başına çağrıldıklarında
+  yetki yükseltmeye izin vermez.
+
+Yalnızca test amaçlı `audit_atomicity_probe` fonksiyonu üretim şemasından kaldırılmıştır.
 
 ## Built with
 
