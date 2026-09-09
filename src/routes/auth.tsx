@@ -65,7 +65,9 @@ function AuthPage() {
       toast.error("Kayıt yapılamadı: " + error.message);
       return;
     }
-    toast.success("Kayıt alındı. E-posta onayı gerekiyorsa gelen kutunuzu kontrol edin.");
+    toast.success(
+      "Kayıt alındı. Gelen kutunuzdaki doğrulama bağlantısına tıklayın; yetkileriniz e-posta doğrulandıktan sonra tanımlanır.",
+    );
   }
 
   async function handleGoogle() {
@@ -160,7 +162,8 @@ function AuthPage() {
                   Kayıt ol
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Sisteme kayıt olan ilk kullanıcı Admin olur; diğer roller Admin tarafından atanır.
+                  Kayıt yalnızca yönetici daveti ile yapılabilir. Davetteki yetkiler, e-posta
+                  adresinizi doğrulama bağlantısıyla onayladıktan sonra hesabınıza tanımlanır.
                 </p>
               </form>
             </TabsContent>
