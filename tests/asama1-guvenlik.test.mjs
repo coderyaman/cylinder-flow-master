@@ -4,11 +4,11 @@
  * ÖNEMLİ: Bu testler YALNIZCA ayrı bir test veritabanında çalışır.
  * Gerçek/üretim projesi hedeflendiğinde hiçbir değişiklik yapmadan durur.
  *
- * Gerekli ortam değişkenleri:
+ * Gerekli ortam değişkenleri (hepsi zorunlu, ilk değişiklikten önce doğrulanır):
  *   TEST_SUPABASE_URL
  *   TEST_SUPABASE_PUBLISHABLE_KEY
  *   TEST_SUPABASE_SERVICE_ROLE_KEY
- *   TEST_SUPABASE_DB_URL           (denetim geri alma testi için, psql)
+ *   TEST_SUPABASE_DB_URL           (aynı test projesinin doğrudan bağlantısı)
  *
  * Çalıştırma:  bun run test:security
  */
@@ -29,34 +29,92 @@ function halt(reason) {
   process.exit(78);
 }
 
-if (!URL || !SERVICE || !PUBLISHABLE) {
-  halt("TEST_SUPABASE_* ortam değişkenleri tanımlı değil. Ayrı bir test projesi gerekir.");
+// --- Ön kontroller: ilk değişiklikten ÖNCE ---------------------------------
+
+for (const [name, value] of [
+  ["TEST_SUPABASE_URL", URL],
+  ["TEST_SUPABASE_PUBLISHABLE_KEY", PUBLISHABLE],
+  ["TEST_SUPABASE_SERVICE_ROLE_KEY", SERVICE],
+  ["TEST_SUPABASE_DB_URL", DB_URL],
+]) {
+  if (!value) halt(`${name} tanımlı değil. Ayrı bir test projesi gerekir.`);
 }
 
 // Üretim/proje ortamı hedeflenmişse kesinlikle çalışma.
+const projectRef = new global.URL(URL).hostname.split(".")[0];
 for (const file of [".env", ".env.local"]) {
   if (!existsSync(file)) continue;
   const text = readFileSync(file, "utf8");
-  for (const m of text.matchAll(/^\s*[A-Z_]*SUPABASE_URL\s*=\s*"?([^"\n]+)"?/gm)) {
-    if (m[1].trim().replace(/\/$/, "") === URL.replace(/\/$/, "")) {
+  for (const m of text.matchAll(/^\s*[A-Z_]*SUPABASE_(URL|PROJECT_ID)\s*=\s*"?([^"\n]+)"?/gm)) {
+    const v = m[2].trim().replace(/\/$/, "");
+    if (v === URL.replace(/\/$/, "") || v === projectRef) {
       halt("Hedef, projenin gerçek Supabase ortamı. Testler yalnızca ayrı test projesinde çalışır.");
     }
   }
 }
 
+// API ve doğrudan veritabanı bağlantısı aynı projeye ait olmalı.
+if (!DB_URL.includes(projectRef)) {
+  halt(
+    "TEST_SUPABASE_DB_URL, TEST_SUPABASE_URL ile aynı test projesini göstermiyor (proje kimliği uyuşmuyor).",
+  );
+}
+
+function psql(args, input) {
+  return execFileSync("psql", [DB_URL, "-v", "ON_ERROR_STOP=1", ...args], {
+    encoding: "utf8",
+    input,
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+}
+
+try {
+  psql(["-tAc", "select 1"]);
+} catch (e) {
+  halt(`TEST_SUPABASE_DB_URL ile bağlantı kurulamadı: ${String(e.stderr ?? e.message).trim()}`);
+}
+
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
 
 // Güvenlik kilidi: test projesinde test hesapları dışında kullanıcı bulunmamalı.
+let existingUsers = [];
 {
   const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (error) halt(`Test projesine bağlanılamadı: ${error.message}`);
-  const foreign = data.users.filter((u) => !(u.email ?? "").endsWith(TEST_DOMAIN));
+  if (error) halt(`Test projesine API ile bağlanılamadı: ${error.message}`);
+  existingUsers = data.users;
+  const foreign = existingUsers.filter((u) => !(u.email ?? "").endsWith(TEST_DOMAIN));
   if (foreign.length) {
     halt(
       `Hedef veritabanında gerçek hesaplar var (${foreign.length} adet). Testler gerçek verilere dokunmaz.`,
     );
   }
 }
+
+// API ve DB bağlantısı gerçekten aynı veritabanını görüyor mu?
+{
+  let dbCount;
+  try {
+    dbCount = Number(psql(["-tAc", "select count(*) from auth.users"]).trim());
+  } catch (e) {
+    halt(`auth.users okunamadı: ${String(e.stderr ?? e.message).trim()}`);
+  }
+  if (dbCount !== existingUsers.length) {
+    halt(
+      `API (${existingUsers.length} kullanıcı) ile veritabanı (${dbCount} kullanıcı) aynı ortamı göstermiyor.`,
+    );
+  }
+}
+
+// --- Önceki çalıştırmadan kalan test verilerini temizle --------------------
+async function purgeTestData(users) {
+  for (const u of users) {
+    if (!(u.email ?? "").endsWith(TEST_DOMAIN)) continue;
+    await admin.auth.admin.deleteUser(u.id);
+  }
+  await admin.from("user_invites").delete().like("email", `%${TEST_DOMAIN}`);
+}
+
+await purgeTestData(existingUsers);
 
 const results = [];
 function check(name, ok, detail = "") {
@@ -89,7 +147,9 @@ async function invite(email, role) {
 async function signUpAndConfirm(email) {
   const c = anonClient();
   const { error } = await c.auth.signUp({ email, password: PASSWORD });
-  if (error) throw new Error(`Kayıt yapılamadı (${email}): ${error.message}`);
+  if (error && !/already registered/i.test(error.message)) {
+    throw new Error(`Kayıt yapılamadı (${email}): ${error.message}`);
+  }
   const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
     type: "signup",
     email,
@@ -163,13 +223,20 @@ async function main() {
       .from("user_roles")
       .select("role")
       .eq("user_id", ids.davetli);
-    check("Doğrulanmış davetli rolünü alır", !claim.error && (roles ?? []).some((r) => r.role === "operator"), claim.error?.message ?? "");
+    check(
+      "Doğrulanmış davetli rolünü alır",
+      !claim.error && (roles ?? []).some((r) => r.role === "operator"),
+      claim.error?.message ?? "",
+    );
     const { data: inv } = await admin
       .from("user_invites")
       .select("accepted_at, accepted_user_id")
       .eq("email", emails.davetli)
       .single();
-    check("Davet kabul edilmiş olarak işaretlenir", !!inv?.accepted_at && inv.accepted_user_id === ids.davetli);
+    check(
+      "Davet kabul edilmiş olarak işaretlenir",
+      !!inv?.accepted_at && inv.accepted_user_id === ids.davetli,
+    );
     const again = await verified.rpc("claim_invite");
     check("Kullanılmış davet ikinci kez rol vermez", !again.error && again.data?.claimed === false);
   }
@@ -298,7 +365,11 @@ async function main() {
       _role: "depo",
       _on: true,
     });
-    check("İzni kaldırılan Admin sunucuda reddedilir", !!rpc.error, rpc.error?.message ?? "hata yok");
+    check(
+      "İzni kaldırılan Admin sunucuda reddedilir",
+      !!rpc.error,
+      rpc.error?.message ?? "hata yok",
+    );
     await asAdmin.rpc("admin_set_permission_override", {
       _user_id: ids.admin2,
       _permission_code: "admin.configure",
@@ -325,7 +396,11 @@ async function main() {
       _user_id: ids.admin,
       _active: false,
     });
-    check("Son aktif Admin kendini pasifleştiremez", !!deact.error, deact.error?.message ?? "hata yok");
+    check(
+      "Son aktif Admin kendini pasifleştiremez",
+      !!deact.error,
+      deact.error?.message ?? "hata yok",
+    );
 
     const stillAdmin = await admin
       .from("user_roles")
@@ -361,44 +436,53 @@ async function main() {
       _role: "admin",
       _on: true,
     });
+    // 9. adım gerçek admin rolüne sahip test yöneticisini gerektirir
+    if (survivor !== ids.admin) {
+      await asAdmin2.rpc("admin_set_user_role", {
+        _user_id: ids.admin,
+        _role: "admin",
+        _on: true,
+      });
+    }
   }
 
   // 9) Denetim kaydı yazılamazsa değişiklik geri alınır (gerçek yönetim fonksiyonu)
   {
-    if (!DB_URL) {
-      check("Denetim hatasında işlem geri alınır", false, "TEST_SUPABASE_DB_URL tanımlı değil");
-    } else {
-      try {
-        const out = execFileSync(
-          "psql",
-          [
-            DB_URL,
-            "-v",
-            "ON_ERROR_STOP=1",
-            "-v",
-            `admin_id=${ids.admin}`,
-            "-v",
-            `target_id=${ids.norole}`,
-            "-v",
-            `jwt_claims={"sub":"${ids.admin}","role":"authenticated"}`,
-            "-f",
-            "tests/audit-rollback.sql",
-          ],
-          { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-        );
-        check("Denetim hatasında işlem geri alınır", out.includes("AUDIT_ROLLBACK_OK"), out.trim());
-      } catch (e) {
-        check("Denetim hatasında işlem geri alınır", false, String(e.stderr ?? e.message).trim());
-      }
+    const marker = `audit-rollback-${stamp}-${Math.random().toString(36).slice(2, 10)}`;
+    try {
+      const out = psql([
+        "-tA",
+        "-v",
+        `admin_id=${ids.admin}`,
+        "-v",
+        `target_id=${ids.norole}`,
+        "-v",
+        `marker=${marker}`,
+        "-v",
+        `jwt_claims={"sub":"${ids.admin}","role":"authenticated"}`,
+        "-f",
+        "tests/audit-rollback.sql",
+      ]);
+      check("Denetim hatasında işlem geri alınır", out.includes("AUDIT_ROLLBACK_OK"), out.trim());
+    } catch (e) {
+      check("Denetim hatasında işlem geri alınır", false, String(e.stderr ?? e.message).trim());
     }
   }
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} test geçti.`);
-  if (failed.length) process.exit(1);
+  return failed.length === 0;
 }
 
-main().catch((e) => {
+let ok = false;
+try {
+  ok = await main();
+} catch (e) {
   console.error(e);
-  process.exit(1);
-});
+} finally {
+  // Temizlik: yalnızca test alan adındaki hesaplar silinir; bir sonraki
+  // çalıştırma temiz bir başlangıç bulur.
+  const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  await purgeTestData(data?.users ?? []);
+}
+process.exit(ok ? 0 : 1);

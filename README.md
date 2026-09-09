@@ -50,16 +50,25 @@ TEST_SUPABASE_DB_URL=postgresql://... \
 bun run test:security
 ```
 
-Güvenlik kilitleri:
+Güvenlik kilitleri (hepsi ilk değişiklikten **önce** çalışır):
 
-- `.env` içindeki gerçek Supabase adresi hedeflenirse test durur.
+- Dört ortam değişkeninden biri eksikse test durur.
+- `.env` içindeki gerçek Supabase adresi veya proje kimliği hedeflenirse test durur.
+- `TEST_SUPABASE_DB_URL` ile `TEST_SUPABASE_URL` aynı test projesini göstermiyorsa,
+  ya da API ile veritabanı farklı sayıda kullanıcı görüyorsa test durur.
 - Hedef veritabanında `@rotagravur.test` dışında bir hesap varsa test durur.
 - Test hesapları gerçek kullanıcı akışıyla (kayıt → doğrulama bağlantısı → oturum)
   oluşturulur; gerçek hesaplar hiçbir zaman pasifleştirilmez veya değiştirilmez.
+- Çalıştırma başında ve sonunda yalnızca `@rotagravur.test` hesapları ve davetleri
+  silinir; böylece testler arka arkaya iki kez sorunsuz çalışır ve önceki
+  çalıştırmadan kalan aktif test Admin'i son Admin senaryosunu bozmaz.
 - Denetim geri alma testi (`tests/audit-rollback.sql`) gerçek `admin_set_user_role`
   fonksiyonunu kullanır; denetim yazımı tek transaction içinde kontrollü olarak
   başarısız kılınır, beklenen hata türü doğrulanır ve transaction geri alınır.
-  Eksik fonksiyon, yetki veya bağlantı hatası testi geçirmez.
+  Parametreler `set_config()` ile aktarılır, başarı işareti stdout'a yazılır ve
+  denetim kontrolü yalnızca o çalıştırmaya özel işareti arar. Eksik fonksiyon,
+  yetki veya bağlantı hatası testi geçirmez.
+
 
 ## Güvenlik uyarıları (Supabase linter)
 
