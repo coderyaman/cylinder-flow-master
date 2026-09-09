@@ -75,9 +75,9 @@ Gerekçeler:
   sınırlıdır.
 - `claim_invite`: davet sahibinin kendi hesabıyla çağırması gerekir; e-posta doğrulaması
   sunucuda `auth.users` üzerinden kontrol edilir.
-- `write_audit`, `assert_admin_remains`, `set_updated_at`, `handle_new_user`: yalnızca
-  diğer fonksiyonlar/tetikleyiciler tarafından kullanılır ve tek başına çağrıldıklarında
-  yetki yükseltmeye izin vermez.
+- `write_audit`, `assert_admin_caller`, `assert_admin_remains`, `handle_new_user`,
+  `set_updated_at`: yalnızca sistemin kendi içinde kullanılır; giriş yapmış kullanıcıların
+  doğrudan çağırma yetkisi kaldırılmıştır.
 
 Yalnızca test amaçlı `audit_atomicity_probe` fonksiyonu üretim şemasından kaldırılmıştır.
 
