@@ -8,6 +8,11 @@ BEGIN;
 
 SELECT set_config('rgtest.admin_id', :'admin_id', true);
 
+-- Gerçek istemci bağlamı: authenticated rolü + oturum kimliği
+SET LOCAL request.jwt.claims = :'jwt_claims';
+SET LOCAL role authenticated;
+
+
 DO $$
 DECLARE
   cust uuid; ord uuid; ord2 uuid; msg text; ver integer; res jsonb;
