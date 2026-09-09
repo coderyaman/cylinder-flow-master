@@ -18,6 +18,7 @@ import { Route as AuthenticatedSiparislerRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIstasyonlarRouteImport } from './routes/_authenticated/admin/istasyonlar'
 import { Route as AuthenticatedAdminKullanicilarRouteImport } from './routes/_authenticated/admin/kullanicilar'
 import { Route as AuthenticatedAdminMusterilerRouteImport } from './routes/_authenticated/admin/musteriler'
+import { Route as AuthenticatedSiparisOrderIdRouteImport } from './routes/_authenticated/siparis.$orderId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -66,6 +67,12 @@ const AuthenticatedAdminMusterilerRoute =
     path: '/admin/musteriler',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSiparisOrderIdRoute =
+  AuthenticatedSiparisOrderIdRouteImport.update({
+    id: '/siparis/$orderId',
+    path: '/siparis/$orderId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -76,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +107,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/_authenticated/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/_authenticated/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/_authenticated/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/admin/istasyonlar'
     | '/admin/kullanicilar'
     | '/admin/musteriler'
+    | '/siparis/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/admin/istasyonlar'
     | '/admin/kullanicilar'
     | '/admin/musteriler'
+    | '/siparis/$orderId'
   id:
     | '__root__'
     | '/'
@@ -131,6 +143,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/istasyonlar'
     | '/_authenticated/admin/kullanicilar'
     | '/_authenticated/admin/musteriler'
+    | '/_authenticated/siparis/$orderId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMusterilerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/siparis/$orderId': {
+      id: '/_authenticated/siparis/$orderId'
+      path: '/siparis/$orderId'
+      fullPath: '/siparis/$orderId'
+      preLoaderRoute: typeof AuthenticatedSiparisOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -214,6 +234,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminIstasyonlarRoute: typeof AuthenticatedAdminIstasyonlarRoute
   AuthenticatedAdminKullanicilarRoute: typeof AuthenticatedAdminKullanicilarRoute
   AuthenticatedAdminMusterilerRoute: typeof AuthenticatedAdminMusterilerRoute
+  AuthenticatedSiparisOrderIdRoute: typeof AuthenticatedSiparisOrderIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -223,6 +244,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminIstasyonlarRoute: AuthenticatedAdminIstasyonlarRoute,
   AuthenticatedAdminKullanicilarRoute: AuthenticatedAdminKullanicilarRoute,
   AuthenticatedAdminMusterilerRoute: AuthenticatedAdminMusterilerRoute,
+  AuthenticatedSiparisOrderIdRoute: AuthenticatedSiparisOrderIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
