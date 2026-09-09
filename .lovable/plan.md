@@ -33,15 +33,23 @@ operatör ekranları ve rework kendi aşamalarında gelir.
 
 ### 1. Admin müşteri yönetimi
 - Firma adı ve aktif/pasif. Müşteri kodu/not V1'de opsiyonel, bu aşamada eklenmez.
+- Firma adı benzersiz **değildir**; aynı adla ikinci kayıt engellenmez. Kullanıcıya
+  yalnızca "benzer adlı müşteri var" uyarısı gösterilir, karar Admin'indir.
 - Pasif müşteri yeni siparişte seçilemez; geçmiş siparişleri bozulmaz.
 - Yalnızca `admin.configure` yetkisi olan kullanıcı ekler/düzenler; her değişiklik audit'e girer.
 
 ### 2. Rol bazlı sipariş/grafik yetkileri
-- `orders.create`: Grafik; Asistan/Müdür/Admin ek yetkiyle.
-- `orders.edit_graphics`: grafik durumu ve PDF yönetimi.
-- Okuma: Grafik, Depo, Asistan, Müdür, Patron, Admin genel sipariş durumunu görür;
-  Muhasebe ticari havuzu görür; Operatör yalnızca ilgili işi/istasyonu.
-- Bütün kontroller sunucuda; arayüz gizleme tek koruma değildir.
+- `orders.create`: Grafik ve **Admin varsayılan olarak**; Asistan/Müdür ek yetkiyle.
+- `orders.edit_graphics`: grafik durumu ve PDF yönetimi — Grafik ve Admin varsayılan,
+  Asistan/Müdür ek yetkiyle.
+- Sipariş **okuma** ile PDF **indirme** ayrı yetkilerdir:
+  - Sipariş okuma: Grafik, Depo, Asistan, Müdür, Patron, Admin genel durumu görür;
+    Muhasebe ticari havuzu görür; Operatör yalnızca ilgili işi/istasyonu.
+  - PDF indirme (`orders.read_graphic_file`): Grafik, Asistan, Müdür, Admin varsayılan.
+    Gravür operatörü sonraki aşamada, yalnızca üzerinde çalıştığı işe bağlı olarak
+    erişir. Depo, Patron ve Muhasebe siparişi okur ama dosyayı indiremez.
+- Bütün kontroller sunucuda; arayüz gizleme tek koruma değildir. İndirme bağlantısı
+  yetki kontrolünden geçen sunucu çağrısıyla üretilir, dosya yolu istemciye açık değildir.
 
 ### 3. Sipariş kartı
 Alanlar: firma (aktif müşteri listesinden, serbest metin yok), iş emri no (müşteri
@@ -56,6 +64,19 @@ grafik durumu, silindir/klişe durumu, öncelik, genel/kritik not.
 - Düzenleme: takım yokken ve üretim başlamamışken Grafik kendi siparişini düzenler.
   Takım/üretim kavramları henüz yok; bu aşamada alan `üretim başlamadı` kabul edilir
   ve sonraki aşamada kısıt eklenecek şekilde sunucu kontrolü tek noktada tutulur.
+- **Düzenleme çakışması:** Sipariş kartında `row_version` tutulur. Kaydetme isteği
+  okunan sürümü gönderir; arada başkası değiştirmişse istek reddedilir ve kullanıcıya
+  "kayıt siz açtıktan sonra değişti, yeni hâli budur" ekranı gösterilir. Sessiz üzerine
+  yazma yoktur.
+- **Tekrar gönderilen istekler:** Her yazma komutu istemciden gelen bir işlem anahtarı
+  taşır. Aynı anahtarla gelen ikinci istek yeni kayıt/revizyon üretmez, ilk sonucun
+  aynısını döndürür (çift tıklama, ağ tekrarı, mobil yeniden gönderim).
+- **Üretim öncesi iptal:** Sipariş silinmez; `iptal` kapanış durumuna alınır. Gerekçe
+  zorunludur, audit'e yazılır. Grafik yalnızca kendi açtığı ve henüz üretime girmemiş
+  siparişi iptal edebilir; Asistan/Müdür/Admin de iptal edebilir. İptal edilen sipariş
+  salt okunur olur (durum/PDF değişmez), listede ayrı gösterilir. Bu aşamada üretim
+  kavramı olmadığı için iptal her zaman "üretim öncesi"dir; sonraki aşamada üretim
+  başlamışsa ayrı kural devreye girecek şekilde tek sunucu kontrolünde tutulur.
 
 ### 4. Grafik iş akışı ve PDF
 - Grafik durumları: Dosya Bekleniyor → Renk Ayrımı Yapılıyor → Müşteri Onayı Bekleniyor
@@ -64,11 +85,29 @@ grafik durumu, silindir/klişe durumu, öncelik, genel/kritik not.
 - Silindir/Klişe durumu: Durum Belirsiz, Depoda Mevcut, Müşteriden Silindir Bekleniyor,
   Yeni İmalat Gerekli, Kısmen Mevcut / Kısmen İmalat. Bu alan yalnızca beyandır;
   fiili adetler sonraki aşamada depo verisinden gelir.
-- PDF: özel (public olmayan) dosya alanına yüklenir. Sipariş başına tek `is_current`
-  revizyon; yeni yükleme eskisini silmez, revizyon numarasını artırır.
-- Revizyon geçmişi görünür: kim, ne zaman, dosya adı, revizyon no.
-- Dosyayı yalnızca yetkili roller indirir; bağlantı süreli imzalı olarak üretilir.
+- **PDF yükleme akışı (net sıra):**
+  1. Kullanıcı dosyayı seçer; arayüz tür (yalnızca PDF), boyut (üst sınır 50 MB) ve
+     boş dosya kontrolünü yapar.
+  2. Sunucu yetkiyi doğrular ve siparişe özel, tahmin edilemez bir yükleme yolu üretir.
+  3. Dosya özel (public olmayan) depolama alanına, `siparis_id/revizyon/dosya` düzeninde
+     yüklenir. Depolama kuralları doğrudan istemci erişimine kapalıdır.
+  4. Yükleme başarılıysa sunucu komutu çağrılır: veritabanı kaydı, revizyon numarası ve
+     `is_current` işareti tek transaction içinde yazılır, audit kaydı aynı transaction'da
+     oluşur.
+  5. Veritabanı kaydı oluşmazsa yüklenen dosya sahipsiz kalır; bu dosyalar "kaydı
+     olmayan yükleme" olarak işaretlenir ve periyodik temizlikte silinir. Kayıtlı hiçbir
+     revizyon silinmez.
+- **Eşzamanlı revizyon:** Revizyon numarası veritabanında, sipariş satırı kilitlenerek
+  belirlenir. İki kullanıcı aynı anda yüklerse iki ayrı revizyon oluşur (kayıp yükleme
+  yok), `is_current` yalnızca en yüksek revizyonda kalır; kısmi benzersiz kısıt ikinci
+  bir güncel dosyayı imkânsız kılar. İkinci yükleyene "sizden sonra yeni revizyon geldi"
+  bilgisi gösterilir.
+- Revizyon geçmişi görünür: revizyon no, kim, ne zaman, dosya adı, boyut; her revizyon
+  ayrı indirilebilir (yetkisi olana).
+- İndirme: sunucu yetkiyi kontrol eder ve kısa ömürlü (ör. 5 dakika) imzalı bağlantı
+  üretir; her indirme audit'e yazılır.
 - "Grafik Hazır" bir üretim tetikleyicisi değildir; ekranda da bu açıkça yazılır.
+
 
 ## Teknik bölüm
 
