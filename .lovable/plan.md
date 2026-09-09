@@ -154,6 +154,7 @@ Durum geçişleri:
 ```text
 graphic_status: dosya_bekleniyor ↔ renk_ayrimi ↔ musteri_onayi ↔ revize ↔ grafik_hazir
 supply_status : belirsiz | depoda_mevcut | silindir_bekleniyor | yeni_imalat | kismi
+closure_status: acik → iptal (üretim öncesi, gerekçeli); iptal salt okunurdur
 (üretim durumu bu aşamada YOK — sonraki aşamalarda operasyonlardan türetilir)
 ```
 
@@ -162,22 +163,34 @@ supply_status : belirsiz | depoda_mevcut | silindir_bekleniyor | yeni_imalat | k
 - Aynı müşteride tekrarlanan iş emri no → red (eşzamanlı istekte de tek kayıt).
 - Termin boş / adet ≤ 0 / negatif ölçü → red, alan bazlı hata.
 - Pasif veya var olmayan müşteri ile sipariş → red.
-- Yetkisiz kullanıcının API'den sipariş açma / PDF değiştirme denemesi → red.
-- Aynı siparişe eşzamanlı iki PDF yüklemesi → tek `is_current` kalır, diğeri revizyon
-  olarak saklanır.
-- Bozuk/boş dosya veya izin verilmeyen tür → red; kayıt oluşmaz.
+- Yetkisiz kullanıcının API'den sipariş açma / PDF değiştirme / PDF indirme denemesi → red.
+- İki kullanıcı aynı siparişi eş zamanlı düzenler → ikincisi `SURUM_ESKI` ile reddedilir,
+  güncel hâl gösterilir; kimsenin değişikliği sessizce kaybolmaz.
+- Aynı komut iki kez gönderilir (çift tıklama/ağ tekrarı) → tek kayıt, tek revizyon,
+  tek audit satırı.
+- Aynı siparişe eşzamanlı iki PDF yüklemesi → iki revizyon saklanır, tek `is_current`
+  kalır; ikinci yükleyene yeni revizyon geldiği bildirilir.
+- Yükleme yarıda kalır veya kayıt yazılamaz → sipariş dosyasız kalır, sahipsiz dosya
+  temizlenir; hatalı "güncel PDF" görünmez.
+- Bozuk/boş dosya, PDF olmayan tür veya boyut aşımı → red; kayıt oluşmaz.
+- İptal edilmiş siparişte düzenleme/PDF yükleme → `IPTAL_EDILMIS` ile red.
 - Müşteri pasifleştirildiğinde mevcut siparişler okunur ve düzenlenebilir kalır.
 
 ## Test planı (ayrı test ortamında)
 
 - AC-01, AC-02 ve eşzamanlı çift sipariş denemesi.
-- Rol matrisi: her rol için sipariş açma/okuma/PDF değiştirme API denemeleri.
-- Audit: her sipariş ve grafik değişikliği için eski/yeni değerli tek kayıt; denetim
-  yazılamazsa değişikliğin geri alınması.
-- PDF: yükleme, revizyon artışı, tek güncel dosya, eski revizyonun korunması,
-  yetkisiz indirme denemesinin reddi.
+- Rol matrisi: her rol için sipariş açma/okuma/PDF değiştirme/PDF indirme API denemeleri;
+  siparişi okuyabilen ama dosyayı indiremeyen rollerin ayrıca doğrulanması.
+- Sürüm çakışması: eski `row_version` ile güncelleme reddi.
+- Tekrar gönderim: aynı işlem anahtarıyla iki istek → tek sonuç.
+- Audit: her sipariş, iptal, grafik ve indirme olayı için eski/yeni değerli tek kayıt;
+  denetim yazılamazsa değişikliğin geri alınması.
+- PDF: yükleme, revizyon artışı, eşzamanlı iki yükleme, tek güncel dosya, eski
+  revizyonun korunması, imzalı bağlantının süresi dolunca çalışmaması.
+- Üretim öncesi iptal: gerekçesiz iptal reddi, iptal sonrası yazma denemelerinin reddi.
 - "Grafik Hazır" sonrası hiçbir üretim/kuyruk etkisi oluşmadığının doğrulanması.
 - Aşama 1 paketi bu ortamda birlikte çalıştırılır; sonuçlar rapor edilir.
+
 
 ## Kapsam dışı (sonraki aşamalar)
 
