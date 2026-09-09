@@ -1,16 +1,30 @@
 -- Aşama 2 doğrulaması: müşteri, sipariş ve grafik kuralları.
 -- Tek transaction içinde çalışır ve sonunda ROLLBACK edilir; kalıcı veri bırakmaz.
--- Kullanım:  psql -v admin_id=<uuid> -v jwt_claims='{"sub":"<uuid>","role":"authenticated"}' -f tests/asama2-dogrulama.sql
-
-\set ON_ERROR_STOP on
+-- Yönetici kimliği e-postadan bulunur; ayrı parametre gerekmez.
+-- Çalıştırma: veritabanı yönetici bağlantısıyla bu dosyayı yürütün
+-- (SET ROLE authenticated yetkisi gerekir).
 
 BEGIN;
 
-SELECT set_config('rgtest.admin_id', :'admin_id', true);
+SELECT set_config(
+  'rgtest.admin_id',
+  (SELECT p.id::text FROM public.profiles p
+     JOIN public.user_roles ur ON ur.user_id = p.id AND ur.role = 'admin'
+    WHERE p.is_active
+    ORDER BY p.created_at
+    LIMIT 1),
+  true
+);
 
 -- Gerçek istemci bağlamı: authenticated rolü + oturum kimliği
-SET LOCAL request.jwt.claims = :'jwt_claims';
+SELECT set_config(
+  'request.jwt.claims',
+  jsonb_build_object('sub', current_setting('rgtest.admin_id'), 'role', 'authenticated')::text,
+  true
+);
 SET LOCAL role authenticated;
+
+
 
 
 DO $$
