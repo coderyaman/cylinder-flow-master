@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { writeAudit } from "@/lib/audit";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,21 +67,14 @@ function StationsAdmin() {
     queryClient.invalidateQueries({ queryKey: ["machines-admin"] });
   };
 
+  // Tüm yazma işlemleri sunucudaki işlem fonksiyonlarıyla yapılır; denetim kaydı aynı işlemde oluşur.
   async function addStation(e: React.FormEvent) {
     e.preventDefault();
-    const nextOrder = ((stations ?? []).at(-1)?.sort_order ?? 0) + 10;
-    const { data, error } = await supabase
-      .from("stations")
-      .insert({ code: stationCode.trim().toUpperCase(), name: stationName.trim(), sort_order: nextOrder })
-      .select()
-      .single();
-    if (error) { toast.error("İstasyon eklenemedi: " + error.message); return; }
-    await writeAudit({
-      action: "station.created",
-      entityType: "stations",
-      entityId: data.id,
-      newValue: { code: data.code, name: data.name },
+    const { error } = await supabase.rpc("admin_create_station", {
+      _code: stationCode.trim().toUpperCase(),
+      _name: stationName.trim(),
     });
+    if (error) { toast.error("İstasyon eklenemedi: " + error.message); return; }
     setStationCode("");
     setStationName("");
     toast.success("İstasyon eklendi");
@@ -92,22 +84,12 @@ function StationsAdmin() {
   async function addMachine(e: React.FormEvent) {
     e.preventDefault();
     if (!machineStation) { toast.error("Önce istasyon seçin"); return; }
-    const { data, error } = await supabase
-      .from("machines")
-      .insert({
-        station_id: machineStation,
-        code: machineCode.trim().toUpperCase(),
-        name: machineName.trim(),
-      })
-      .select()
-      .single();
-    if (error) { toast.error("Makine eklenemedi: " + error.message); return; }
-    await writeAudit({
-      action: "machine.created",
-      entityType: "machines",
-      entityId: data.id,
-      newValue: { code: data.code, name: data.name, station_id: data.station_id },
+    const { error } = await supabase.rpc("admin_create_machine", {
+      _station_id: machineStation,
+      _code: machineCode.trim().toUpperCase(),
+      _name: machineName.trim(),
     });
+    if (error) { toast.error("Makine eklenemedi: " + error.message); return; }
     setMachineCode("");
     setMachineName("");
     toast.success("Makine eklendi");
@@ -115,28 +97,20 @@ function StationsAdmin() {
   }
 
   async function toggleStationActive(id: string, active: boolean) {
-    const { error } = await supabase.from("stations").update({ is_active: active }).eq("id", id);
-    if (error) { toast.error("Güncellenemedi: " + error.message); return; }
-    await writeAudit({
-      action: "station.active_changed",
-      entityType: "stations",
-      entityId: id,
-      oldValue: { is_active: !active },
-      newValue: { is_active: active },
+    const { error } = await supabase.rpc("admin_set_station_active", {
+      _station_id: id,
+      _active: active,
     });
+    if (error) { toast.error("Güncellenemedi: " + error.message); return; }
     refresh();
   }
 
   async function toggleMachineActive(id: string, active: boolean) {
-    const { error } = await supabase.from("machines").update({ is_active: active }).eq("id", id);
-    if (error) { toast.error("Güncellenemedi: " + error.message); return; }
-    await writeAudit({
-      action: "machine.active_changed",
-      entityType: "machines",
-      entityId: id,
-      oldValue: { is_active: !active },
-      newValue: { is_active: active },
+    const { error } = await supabase.rpc("admin_set_machine_active", {
+      _machine_id: id,
+      _active: active,
     });
+    if (error) { toast.error("Güncellenemedi: " + error.message); return; }
     refresh();
   }
 

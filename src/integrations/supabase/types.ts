@@ -201,6 +201,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+        }
+        Relationships: []
+      }
       user_permission_overrides: {
         Row: {
           created_at: string
@@ -294,6 +327,68 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_machine: {
+        Args: { _code: string; _name: string; _station_id: string }
+        Returns: string
+      }
+      admin_create_station: {
+        Args: { _code: string; _name: string; _sort_order?: number }
+        Returns: string
+      }
+      admin_invite_user: {
+        Args: {
+          _email: string
+          _full_name?: string
+          _role?: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: string
+      }
+      admin_revoke_invite: { Args: { _invite_id: string }; Returns: undefined }
+      admin_set_machine_active: {
+        Args: { _active: boolean; _machine_id: string }
+        Returns: undefined
+      }
+      admin_set_permission_override: {
+        Args: {
+          _granted: boolean
+          _permission_code: string
+          _reason?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      admin_set_station_active: {
+        Args: { _active: boolean; _station_id: string }
+        Returns: undefined
+      }
+      admin_set_station_scope: {
+        Args: {
+          _on: boolean
+          _reason?: string
+          _station_id: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      admin_set_user_active: {
+        Args: { _active: boolean; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_user_role: {
+        Args: {
+          _on: boolean
+          _reason?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      assert_admin_caller: { Args: never; Returns: string }
+      assert_admin_remains: { Args: { _target: string }; Returns: undefined }
+      audit_atomicity_probe: { Args: { _user_id: string }; Returns: undefined }
+      caller_is_admin: { Args: never; Returns: boolean }
+      can_read_directory: { Args: never; Returns: boolean }
+      has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -309,7 +404,19 @@ export type Database = {
         Args: { _station_id: string; _user_id: string }
         Returns: boolean
       }
+      is_active_user: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      write_audit: {
+        Args: {
+          _action: string
+          _entity_id: string
+          _entity_type: string
+          _new: Json
+          _old: Json
+          _reason: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role:

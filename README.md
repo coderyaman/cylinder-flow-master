@@ -21,6 +21,19 @@ npm i
 npm run dev
 ```
 
+## Ürün gereksinim belgesi
+
+Bağlayıcı gereksinim belgesi depoda saklanır:
+[docs/Rotagravur_MES_PRD_Vibe_Coding_v2.0.md](docs/Rotagravur_MES_PRD_Vibe_Coding_v2.0.md)
+
+## Güvenlik testleri
+
+Aşama 1 yetki, denetim ve eşzamanlılık senaryoları doğrudan API/veritabanı seviyesinde test edilir:
+
+```sh
+bun run test:security
+```
+
 ## Built with
 
 - TanStack Start
