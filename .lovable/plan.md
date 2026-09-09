@@ -113,27 +113,41 @@ grafik durumu, silindir/klişe durumu, öncelik, genel/kritik not.
 
 Tablolar (hepsinde `created_at/by`, `updated_at/by`, RLS, GRANT, `updated_at` trigger):
 
-- `customers(name, is_active)` — `UNIQUE(lower(name))`.
+- `customers(name, is_active)` — ad üzerinde benzersizlik kısıtı **yok**; yalnızca
+  arama/uyarı için normalize edilmiş ad sütunu ve indeks.
 - `orders(customer_id, work_order_no, normalized_work_order_no, name, quantity,
   nominal_circumference_mm, target_length_mm, ordered_on, due_on, graphic_status,
-  supply_status, priority, note, critical_note)`
+  supply_status, priority, note, critical_note, closure_status, cancel_reason,
+  row_version)`
   - `UNIQUE(customer_id, normalized_work_order_no)`
   - `CHECK(quantity > 0)`, `due_on NOT NULL`, ölçüler için pozitiflik kontrolü
-  - Enum'lar: `graphic_status`, `supply_status`, `order_priority`
-- `graphic_assets(order_id, revision_no, storage_path, filename, byte_size, checksum,
-  uploaded_by, uploaded_at, is_current)`
+  - Enum'lar: `graphic_status`, `supply_status`, `order_priority`, `order_closure_status`
+- `graphic_assets(order_id, revision_no, storage_path, filename, byte_size,
+  content_type, checksum, uploaded_by, uploaded_at, is_current)`
   - `UNIQUE(order_id, revision_no)`, `UNIQUE(order_id) WHERE is_current`
   - Silme yok; yalnızca yeni revizyon.
+- `command_log(idempotency_key, actor_id, command, result_ref, created_at)` —
+  `UNIQUE(idempotency_key)`; tekrar gönderilen istekleri tekilleştirir.
+- Depolama: özel `grafik-pdf` alanı; doğrudan istemci okuma/yazma politikası yok,
+  erişim yalnızca sunucu tarafından üretilen imzalı bağlantıyla.
 
 Sunucu kontrolleri (Aşama 1 deseni — istemcinin doğrudan INSERT/UPDATE yetkisi yok,
 her yazma `SECURITY DEFINER` RPC üzerinden ve audit ile aynı transaction'da):
 
-- `admin_create_customer`, `admin_set_customer_active`
-- `create_order`, `update_order`, `set_graphic_status`, `attach_graphic_revision`
-- Her RPC: aktif hesap + izin + (varsa) müşteri aktifliği kontrolü, ardından
-  `write_audit` ile eski/yeni değer kaydı. Audit yazılamazsa değişiklik geri alınır.
-- Tekillik ihlali kullanıcıya anlaşılır hata olarak döner (`IS_EMRI_TEKRAR`),
-  eşzamanlı iki istekte de veritabanı kısıtı son sözü söyler.
+- `admin_create_customer`, `admin_update_customer`, `admin_set_customer_active`
+- `create_order`, `update_order`, `cancel_order`, `set_graphic_status`
+- `graphic_upload_target` (yetki + yol üretimi), `attach_graphic_revision`,
+  `graphic_download_url`
+- Her RPC: aktif hesap + izin + (varsa) müşteri aktifliği + `row_version` kontrolü,
+  ardından `write_audit` ile eski/yeni değer kaydı. Audit yazılamazsa değişiklik
+  geri alınır.
+- Yazma komutları `_idempotency_key` alır; aynı anahtar ikinci kez gelirse yeni kayıt
+  oluşmaz, ilk sonuç döner.
+- `attach_graphic_revision` sipariş satırını kilitler, revizyon numarasını atar, eski
+  `is_current` işaretini kaldırır ve yenisini koyar — hepsi tek transaction'da.
+- Anlaşılır hata kodları: `IS_EMRI_TEKRAR`, `SURUM_ESKI` (çakışma), `MUSTERI_PASIF`,
+  `IPTAL_EDILMIS`, `DOSYA_GECERSIZ`, `YETKISIZ`.
+
 
 Durum geçişleri:
 
