@@ -90,6 +90,32 @@ Gerekçeler:
 
 Yalnızca test amaçlı `audit_atomicity_probe` fonksiyonu üretim şemasından kaldırılmıştır.
 
+## Aşama 2 — Müşteri, sipariş ve grafik akışı
+
+Migration'lar: `supabase/migrations/20260909170229_*.sql` (tablolar, RPC'ler, RLS) ve
+`20260909170252_*.sql` (özel `grafik-pdf` deposu politikaları).
+
+Ekranlar: `/admin/musteriler` (Admin müşteri yönetimi), `/siparisler` (liste + sipariş açma),
+`/siparis/$orderId` (düzenleme, grafik durumu, PDF revizyonları, üretim öncesi iptal).
+
+Kurallar: müşteri adı benzersiz değildir (yalnızca benzer ad uyarısı); iş emri numarası
+müşteri kapsamında tekildir; adet ve termin zorunludur; sipariş okuma ile PDF indirme ayrı
+izinlerdir (`orders.read_graphic_file`); her yazma işlemi sürüm kontrolü (`row_version`) ve
+işlem anahtarı (idempotency) ile korunur; **Grafik Hazır üretimi başlatmaz**.
+
+### Aşama 2 doğrulaması
+
+- `tests/asama2-dogrulama.sql` — tek transaction içinde çalışır ve `ROLLBACK` ile biter;
+  kalıcı veri bırakmaz. Aktif Admin kimliğini kendisi bulur, `authenticated` rolüyle gerçek
+  RPC'leri çağırır ve başarıda `ASAMA2_OK` yazar.
+- Kapsam: müşteri oluşturma ve denetim kaydı, aynı adla ikinci müşteri (serbest), Admin'in
+  varsayılan sipariş açma yetkisi, iş emri tekilliği, geçersiz adet, işlem anahtarı tekrarı,
+  sürüm çakışması, güncelleme denetimi, grafik durumu, iki PDF revizyonu / tek güncel dosya,
+  PDF olmayan dosyanın reddi, gerekçesiz iptalin reddi, iptal sonrası yazma reddi ve pasif
+  müşteriye sipariş açılamaması.
+- Ek yetki testi: rolü olmayan kimlik sipariş açamaz, müşteri/sipariş okuyamaz ve
+  `customers`, `orders`, `graphic_assets` tablolarına doğrudan yazamaz.
+
 ## Built with
 
 - TanStack Start
