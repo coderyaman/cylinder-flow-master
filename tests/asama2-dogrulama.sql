@@ -101,23 +101,84 @@ BEGIN
     RAISE EXCEPTION 'HATA: grafik durumu değişmedi.';
   END IF;
 
-  -- 10) PDF revizyonları: iki yükleme, tek güncel dosya
-  res := public.attach_graphic_revision(ord, ord::text || '/a.pdf', 'a.pdf', 1024, 'application/pdf');
-  res := public.attach_graphic_revision(ord, ord::text || '/b.pdf', 'b.pdf', 2048, 'application/pdf');
-  IF (SELECT count(*) FROM public.graphic_assets WHERE order_id = ord) <> 2 THEN
-    RAISE EXCEPTION 'HATA: revizyon geçmişi korunmadı.';
-  END IF;
-  IF (SELECT count(*) FROM public.graphic_assets WHERE order_id = ord AND is_current) <> 1 THEN
-    RAISE EXCEPTION 'HATA: birden fazla güncel dosya var.';
-  END IF;
-  IF (res->>'revision_no')::int <> 2 THEN RAISE EXCEPTION 'HATA: revizyon numarası artmadı.'; END IF;
-
-  -- 11) PDF olmayan dosya reddedilmeli
+  -- 10) PDF revizyonları yeni akışla: sunucu yükleme oturumu + kesinleştirme
+  DECLARE s1 jsonb; s2 jsonb; s3 jsonb;
   BEGIN
-    PERFORM public.attach_graphic_revision(ord, ord::text || '/c.jpg', 'c.jpg', 10, 'image/jpeg');
-    RAISE EXCEPTION 'HATA: PDF olmayan dosya kabul edildi.';
-  EXCEPTION WHEN others THEN
-    IF SQLERRM NOT LIKE '%DOSYA_GECERSIZ%' THEN RAISE; END IF;
+    s1 := private.graphic_upload_target(uid, ord, 0);
+    res := private.attach_graphic_revision_v3(uid, (s1->>'session_id')::uuid, 'a.pdf', 1024);
+    s2 := private.graphic_upload_target(uid, ord, 1);
+    res := private.attach_graphic_revision_v3(uid, (s2->>'session_id')::uuid, 'b.pdf', 2048);
+    IF (SELECT count(*) FROM public.graphic_assets WHERE order_id = ord) <> 2 THEN
+      RAISE EXCEPTION 'HATA: revizyon geçmişi korunmadı.';
+    END IF;
+    IF (SELECT count(*) FROM public.graphic_assets WHERE order_id = ord AND is_current) <> 1 THEN
+      RAISE EXCEPTION 'HATA: birden fazla güncel dosya var.';
+    END IF;
+    IF (res->>'revision_no')::int <> 2 THEN RAISE EXCEPTION 'HATA: revizyon numarası artmadı.'; END IF;
+
+    -- 10b) Aynı oturumun tekrarı önceki sonucu döndürmeli, yeni revizyon üretmemeli
+    res := private.attach_graphic_revision_v3(uid, (s2->>'session_id')::uuid, 'b.pdf', 2048);
+    IF (res->>'replayed')::boolean IS NOT TRUE OR (res->>'revision_no')::int <> 2 THEN
+      RAISE EXCEPTION 'HATA: tekrar gönderim önceki sonucu döndürmedi.';
+    END IF;
+    IF (SELECT count(*) FROM public.graphic_assets WHERE order_id = ord) <> 2 THEN
+      RAISE EXCEPTION 'HATA: tekrar gönderim yeni revizyon oluşturdu.';
+    END IF;
+
+    -- 10c) Eski revizyon beklentisiyle yükleme hedefi çakışma vermeli
+    BEGIN
+      PERFORM private.graphic_upload_target(uid, ord, 0);
+      RAISE EXCEPTION 'HATA: eski revizyon beklentisi kabul edildi.';
+    EXCEPTION WHEN others THEN
+      IF SQLERRM NOT LIKE '%REVIZYON_CAKISMASI%' THEN RAISE; END IF;
+    END;
+
+    -- 11) Temizliğe alınan oturum kesinleştirilememeli; kayıtlı dosya korunmalı
+    s3 := private.graphic_upload_target(uid, ord, 2);
+    UPDATE public.graphic_upload_sessions
+       SET created_at = now() - interval '2 hours' WHERE id = (s3->>'session_id')::uuid;
+    PERFORM private.graphic_claim_orphans(60);
+    BEGIN
+      PERFORM private.attach_graphic_revision_v3(uid, (s3->>'session_id')::uuid, 'c.pdf', 1024);
+      RAISE EXCEPTION 'HATA: temizliğe alınan oturum kesinleştirildi.';
+    EXCEPTION WHEN others THEN
+      IF SQLERRM NOT LIKE '%OTURUM_TEMIZLENDI%' THEN RAISE; END IF;
+    END;
+    IF EXISTS (
+      SELECT 1 FROM public.graphic_upload_sessions s
+      JOIN public.graphic_assets g ON g.storage_path = s.storage_path
+      WHERE s.cleanup_claimed_at IS NOT NULL
+    ) THEN
+      RAISE EXCEPTION 'HATA: kayıtlı dosyanın oturumu temizliğe alındı.';
+    END IF;
+
+    -- 11b) Geçersiz boyut reddedilmeli
+    BEGIN
+      PERFORM private.attach_graphic_revision_v3(uid,
+        (private.graphic_upload_target(uid, ord, 2)->>'session_id')::uuid, 'd.pdf', 0);
+      RAISE EXCEPTION 'HATA: geçersiz boyut kabul edildi.';
+    EXCEPTION WHEN others THEN
+      IF SQLERRM NOT LIKE '%DOSYA_GECERSIZ%' THEN RAISE; END IF;
+    END;
+  END;
+
+  -- 11c) Aynı işlem anahtarı, yalnızca boy/çevre/not/öncelik değişse bile reddedilmeli
+  DECLARE k2 text := 'idem2-' || gen_random_uuid()::text; v integer;
+  BEGIN
+    SELECT row_version INTO v FROM public.orders WHERE id = ord;
+    v := public.update_order(ord, v, '00123', 'Güncellenmiş iş', 5, 610, 1210,
+      current_date + 12, 'depoda_mevcut', 'yuksek', 'not', NULL, 'doğrulama', k2);
+    IF public.update_order(ord, v - 1, '00123', 'Güncellenmiş iş', 5, 610, 1210,
+      current_date + 12, 'depoda_mevcut', 'yuksek', 'not', NULL, 'doğrulama', k2) <> v THEN
+      RAISE EXCEPTION 'HATA: aynı istek tekrarı önceki sonucu döndürmedi.';
+    END IF;
+    BEGIN
+      PERFORM public.update_order(ord, v, '00123', 'Güncellenmiş iş', 5, 999, 1999,
+        current_date + 12, 'depoda_mevcut', 'acil', 'başka not', NULL, 'doğrulama', k2);
+      RAISE EXCEPTION 'HATA: aynı anahtar farklı içerikle kabul edildi.';
+    EXCEPTION WHEN others THEN
+      IF SQLERRM NOT LIKE '%ANAHTAR_CAKISMASI%' THEN RAISE; END IF;
+    END;
   END;
 
   -- 12) Gerekçesiz iptal reddedilmeli
