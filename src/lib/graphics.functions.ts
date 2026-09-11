@@ -90,7 +90,7 @@ export const finalizeGraphicUpload = createServerFn({ method: "POST" })
       _session_id: data.sessionId,
       _filename: data.filename,
       _byte_size: size,
-      _checksum: checksum,
+      _checksum: checksum ?? undefined,
     });
     if (error) {
       // Kesinleştirilemeyen yükleme silinir; önceki güncel PDF olduğu gibi kalır.
