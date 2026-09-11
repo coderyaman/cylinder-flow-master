@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import {
+  finalizeGraphicUpload,
+  graphicAccessLink,
+  startGraphicUpload,
+} from "@/lib/graphics.functions";
 import {
   GRAPHIC_STATUSES,
   GRAPHIC_STATUS_LABELS,
@@ -93,7 +99,16 @@ function OrderDetail() {
     critical_note: string;
   }>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingPdf, setPendingPdf] = useState<File | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+
+  const startUpload = useServerFn(startGraphicUpload);
+  const finalizeUpload = useServerFn(finalizeGraphicUpload);
+  const accessLink = useServerFn(graphicAccessLink);
+  const currentRevision = (assetsQuery.data ?? []).reduce(
+    (max, a) => Math.max(max, a.revision_no),
+    0,
+  );
   // Kullanıcının açtığı sürüm: arka plan yenilemesi taslağı ezmez.
   const [baseVersion, setBaseVersion] = useState<number | null>(null);
 
