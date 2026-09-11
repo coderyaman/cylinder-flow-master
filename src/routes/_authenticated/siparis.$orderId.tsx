@@ -524,7 +524,7 @@ function OrderDetail() {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {(Number(a.byte_size) / 1048576).toFixed(2)} MB ·{" "}
-                    {new Date(a.uploaded_at).toLocaleString("tr-TR")}
+                    {new Date(a.uploaded_at).toLocaleString("tr-TR")} · yükleyen: {a.uploader}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
