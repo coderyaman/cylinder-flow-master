@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedDepoRouteImport } from './routes/_authenticated/depo'
 import { Route as AuthenticatedKayitlarRouteImport } from './routes/_authenticated/kayitlar'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
 import { Route as AuthenticatedSiparislerRouteImport } from './routes/_authenticated/siparisler'
@@ -34,6 +35,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDepoRoute = AuthenticatedDepoRouteImport.update({
+  id: '/depo',
+  path: '/depo',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKayitlarRoute = AuthenticatedKayitlarRouteImport.update({
   id: '/kayitlar',
@@ -83,6 +89,7 @@ const ApiPublicGrafikTemizlikRoute = ApiPublicGrafikTemizlikRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/depo': typeof AuthenticatedDepoRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
   '/panel': typeof AuthenticatedPanelRoute
   '/siparisler': typeof AuthenticatedSiparislerRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/depo': typeof AuthenticatedDepoRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
   '/panel': typeof AuthenticatedPanelRoute
   '/siparisler': typeof AuthenticatedSiparislerRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/depo': typeof AuthenticatedDepoRoute
   '/_authenticated/kayitlar': typeof AuthenticatedKayitlarRoute
   '/_authenticated/panel': typeof AuthenticatedPanelRoute
   '/_authenticated/siparisler': typeof AuthenticatedSiparislerRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/depo'
     | '/kayitlar'
     | '/panel'
     | '/siparisler'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/depo'
     | '/kayitlar'
     | '/panel'
     | '/siparisler'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/depo'
     | '/_authenticated/kayitlar'
     | '/_authenticated/panel'
     | '/_authenticated/siparisler'
@@ -187,6 +199,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/depo': {
+      id: '/_authenticated/depo'
+      path: '/depo'
+      fullPath: '/depo'
+      preLoaderRoute: typeof AuthenticatedDepoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kayitlar': {
       id: '/_authenticated/kayitlar'
@@ -248,6 +267,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDepoRoute: typeof AuthenticatedDepoRoute
   AuthenticatedKayitlarRoute: typeof AuthenticatedKayitlarRoute
   AuthenticatedPanelRoute: typeof AuthenticatedPanelRoute
   AuthenticatedSiparislerRoute: typeof AuthenticatedSiparislerRoute
@@ -258,6 +278,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDepoRoute: AuthenticatedDepoRoute,
   AuthenticatedKayitlarRoute: AuthenticatedKayitlarRoute,
   AuthenticatedPanelRoute: AuthenticatedPanelRoute,
   AuthenticatedSiparislerRoute: AuthenticatedSiparislerRoute,
