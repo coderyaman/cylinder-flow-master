@@ -61,3 +61,14 @@
 - [ ] Blokaj: izole test ortamı (TEST_SUPABASE_*) yok; Aşama 1 ve Aşama 2 otomatik test
       paketleri ayrı ortamda çalıştırılamadı
 
+
+## Aşama 3 — Depo kabulü, silindir kartı ve QR
+- [x] Kabul kaydı tablosu, ölçüm geçmişi, CYL kimliği ve RLS (`drizzle/migrations/0005`, `0006`)
+- [x] Sunucu RPC'leri: kabul, düzeltme (kendi/bağlanmamış kayıt), gerekçeli iptal, etiket basım kaydı
+- [x] Depo ekranı: yoğun tablo, arama/filtre/sıralama/sayfalama, yan panelde yeni kabul
+- [x] Türkçe ondalık virgülü; hesaplanan çap yalnızca bilgi, kaydedilmez
+- [x] "Önceki kaydı kopyala" ortak bilgileri doldurur, ölçüleri boş bırakır
+- [x] Silindir kartı: kabul bilgileri, ölçüm geçmişi, not, QR etiketi ve yazdırma
+- [x] QR okutma (kamera) + kodla arama; okutma operasyon başlatmaz
+- [x] Canlı doğrulama: kabul oluştur → tabloda bul → kartı aç → etiketi gör → aynı kodla yeniden aç
+- [ ] Ertelendi: kapsamlı sağlamlaştırma ve Aşama 3 otomatik testleri (izole test ortamı yok)
