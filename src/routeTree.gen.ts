@@ -19,6 +19,7 @@ import { Route as AuthenticatedAdminIstasyonlarRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminKullanicilarRouteImport } from './routes/_authenticated/admin/kullanicilar'
 import { Route as AuthenticatedAdminMusterilerRouteImport } from './routes/_authenticated/admin/musteriler'
 import { Route as AuthenticatedSiparisOrderIdRouteImport } from './routes/_authenticated/siparis.$orderId'
+import { Route as ApiPublicGrafikTemizlikRouteImport } from './routes/api/public/grafik-temizlik'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -73,6 +74,11 @@ const AuthenticatedSiparisOrderIdRoute =
     path: '/siparis/$orderId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicGrafikTemizlikRoute = ApiPublicGrafikTemizlikRouteImport.update({
+  id: '/api/public/grafik-temizlik',
+  path: '/api/public/grafik-temizlik',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
   '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
+  '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
   '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
+  '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/_authenticated/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
   '/_authenticated/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
+  '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/admin/kullanicilar'
     | '/admin/musteriler'
     | '/siparis/$orderId'
+    | '/api/public/grafik-temizlik'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/admin/kullanicilar'
     | '/admin/musteriler'
     | '/siparis/$orderId'
+    | '/api/public/grafik-temizlik'
   id:
     | '__root__'
     | '/'
@@ -144,12 +155,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/kullanicilar'
     | '/_authenticated/admin/musteriler'
     | '/_authenticated/siparis/$orderId'
+    | '/api/public/grafik-temizlik'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicGrafikTemizlikRoute: typeof ApiPublicGrafikTemizlikRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSiparisOrderIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/grafik-temizlik': {
+      id: '/api/public/grafik-temizlik'
+      path: '/api/public/grafik-temizlik'
+      fullPath: '/api/public/grafik-temizlik'
+      preLoaderRoute: typeof ApiPublicGrafikTemizlikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -254,6 +274,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicGrafikTemizlikRoute: ApiPublicGrafikTemizlikRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
