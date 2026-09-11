@@ -205,9 +205,9 @@ function WarehousePage() {
       _shaft_type: form.shaft_type,
       _surface_state: form.surface_state,
       _usability: form.usability,
-      _waybill_no: form.waybill_no.trim() || null,
+      _waybill_no: form.waybill_no.trim() || undefined,
       _received_on: form.received_on,
-      _note: form.note.trim() || null,
+      _note: form.note.trim() || undefined,
       _idempotency_key: createKey.current,
     });
     setSaving(false);
