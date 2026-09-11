@@ -556,6 +556,24 @@ function OrderDetail() {
                   if (f) uploadPdf(f);
                 }}
               />
+              {pendingPdf && (
+                <div className="mt-3 rounded-md border border-amber-500/60 p-3 text-sm">
+                  <p className="font-medium">Yüklemeniz kesinleştirilemedi</p>
+                  <p className="text-muted-foreground">
+                    Siz gönderirken yeni bir revizyon eklendi. Seçtiğiniz dosya ({pendingPdf.name})
+                    duruyor. Yukarıdaki güncel listeyi görüp yine de göndermek isterseniz tekrar
+                    deneyin.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <Button size="sm" disabled={busy} onClick={() => uploadPdf(pendingPdf)}>
+                      Yeniden gönder
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setPendingPdf(null)}>
+                      Vazgeç
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {!canDownload && (
