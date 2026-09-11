@@ -415,10 +415,18 @@ function OrdersPage() {
               <table className="w-full min-w-[1500px] border-collapse text-xs">
                 <thead className="sticky top-0 z-20 bg-card">
                   <tr className="text-muted-foreground">
-                    <th className={`${th} sticky left-0 z-30 bg-card w-28`}>
+                    <th
+                      className={`${th} sticky left-0 z-30 bg-card`}
+                      style={{ width: 120, minWidth: 120 }}
+                    >
                       {sortButton("work_order_no", "İş Emri No")}
                     </th>
-                    <th className={`${th} sticky left-28 z-30 bg-card w-44`}>Firma</th>
+                    <th
+                      className={`${th} sticky z-30 bg-card`}
+                      style={{ left: 120, width: 180, minWidth: 180 }}
+                    >
+                      Firma
+                    </th>
                     <th className={`${th} min-w-[320px]`}>{sortButton("name", "İşin Adı")}</th>
                     <th className={`${th} w-20 text-right`}>
                       {sortButton("quantity", "Silindir")}
