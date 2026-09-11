@@ -43,6 +43,13 @@
       "when": 1789170404349,
       "tag": "0005_asama3_depo_kabul_silindir",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789170430665,
+      "tag": "0006_asama3_receive_cylinder_replay_fix",
+      "breakpoints": true
     }
   ]
 }
