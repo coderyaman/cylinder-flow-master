@@ -163,6 +163,7 @@ BEGIN
     EXCEPTION WHEN others THEN
       IF SQLERRM NOT LIKE '%DOSYA_GECERSIZ%' THEN RAISE; END IF;
     END;
+    EXECUTE 'SET LOCAL ROLE authenticated';
   END;
 
   -- 11c) Aynı işlem anahtarı, yalnızca boy/çevre/not/öncelik değişse bile reddedilmeli
