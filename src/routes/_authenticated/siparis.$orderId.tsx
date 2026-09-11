@@ -517,7 +517,7 @@ function OrderDetail() {
                 <div className="flex items-center gap-2">
                   {a.is_current && <Badge>Güncel</Badge>}
                   {canDownload && (
-                    <Button size="sm" variant="outline" onClick={() => download(a.storage_path, a.filename)}>
+                    <Button size="sm" variant="outline" onClick={() => download(a.id)}>
                       İndir
                     </Button>
                   )}
