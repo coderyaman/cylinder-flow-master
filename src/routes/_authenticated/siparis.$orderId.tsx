@@ -77,11 +77,24 @@ function OrderDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("graphic_assets")
-        .select("id, revision_no, filename, byte_size, storage_path, uploaded_at, is_current")
+        .select("id, revision_no, filename, byte_size, uploaded_by, uploaded_at, is_current")
         .eq("order_id", orderId)
         .order("revision_no", { ascending: false });
       if (error) throw error;
-      return data;
+
+      const ids = Array.from(new Set((data ?? []).map((a) => a.uploaded_by).filter(Boolean)));
+      const names = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: people } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", ids as string[]);
+        for (const p of people ?? []) names.set(p.id, p.full_name);
+      }
+      return (data ?? []).map((a) => ({
+        ...a,
+        uploader: (a.uploaded_by && names.get(a.uploaded_by)) || "Bilinmiyor",
+      }));
     },
   });
 
