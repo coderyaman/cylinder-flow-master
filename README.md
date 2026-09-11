@@ -116,6 +116,20 @@ işlem anahtarı (idempotency) ile korunur; **Grafik Hazır üretimi başlatmaz*
 - Ek yetki testi: rolü olmayan kimlik sipariş açamaz, müşteri/sipariş okuyamaz ve
   `customers`, `orders`, `graphic_assets` tablolarına doğrudan yazamaz.
 
+### PDF akışı (sunucu denetimli)
+
+- Yükleme: `startGraphicUpload` → yalnızca o yüklemeye ait imzalı hedef; dosya gönderilir;
+  `finalizeGraphicUpload` sunucuda gerçek boyutu, PDF imzasını ve oturum sahipliğini doğrular,
+  ardından revizyon + güncel dosya + denetim kaydı tek veritabanı işleminde oluşur.
+- Çakışma: `expected_revision` uyuşmazsa `REVIZYON_CAKISMASI` döner, önceki güncel PDF korunur
+  ve kullanıcının dosyası ekranda saklanır.
+- Erişim: `graphicAccessLink` yetkiyi denetler, `graphic_asset.link_created` denetim kaydı yazar
+  ve 5 dakikalık imzalı bağlantı üretir. Doğrudan depolama politikası yoktur.
+- Temizlik: `POST /api/public/grafik-temizlik` (cron gizli anahtarıyla) 60 dakikadan eski,
+  kesinleştirilmemiş yüklemeleri siler; kayıtlı revizyonlara dokunmaz.
+- Depolama kurulumu: `node scripts/setup-storage.mjs` (özel alan, 50 MB, yalnızca PDF).
+
+
 ## Built with
 
 - TanStack Start

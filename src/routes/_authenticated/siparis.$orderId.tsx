@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import {
+  finalizeGraphicUpload,
+  graphicAccessLink,
+  startGraphicUpload,
+} from "@/lib/graphics.functions";
 import {
   GRAPHIC_STATUSES,
   GRAPHIC_STATUS_LABELS,
@@ -71,11 +77,24 @@ function OrderDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("graphic_assets")
-        .select("id, revision_no, filename, byte_size, storage_path, uploaded_at, is_current")
+        .select("id, revision_no, filename, byte_size, uploaded_by, uploaded_at, is_current")
         .eq("order_id", orderId)
         .order("revision_no", { ascending: false });
       if (error) throw error;
-      return data;
+
+      const ids = Array.from(new Set((data ?? []).map((a) => a.uploaded_by).filter(Boolean)));
+      const names = new Map<string, string>();
+      if (ids.length > 0) {
+        const { data: people } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", ids as string[]);
+        for (const p of people ?? []) names.set(p.id, p.full_name);
+      }
+      return (data ?? []).map((a) => ({
+        ...a,
+        uploader: (a.uploaded_by && names.get(a.uploaded_by)) || "Bilinmiyor",
+      }));
     },
   });
 
@@ -93,9 +112,48 @@ function OrderDetail() {
     critical_note: string;
   }>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingPdf, setPendingPdf] = useState<File | null>(null);
   const [cancelReason, setCancelReason] = useState("");
 
+  const startUpload = useServerFn(startGraphicUpload);
+  const finalizeUpload = useServerFn(finalizeGraphicUpload);
+  const accessLink = useServerFn(graphicAccessLink);
+  const currentRevision = (assetsQuery.data ?? []).reduce(
+    (max, a) => Math.max(max, a.revision_no),
+    0,
+  );
+  // Kullanıcının açtığı sürüm: arka plan yenilemesi taslağı ezmez.
+  const [baseVersion, setBaseVersion] = useState<number | null>(null);
+
+  // Aynı mantıksal işlemin ağ tekrarlarında anahtar sabit kalır; başarıdan sonra yenilenir.
+  const keys = useRef<Record<string, string>>({});
+  const keyFor = (op: string) => (keys.current[op] ??= newIdempotencyKey());
+  const clearKey = (op: string) => {
+    delete keys.current[op];
+  };
+
   useEffect(() => {
+    if (!order) return;
+    setForm((prev) =>
+      prev
+        ? prev
+        : {
+            work_order_no: order.work_order_no,
+            name: order.name,
+            quantity: String(order.quantity),
+            nominal_circumference_mm: String(order.nominal_circumference_mm),
+            target_length_mm: String(order.target_length_mm),
+            due_on: order.due_on,
+            supply_status: order.supply_status,
+            priority: order.priority,
+            note: order.note ?? "",
+            critical_note: order.critical_note ?? "",
+          },
+    );
+    setBaseVersion((prev) => prev ?? order.row_version);
+  }, [order?.id, order?.row_version]);
+
+  function loadCurrentIntoForm() {
     if (!order) return;
     setForm({
       work_order_no: order.work_order_no,
@@ -109,7 +167,8 @@ function OrderDetail() {
       note: order.note ?? "",
       critical_note: order.critical_note ?? "",
     });
-  }, [order?.id, order?.row_version]);
+    setBaseVersion(order.row_version);
+  }
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["order", orderId] });
@@ -129,6 +188,7 @@ function OrderDetail() {
     );
 
   const cancelled = order.closure_status === "iptal";
+  const stale = baseVersion !== null && order.row_version !== baseVersion;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -136,7 +196,7 @@ function OrderDetail() {
     setBusy(true);
     const { error } = await supabase.rpc("update_order", {
       _order_id: order.id,
-      _row_version: order.row_version,
+      _row_version: baseVersion ?? order.row_version,
       _work_order_no: form.work_order_no,
       _name: form.name,
       _quantity: Number(form.quantity),
@@ -147,9 +207,13 @@ function OrderDetail() {
       _priority: form.priority,
       _note: form.note,
       _critical_note: form.critical_note,
+      _idempotency_key: keyFor("update"),
     });
     setBusy(false);
     if (error) return void toast.error(orderErrorText(error.message));
+    clearKey("update");
+    setBaseVersion(null);
+    setForm(null);
     toast.success("Sipariş güncellendi");
     refresh();
   }
@@ -158,10 +222,13 @@ function OrderDetail() {
     if (!order) return;
     const { error } = await supabase.rpc("set_graphic_status", {
       _order_id: order.id,
-      _row_version: order.row_version,
+      _row_version: baseVersion ?? order.row_version,
       _status: status,
+      _idempotency_key: keyFor("status:" + status),
     });
     if (error) return void toast.error(orderErrorText(error.message));
+    clearKey("status:" + status);
+    setBaseVersion(null);
     toast.success("Grafik durumu güncellendi");
     refresh();
   }
@@ -171,10 +238,12 @@ function OrderDetail() {
     if (!cancelReason.trim()) return void toast.error("İptal gerekçesi zorunludur.");
     const { error } = await supabase.rpc("cancel_order", {
       _order_id: order.id,
-      _row_version: order.row_version,
+      _row_version: baseVersion ?? order.row_version,
       _reason: cancelReason.trim(),
+      _idempotency_key: keyFor("cancel"),
     });
     if (error) return void toast.error(orderErrorText(error.message));
+    clearKey("cancel");
     setCancelReason("");
     toast.success("Sipariş iptal edildi");
     refresh();
@@ -187,36 +256,46 @@ function OrderDetail() {
       return void toast.error("Dosya boş olamaz ve 50 MB'ı aşamaz.");
 
     setBusy(true);
-    const path = `${order.id}/${crypto.randomUUID()}.pdf`;
-    const up = await supabase.storage
-      .from("grafik-pdf")
-      .upload(path, file, { contentType: "application/pdf", upsert: false });
-    if (up.error) {
+    try {
+      // 1) Sunucu yetkiyi doğrular ve yalnızca bu yüklemeye ait hedefi üretir.
+      const target = await startUpload({
+        data: { orderId: order.id, expectedRevision: currentRevision },
+      });
+      // 2) Dosya yalnızca o hedefe gönderilir.
+      const up = await supabase.storage
+        .from("grafik-pdf")
+        .uploadToSignedUrl(target.path, target.token, file, {
+          contentType: "application/pdf",
+        });
+      if (up.error) throw new Error(up.error.message);
+      // 3) Sunucu gerçek dosyayı doğrular; kayıt, güncel dosya ve denetim aynı işlemde oluşur.
+      const res = await finalizeUpload({
+        data: { sessionId: target.sessionId, filename: file.name },
+      });
+      setPendingPdf(null);
+      toast.success(`PDF yüklendi (revizyon ${res.revision_no})`);
+      refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("REVIZYON_CAKISMASI")) {
+        setPendingPdf(file);
+        toast.error("Siz yüklerken yeni bir revizyon geldi. Dosyanız duruyor; listeyi görüp yeniden gönderebilirsiniz.");
+      } else {
+        toast.error(orderErrorText(message));
+      }
+      refresh();
+    } finally {
       setBusy(false);
-      return void toast.error("Dosya yüklenemedi: " + up.error.message);
     }
-    // Kayıt ve denetim aynı işlemde oluşur; kayıt oluşmazsa dosya sahipsiz kalır ve kullanılmaz.
-    const { data, error } = await supabase.rpc("attach_graphic_revision", {
-      _order_id: order.id,
-      _storage_path: path,
-      _filename: file.name,
-      _byte_size: file.size,
-      _content_type: "application/pdf",
-      _idempotency_key: newIdempotencyKey(),
-    });
-    setBusy(false);
-    if (error) return void toast.error(orderErrorText(error.message));
-    const rev = (data as { revision_no?: number } | null)?.revision_no;
-    toast.success(`PDF yüklendi (revizyon ${rev ?? "?"})`);
-    refresh();
   }
 
-  async function download(path: string, filename: string) {
-    const { data, error } = await supabase.storage
-      .from("grafik-pdf")
-      .createSignedUrl(path, 300, { download: filename });
-    if (error || !data) return void toast.error("İndirme bağlantısı alınamadı.");
-    window.open(data.signedUrl, "_blank", "noopener");
+  async function download(assetId: string) {
+    try {
+      const res = await accessLink({ data: { assetId } });
+      window.open(res.url, "_blank", "noopener");
+    } catch (err) {
+      toast.error(orderErrorText(err instanceof Error ? err.message : String(err)));
+    }
   }
 
   return (
@@ -251,6 +330,28 @@ function OrderDetail() {
           </CardHeader>
         </Card>
       )}
+
+      {stale && (
+        <Card className="border-amber-500/60">
+          <CardHeader>
+            <CardTitle className="text-base">Bu kayıt siz düzenlerken değişti</CardTitle>
+            <CardDescription>
+              Yazdıklarınız korunuyor. Aşağıda güncel kayıttaki değerler var; karşılaştırıp
+              kendi taslağınızı kaydedebilir ya da güncel hâli forma yükleyebilirsiniz.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <p className="text-muted-foreground">
+              Güncel: {order.name} · #{order.work_order_no} · {order.quantity} silindir ·
+              termin {order.due_on} · {GRAPHIC_STATUS_LABELS[order.graphic_status]}
+            </p>
+            <Button size="sm" variant="outline" onClick={loadCurrentIntoForm}>
+              Güncel kaydı forma yükle (taslağınız silinir)
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader>
@@ -423,13 +524,13 @@ function OrderDetail() {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {(Number(a.byte_size) / 1048576).toFixed(2)} MB ·{" "}
-                    {new Date(a.uploaded_at).toLocaleString("tr-TR")}
+                    {new Date(a.uploaded_at).toLocaleString("tr-TR")} · yükleyen: {a.uploader}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {a.is_current && <Badge>Güncel</Badge>}
                   {canDownload && (
-                    <Button size="sm" variant="outline" onClick={() => download(a.storage_path, a.filename)}>
+                    <Button size="sm" variant="outline" onClick={() => download(a.id)}>
                       İndir
                     </Button>
                   )}
@@ -455,6 +556,24 @@ function OrderDetail() {
                   if (f) uploadPdf(f);
                 }}
               />
+              {pendingPdf && (
+                <div className="mt-3 rounded-md border border-amber-500/60 p-3 text-sm">
+                  <p className="font-medium">Yüklemeniz kesinleştirilemedi</p>
+                  <p className="text-muted-foreground">
+                    Siz gönderirken yeni bir revizyon eklendi. Seçtiğiniz dosya ({pendingPdf.name})
+                    duruyor. Yukarıdaki güncel listeyi görüp yine de göndermek isterseniz tekrar
+                    deneyin.
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <Button size="sm" disabled={busy} onClick={() => uploadPdf(pendingPdf)}>
+                      Yeniden gönder
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setPendingPdf(null)}>
+                      Vazgeç
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {!canDownload && (

@@ -78,6 +78,7 @@ export type Database = {
           created_at: string
           id: string
           idempotency_key: string
+          payload_hash: string | null
           result_ref: string | null
         }
         Insert: {
@@ -86,6 +87,7 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key: string
+          payload_hash?: string | null
           result_ref?: string | null
         }
         Update: {
@@ -94,6 +96,7 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key?: string
+          payload_hash?: string | null
           result_ref?: string | null
         }
         Relationships: []
@@ -174,6 +177,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "graphic_assets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      graphic_upload_sessions: {
+        Row: {
+          cleaned_at: string | null
+          consumed_at: string | null
+          created_at: string
+          expected_revision: number
+          id: string
+          order_id: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          cleaned_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          expected_revision: number
+          id?: string
+          order_id: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          cleaned_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          expected_revision?: number
+          id?: string
+          order_id?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "graphic_upload_sessions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -593,7 +637,18 @@ export type Database = {
       }
       assert_admin_caller: { Args: never; Returns: string }
       assert_admin_remains: { Args: { _target: string }; Returns: undefined }
+      assert_can_write_order: {
+        Args: {
+          _order: Database["public"]["Tables"]["orders"]["Row"]
+          _uid: string
+        }
+        Returns: undefined
+      }
       assert_permission: { Args: { _permission: string }; Returns: string }
+      assert_row_version: {
+        Args: { _current: number; _given: number }
+        Returns: undefined
+      }
       attach_graphic_revision: {
         Args: {
           _byte_size: number
@@ -610,17 +665,30 @@ export type Database = {
       can_read_directory: { Args: never; Returns: boolean }
       can_read_orders: { Args: never; Returns: boolean }
       cancel_order: {
-        Args: { _order_id: string; _reason: string; _row_version: number }
+        Args: {
+          _idempotency_key?: string
+          _order_id: string
+          _reason: string
+          _row_version: number
+        }
         Returns: number
       }
       claim_invite: { Args: never; Returns: Json }
-      command_begin: {
-        Args: { _command: string; _key: string }
-        Returns: {
-          is_new: boolean
-          prior: string
-        }[]
-      }
+      command_begin:
+        | {
+            Args: { _command: string; _key: string }
+            Returns: {
+              is_new: boolean
+              prior: string
+            }[]
+          }
+        | {
+            Args: { _command: string; _key: string; _payload: Json }
+            Returns: {
+              is_new: boolean
+              prior: string
+            }[]
+          }
       command_finish: {
         Args: { _key: string; _result: string }
         Returns: undefined
@@ -663,6 +731,7 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       set_graphic_status: {
         Args: {
+          _idempotency_key?: string
           _order_id: string
           _reason?: string
           _row_version: number
@@ -670,10 +739,40 @@ export type Database = {
         }
         Returns: number
       }
+      srv_attach_graphic_revision: {
+        Args: {
+          _actor: string
+          _byte_size: number
+          _checksum?: string
+          _filename: string
+          _session_id: string
+        }
+        Returns: Json
+      }
+      srv_graphic_access_grant: {
+        Args: { _actor: string; _asset_id: string }
+        Returns: Json
+      }
+      srv_graphic_mark_cleaned: {
+        Args: { _session_ids: string[] }
+        Returns: number
+      }
+      srv_graphic_orphan_sessions: {
+        Args: { _older_minutes?: number }
+        Returns: {
+          session_id: string
+          storage_path: string
+        }[]
+      }
+      srv_graphic_upload_target: {
+        Args: { _actor: string; _expected_revision: number; _order_id: string }
+        Returns: Json
+      }
       update_order: {
         Args: {
           _critical_note?: string
           _due_on: string
+          _idempotency_key?: string
           _name: string
           _nominal_circumference_mm: number
           _note?: string
