@@ -15,6 +15,13 @@
       "when": 1789168341985,
       "tag": "0001_asama2_pdf_yukleme_oturumu",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789168379301,
+      "tag": "0002_asama2_pdf_sunucu_rpc_ve_depolama",
+      "breakpoints": true
     }
   ]
 }

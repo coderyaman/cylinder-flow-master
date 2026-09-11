@@ -739,6 +739,35 @@ export type Database = {
         }
         Returns: number
       }
+      srv_attach_graphic_revision: {
+        Args: {
+          _actor: string
+          _byte_size: number
+          _checksum?: string
+          _filename: string
+          _session_id: string
+        }
+        Returns: Json
+      }
+      srv_graphic_access_grant: {
+        Args: { _actor: string; _asset_id: string }
+        Returns: Json
+      }
+      srv_graphic_mark_cleaned: {
+        Args: { _session_ids: string[] }
+        Returns: number
+      }
+      srv_graphic_orphan_sessions: {
+        Args: { _older_minutes?: number }
+        Returns: {
+          session_id: string
+          storage_path: string
+        }[]
+      }
+      srv_graphic_upload_target: {
+        Args: { _actor: string; _expected_revision: number; _order_id: string }
+        Returns: Json
+      }
       update_order: {
         Args: {
           _critical_note?: string
