@@ -184,6 +184,47 @@ export type Database = {
           },
         ]
       }
+      graphic_upload_sessions: {
+        Row: {
+          cleaned_at: string | null
+          consumed_at: string | null
+          created_at: string
+          expected_revision: number
+          id: string
+          order_id: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          cleaned_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          expected_revision: number
+          id?: string
+          order_id: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          cleaned_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          expected_revision?: number
+          id?: string
+          order_id?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "graphic_upload_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machines: {
         Row: {
           code: string
