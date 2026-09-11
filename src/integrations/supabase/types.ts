@@ -187,31 +187,40 @@ export type Database = {
       graphic_upload_sessions: {
         Row: {
           cleaned_at: string | null
+          cleanup_claimed_at: string | null
           consumed_at: string | null
           created_at: string
           expected_revision: number
           id: string
           order_id: string
+          result_asset_id: string | null
+          result_revision_no: number | null
           storage_path: string
           user_id: string
         }
         Insert: {
           cleaned_at?: string | null
+          cleanup_claimed_at?: string | null
           consumed_at?: string | null
           created_at?: string
           expected_revision: number
           id?: string
           order_id: string
+          result_asset_id?: string | null
+          result_revision_no?: number | null
           storage_path: string
           user_id: string
         }
         Update: {
           cleaned_at?: string | null
+          cleanup_claimed_at?: string | null
           consumed_at?: string | null
           created_at?: string
           expected_revision?: number
           id?: string
           order_id?: string
+          result_asset_id?: string | null
+          result_revision_no?: number | null
           storage_path?: string
           user_id?: string
         }
@@ -752,6 +761,13 @@ export type Database = {
       srv_graphic_access_grant: {
         Args: { _actor: string; _asset_id: string }
         Returns: Json
+      }
+      srv_graphic_claim_orphans: {
+        Args: { _older_minutes?: number }
+        Returns: {
+          session_id: string
+          storage_path: string
+        }[]
       }
       srv_graphic_mark_cleaned: {
         Args: { _session_ids: string[] }
