@@ -78,6 +78,7 @@ export type Database = {
           created_at: string
           id: string
           idempotency_key: string
+          payload_hash: string | null
           result_ref: string | null
         }
         Insert: {
@@ -86,6 +87,7 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key: string
+          payload_hash?: string | null
           result_ref?: string | null
         }
         Update: {
@@ -94,6 +96,7 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key?: string
+          payload_hash?: string | null
           result_ref?: string | null
         }
         Relationships: []
@@ -593,7 +596,18 @@ export type Database = {
       }
       assert_admin_caller: { Args: never; Returns: string }
       assert_admin_remains: { Args: { _target: string }; Returns: undefined }
+      assert_can_write_order: {
+        Args: {
+          _order: Database["public"]["Tables"]["orders"]["Row"]
+          _uid: string
+        }
+        Returns: undefined
+      }
       assert_permission: { Args: { _permission: string }; Returns: string }
+      assert_row_version: {
+        Args: { _current: number; _given: number }
+        Returns: undefined
+      }
       attach_graphic_revision: {
         Args: {
           _byte_size: number
@@ -610,17 +624,30 @@ export type Database = {
       can_read_directory: { Args: never; Returns: boolean }
       can_read_orders: { Args: never; Returns: boolean }
       cancel_order: {
-        Args: { _order_id: string; _reason: string; _row_version: number }
+        Args: {
+          _idempotency_key?: string
+          _order_id: string
+          _reason: string
+          _row_version: number
+        }
         Returns: number
       }
       claim_invite: { Args: never; Returns: Json }
-      command_begin: {
-        Args: { _command: string; _key: string }
-        Returns: {
-          is_new: boolean
-          prior: string
-        }[]
-      }
+      command_begin:
+        | {
+            Args: { _command: string; _key: string }
+            Returns: {
+              is_new: boolean
+              prior: string
+            }[]
+          }
+        | {
+            Args: { _command: string; _key: string; _payload: Json }
+            Returns: {
+              is_new: boolean
+              prior: string
+            }[]
+          }
       command_finish: {
         Args: { _key: string; _result: string }
         Returns: undefined
@@ -663,6 +690,7 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       set_graphic_status: {
         Args: {
+          _idempotency_key?: string
           _order_id: string
           _reason?: string
           _row_version: number
@@ -674,6 +702,7 @@ export type Database = {
         Args: {
           _critical_note?: string
           _due_on: string
+          _idempotency_key?: string
           _name: string
           _nominal_circumference_mm: number
           _note?: string
