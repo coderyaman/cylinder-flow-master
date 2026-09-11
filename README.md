@@ -153,14 +153,24 @@ işlem anahtarı (idempotency) ile korunur; **Grafik Hazır üretimi başlatmaz*
 ### PDF akışı (sunucu denetimli)
 
 - Yükleme: `startGraphicUpload` → yalnızca o yüklemeye ait imzalı hedef; dosya gönderilir;
-  `finalizeGraphicUpload` sunucuda gerçek boyutu, PDF imzasını ve oturum sahipliğini doğrular,
-  ardından revizyon + güncel dosya + denetim kaydı tek veritabanı işleminde oluşur.
+  `finalizeGraphicUpload` sunucuda gerçek boyutu, oturum sahipliğini ve **gerçek PDF
+  geçerliliğini** (`src/lib/pdf-validate.ts`: sürüm başlığı, nesne, `/Root`, `startxref`,
+  `%%EOF`) doğrular; ardından revizyon + güncel dosya + denetim kaydı tek veritabanı
+  işleminde oluşur.
+- Yarış koruması: oturumun durumu veritabanında atomik geçişlerle yönetilir
+  (`consumed_at`, `cleanup_claimed_at`, `cleaned_at`). Temizliğe ayrılmış veya temizlenmiş
+  oturum kesinleştirilemez; kesinleştirilmiş oturum temizliğe alınamaz.
+- Tekrar: aynı oturumun ikinci kesinleştirmesi yeni revizyon üretmez, önceki sonucu
+  `replayed: true` ile döndürür. Kesinleştirme hatasında dosya **silinmez** (yanıt kaybı
+  veya eşzamanlı istek olabilir); kaydı olmayan dosyayı yalnızca temizlik işi alır.
+  Doğrulamada (boyut/PDF) reddedilen dosya, henüz kayıt oluşmadığı için silinir.
 - Çakışma: `expected_revision` uyuşmazsa `REVIZYON_CAKISMASI` döner, önceki güncel PDF korunur
   ve kullanıcının dosyası ekranda saklanır.
 - Erişim: `graphicAccessLink` yetkiyi denetler, `graphic_asset.link_created` denetim kaydı yazar
   ve 5 dakikalık imzalı bağlantı üretir. Doğrudan depolama politikası yoktur.
-- Temizlik: `POST /api/public/grafik-temizlik` (cron gizli anahtarıyla) 60 dakikadan eski,
-  kesinleştirilmemiş yüklemeleri siler; kayıtlı revizyonlara dokunmaz.
+- Temizlik: `POST /api/public/grafik-temizlik` (cron gizli anahtarıyla) önce oturumları
+  atomik olarak temizliğe ayırır (`srv_graphic_claim_orphans`), sonra dosyaları siler.
+  Kayıtlı revizyonun dosyası hiçbir yolla silinmez.
 - Depolama kurulumu: `node scripts/setup-storage.mjs` (özel alan, 50 MB, yalnızca PDF).
 
 
