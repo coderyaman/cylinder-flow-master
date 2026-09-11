@@ -19,6 +19,7 @@ import { Route as AuthenticatedSiparislerRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIstasyonlarRouteImport } from './routes/_authenticated/admin/istasyonlar'
 import { Route as AuthenticatedAdminKullanicilarRouteImport } from './routes/_authenticated/admin/kullanicilar'
 import { Route as AuthenticatedAdminMusterilerRouteImport } from './routes/_authenticated/admin/musteriler'
+import { Route as AuthenticatedSilindirCylCodeRouteImport } from './routes/_authenticated/silindir.$cylCode'
 import { Route as AuthenticatedSiparisOrderIdRouteImport } from './routes/_authenticated/siparis.$orderId'
 import { Route as ApiPublicGrafikTemizlikRouteImport } from './routes/api/public/grafik-temizlik'
 
@@ -74,6 +75,12 @@ const AuthenticatedAdminMusterilerRoute =
     path: '/admin/musteriler',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSilindirCylCodeRoute =
+  AuthenticatedSilindirCylCodeRouteImport.update({
+    id: '/silindir/$cylCode',
+    path: '/silindir/$cylCode',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSiparisOrderIdRoute =
   AuthenticatedSiparisOrderIdRouteImport.update({
     id: '/siparis/$orderId',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
   '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
   '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
 }
@@ -109,6 +117,7 @@ export interface FileRoutesByTo {
   '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
   '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
   '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
 }
@@ -124,6 +133,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/_authenticated/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/_authenticated/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/_authenticated/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
   '/_authenticated/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
   '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
 }
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/admin/istasyonlar'
     | '/admin/kullanicilar'
     | '/admin/musteriler'
+    | '/silindir/$cylCode'
     | '/siparis/$orderId'
     | '/api/public/grafik-temizlik'
   fileRoutesByTo: FileRoutesByTo
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/admin/istasyonlar'
     | '/admin/kullanicilar'
     | '/admin/musteriler'
+    | '/silindir/$cylCode'
     | '/siparis/$orderId'
     | '/api/public/grafik-temizlik'
   id:
@@ -166,6 +178,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/istasyonlar'
     | '/_authenticated/admin/kullanicilar'
     | '/_authenticated/admin/musteriler'
+    | '/_authenticated/silindir/$cylCode'
     | '/_authenticated/siparis/$orderId'
     | '/api/public/grafik-temizlik'
   fileRoutesById: FileRoutesById
@@ -249,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMusterilerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/silindir/$cylCode': {
+      id: '/_authenticated/silindir/$cylCode'
+      path: '/silindir/$cylCode'
+      fullPath: '/silindir/$cylCode'
+      preLoaderRoute: typeof AuthenticatedSilindirCylCodeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/siparis/$orderId': {
       id: '/_authenticated/siparis/$orderId'
       path: '/siparis/$orderId'
@@ -274,6 +294,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminIstasyonlarRoute: typeof AuthenticatedAdminIstasyonlarRoute
   AuthenticatedAdminKullanicilarRoute: typeof AuthenticatedAdminKullanicilarRoute
   AuthenticatedAdminMusterilerRoute: typeof AuthenticatedAdminMusterilerRoute
+  AuthenticatedSilindirCylCodeRoute: typeof AuthenticatedSilindirCylCodeRoute
   AuthenticatedSiparisOrderIdRoute: typeof AuthenticatedSiparisOrderIdRoute
 }
 
@@ -285,6 +306,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminIstasyonlarRoute: AuthenticatedAdminIstasyonlarRoute,
   AuthenticatedAdminKullanicilarRoute: AuthenticatedAdminKullanicilarRoute,
   AuthenticatedAdminMusterilerRoute: AuthenticatedAdminMusterilerRoute,
+  AuthenticatedSilindirCylCodeRoute: AuthenticatedSilindirCylCodeRoute,
   AuthenticatedSiparisOrderIdRoute: AuthenticatedSiparisOrderIdRoute,
 }
 
