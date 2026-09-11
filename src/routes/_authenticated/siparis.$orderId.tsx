@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -94,8 +94,38 @@ function OrderDetail() {
   }>(null);
   const [busy, setBusy] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  // Kullanıcının açtığı sürüm: arka plan yenilemesi taslağı ezmez.
+  const [baseVersion, setBaseVersion] = useState<number | null>(null);
+
+  // Aynı mantıksal işlemin ağ tekrarlarında anahtar sabit kalır; başarıdan sonra yenilenir.
+  const keys = useRef<Record<string, string>>({});
+  const keyFor = (op: string) => (keys.current[op] ??= newIdempotencyKey());
+  const clearKey = (op: string) => {
+    delete keys.current[op];
+  };
 
   useEffect(() => {
+    if (!order) return;
+    setForm((prev) =>
+      prev
+        ? prev
+        : {
+            work_order_no: order.work_order_no,
+            name: order.name,
+            quantity: String(order.quantity),
+            nominal_circumference_mm: String(order.nominal_circumference_mm),
+            target_length_mm: String(order.target_length_mm),
+            due_on: order.due_on,
+            supply_status: order.supply_status,
+            priority: order.priority,
+            note: order.note ?? "",
+            critical_note: order.critical_note ?? "",
+          },
+    );
+    setBaseVersion((prev) => prev ?? order.row_version);
+  }, [order?.id, order?.row_version]);
+
+  function loadCurrentIntoForm() {
     if (!order) return;
     setForm({
       work_order_no: order.work_order_no,
@@ -109,7 +139,8 @@ function OrderDetail() {
       note: order.note ?? "",
       critical_note: order.critical_note ?? "",
     });
-  }, [order?.id, order?.row_version]);
+    setBaseVersion(order.row_version);
+  }
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["order", orderId] });
