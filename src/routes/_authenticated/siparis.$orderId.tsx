@@ -228,36 +228,46 @@ function OrderDetail() {
       return void toast.error("Dosya boş olamaz ve 50 MB'ı aşamaz.");
 
     setBusy(true);
-    const path = `${order.id}/${crypto.randomUUID()}.pdf`;
-    const up = await supabase.storage
-      .from("grafik-pdf")
-      .upload(path, file, { contentType: "application/pdf", upsert: false });
-    if (up.error) {
+    try {
+      // 1) Sunucu yetkiyi doğrular ve yalnızca bu yüklemeye ait hedefi üretir.
+      const target = await startUpload({
+        data: { orderId: order.id, expectedRevision: currentRevision },
+      });
+      // 2) Dosya yalnızca o hedefe gönderilir.
+      const up = await supabase.storage
+        .from("grafik-pdf")
+        .uploadToSignedUrl(target.path, target.token, file, {
+          contentType: "application/pdf",
+        });
+      if (up.error) throw new Error(up.error.message);
+      // 3) Sunucu gerçek dosyayı doğrular; kayıt, güncel dosya ve denetim aynı işlemde oluşur.
+      const res = await finalizeUpload({
+        data: { sessionId: target.sessionId, filename: file.name },
+      });
+      setPendingPdf(null);
+      toast.success(`PDF yüklendi (revizyon ${res.revision_no})`);
+      refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("REVIZYON_CAKISMASI")) {
+        setPendingPdf(file);
+        toast.error("Siz yüklerken yeni bir revizyon geldi. Dosyanız duruyor; listeyi görüp yeniden gönderebilirsiniz.");
+      } else {
+        toast.error(orderErrorText(message));
+      }
+      refresh();
+    } finally {
       setBusy(false);
-      return void toast.error("Dosya yüklenemedi: " + up.error.message);
     }
-    // Kayıt ve denetim aynı işlemde oluşur; kayıt oluşmazsa dosya sahipsiz kalır ve kullanılmaz.
-    const { data, error } = await supabase.rpc("attach_graphic_revision", {
-      _order_id: order.id,
-      _storage_path: path,
-      _filename: file.name,
-      _byte_size: file.size,
-      _content_type: "application/pdf",
-      _idempotency_key: newIdempotencyKey(),
-    });
-    setBusy(false);
-    if (error) return void toast.error(orderErrorText(error.message));
-    const rev = (data as { revision_no?: number } | null)?.revision_no;
-    toast.success(`PDF yüklendi (revizyon ${rev ?? "?"})`);
-    refresh();
   }
 
-  async function download(path: string, filename: string) {
-    const { data, error } = await supabase.storage
-      .from("grafik-pdf")
-      .createSignedUrl(path, 300, { download: filename });
-    if (error || !data) return void toast.error("İndirme bağlantısı alınamadı.");
-    window.open(data.signedUrl, "_blank", "noopener");
+  async function download(assetId: string) {
+    try {
+      const res = await accessLink({ data: { assetId } });
+      window.open(res.url, "_blank", "noopener");
+    } catch (err) {
+      toast.error(orderErrorText(err instanceof Error ? err.message : String(err)));
+    }
   }
 
   return (
