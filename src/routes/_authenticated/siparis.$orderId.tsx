@@ -293,6 +293,28 @@ function OrderDetail() {
         </Card>
       )}
 
+      {stale && (
+        <Card className="border-amber-500/60">
+          <CardHeader>
+            <CardTitle className="text-base">Bu kayıt siz düzenlerken değişti</CardTitle>
+            <CardDescription>
+              Yazdıklarınız korunuyor. Aşağıda güncel kayıttaki değerler var; karşılaştırıp
+              kendi taslağınızı kaydedebilir ya da güncel hâli forma yükleyebilirsiniz.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <p className="text-muted-foreground">
+              Güncel: {order.name} · #{order.work_order_no} · {order.quantity} silindir ·
+              termin {order.due_on} · {GRAPHIC_STATUS_LABELS[order.graphic_status]}
+            </p>
+            <Button size="sm" variant="outline" onClick={loadCurrentIntoForm}>
+              Güncel kaydı forma yükle (taslağınız silinir)
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Sipariş bilgileri</CardTitle>
