@@ -134,6 +134,136 @@ export type Database = {
         }
         Relationships: []
       }
+      cylinder_measurements: {
+        Row: {
+          circumference_mm: number
+          diameter_mm: number
+          id: string
+          length_mm: number
+          measured_at: string
+          measured_by: string | null
+          note: string | null
+          receipt_id: string
+          source: string
+        }
+        Insert: {
+          circumference_mm: number
+          diameter_mm: number
+          id?: string
+          length_mm: number
+          measured_at?: string
+          measured_by?: string | null
+          note?: string | null
+          receipt_id: string
+          source?: string
+        }
+        Update: {
+          circumference_mm?: number
+          diameter_mm?: number
+          id?: string
+          length_mm?: number
+          measured_at?: string
+          measured_by?: string | null
+          note?: string | null
+          receipt_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cylinder_measurements_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cylinder_receipts: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          cyl_code: string
+          id: string
+          label_print_count: number
+          last_label_printed_at: string | null
+          measured_circumference_mm: number
+          measured_diameter_mm: number
+          measured_length_mm: number
+          note: string | null
+          received_on: string
+          row_version: number
+          shaft_type: Database["public"]["Enums"]["cyl_shaft_type"]
+          status: Database["public"]["Enums"]["cyl_receipt_status"]
+          surface_state: Database["public"]["Enums"]["cyl_surface_state"]
+          updated_at: string
+          updated_by: string | null
+          usability: Database["public"]["Enums"]["cyl_usability"]
+          waybill_no: string | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          cyl_code: string
+          id?: string
+          label_print_count?: number
+          last_label_printed_at?: string | null
+          measured_circumference_mm: number
+          measured_diameter_mm: number
+          measured_length_mm: number
+          note?: string | null
+          received_on?: string
+          row_version?: number
+          shaft_type: Database["public"]["Enums"]["cyl_shaft_type"]
+          status?: Database["public"]["Enums"]["cyl_receipt_status"]
+          surface_state: Database["public"]["Enums"]["cyl_surface_state"]
+          updated_at?: string
+          updated_by?: string | null
+          usability: Database["public"]["Enums"]["cyl_usability"]
+          waybill_no?: string | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          cyl_code?: string
+          id?: string
+          label_print_count?: number
+          last_label_printed_at?: string | null
+          measured_circumference_mm?: number
+          measured_diameter_mm?: number
+          measured_length_mm?: number
+          note?: string | null
+          received_on?: string
+          row_version?: number
+          shaft_type?: Database["public"]["Enums"]["cyl_shaft_type"]
+          status?: Database["public"]["Enums"]["cyl_receipt_status"]
+          surface_state?: Database["public"]["Enums"]["cyl_surface_state"]
+          updated_at?: string
+          updated_by?: string | null
+          usability?: Database["public"]["Enums"]["cyl_usability"]
+          waybill_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cylinder_receipts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       graphic_assets: {
         Row: {
           byte_size: number
@@ -672,7 +802,17 @@ export type Database = {
       }
       caller_is_admin: { Args: never; Returns: boolean }
       can_read_directory: { Args: never; Returns: boolean }
+      can_read_inventory: { Args: never; Returns: boolean }
       can_read_orders: { Args: never; Returns: boolean }
+      cancel_cylinder_receipt: {
+        Args: {
+          _idempotency_key?: string
+          _reason: string
+          _receipt_id: string
+          _row_version: number
+        }
+        Returns: number
+      }
       cancel_order: {
         Args: {
           _idempotency_key?: string
@@ -738,6 +878,23 @@ export type Database = {
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      receive_cylinder: {
+        Args: {
+          _customer_id: string
+          _idempotency_key?: string
+          _measured_circumference_mm: number
+          _measured_diameter_mm: number
+          _measured_length_mm: number
+          _note?: string
+          _received_on?: string
+          _shaft_type: Database["public"]["Enums"]["cyl_shaft_type"]
+          _surface_state: Database["public"]["Enums"]["cyl_surface_state"]
+          _usability: Database["public"]["Enums"]["cyl_usability"]
+          _waybill_no?: string
+        }
+        Returns: Json
+      }
+      record_label_print: { Args: { _receipt_id: string }; Returns: number }
       set_graphic_status: {
         Args: {
           _idempotency_key?: string
@@ -784,6 +941,23 @@ export type Database = {
         Args: { _actor: string; _expected_revision: number; _order_id: string }
         Returns: Json
       }
+      update_cylinder_receipt: {
+        Args: {
+          _idempotency_key?: string
+          _measured_circumference_mm: number
+          _measured_diameter_mm: number
+          _measured_length_mm: number
+          _note?: string
+          _reason?: string
+          _receipt_id: string
+          _row_version: number
+          _shaft_type: Database["public"]["Enums"]["cyl_shaft_type"]
+          _surface_state: Database["public"]["Enums"]["cyl_surface_state"]
+          _usability: Database["public"]["Enums"]["cyl_usability"]
+          _waybill_no?: string
+        }
+        Returns: number
+      }
       update_order: {
         Args: {
           _critical_note?: string
@@ -825,6 +999,10 @@ export type Database = {
         | "patron"
         | "muhasebe"
         | "admin"
+      cyl_receipt_status: "kabul" | "iptal"
+      cyl_shaft_type: "konik" | "silindirik" | "flansli" | "diger"
+      cyl_surface_state: "temiz" | "bakirli" | "kromlu" | "asinmis" | "hasarli"
+      cyl_usability: "kullanilabilir" | "sartli" | "kullanilamaz"
       graphic_status:
         | "dosya_bekleniyor"
         | "renk_ayrimi"
@@ -976,6 +1154,10 @@ export const Constants = {
         "muhasebe",
         "admin",
       ],
+      cyl_receipt_status: ["kabul", "iptal"],
+      cyl_shaft_type: ["konik", "silindirik", "flansli", "diger"],
+      cyl_surface_state: ["temiz", "bakirli", "kromlu", "asinmis", "hasarli"],
+      cyl_usability: ["kullanilabilir", "sartli", "kullanilamaz"],
       graphic_status: [
         "dosya_bekleniyor",
         "renk_ayrimi",
