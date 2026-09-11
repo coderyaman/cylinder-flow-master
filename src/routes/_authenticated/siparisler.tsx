@@ -464,10 +464,16 @@ function OrdersPage() {
                       {!collapsed &&
                         g.rows.map((o) => (
                           <tr key={o.id} className="hover:bg-accent/40">
-                            <td className={`${td} sticky left-0 z-10 bg-card font-mono`}>
+                            <td
+                              className={`${td} sticky left-0 z-10 bg-card font-mono`}
+                              style={{ width: 120, minWidth: 120 }}
+                            >
                               {o.work_order_no}
                             </td>
-                            <td className={`${td} sticky left-28 z-10 bg-card`}>
+                            <td
+                              className={`${td} sticky z-10 bg-card`}
+                              style={{ left: 120, width: 180, minWidth: 180 }}
+                            >
                               {o.customers?.name ?? "—"}
                             </td>
                             <td className={`${td} font-medium`}>{o.name}</td>
