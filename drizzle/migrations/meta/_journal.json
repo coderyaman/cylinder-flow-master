@@ -50,6 +50,13 @@
       "when": 1789170430665,
       "tag": "0006_asama3_receive_cylinder_replay_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789171120966,
+      "tag": "0007_asama4_sepet_rezervasyon_takim",
+      "breakpoints": true
     }
   ]
 }
