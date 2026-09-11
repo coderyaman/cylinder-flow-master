@@ -12,7 +12,9 @@ export const Route = createFileRoute("/api/public/grafik-temizlik")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const { data, error } = await supabaseAdmin.rpc("srv_graphic_orphan_sessions", {
+        // Silmeden önce oturumlar atomik olarak temizliğe ayrılır; böylece
+        // kesinleştirme ile temizlik aynı oturumda birbirini dışlar.
+        const { data, error } = await supabaseAdmin.rpc("srv_graphic_claim_orphans", {
           _older_minutes: 60,
         });
         if (error) return new Response(error.message, { status: 500 });

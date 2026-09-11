@@ -211,13 +211,19 @@ function OrdersPage() {
 
   const groups = useMemo(() => {
     if (grouping === "yok") return [{ key: "", label: "", rows }];
-    const map = new Map<string, OrderRow[]>();
+    // Firma gruplaması müşteri kimliğine göre yapılır: aynı adlı farklı müşteriler ayrı kalır.
+    const map = new Map<string, { label: string; rows: OrderRow[] }>();
     for (const r of rows) {
-      const key =
-        grouping === "grafik" ? GRAPHIC_STATUS_LABELS[r.graphic_status] : (r.customers?.name ?? "—");
-      map.set(key, [...(map.get(key) ?? []), r]);
+      const key = grouping === "grafik" ? r.graphic_status : r.customer_id;
+      const label =
+        grouping === "grafik"
+          ? GRAPHIC_STATUS_LABELS[r.graphic_status]
+          : (r.customers?.name ?? "—");
+      const current = map.get(key);
+      if (current) current.rows.push(r);
+      else map.set(key, { label, rows: [r] });
     }
-    return Array.from(map, ([label, groupRows]) => ({ key: label, label, rows: groupRows }));
+    return Array.from(map, ([key, g]) => ({ key, label: g.label, rows: g.rows }));
   }, [rows, grouping]);
 
   async function submit(e: React.FormEvent) {
