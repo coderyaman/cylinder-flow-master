@@ -101,9 +101,12 @@ BEGIN
     RAISE EXCEPTION 'HATA: grafik durumu değişmedi.';
   END IF;
 
-  -- 10) PDF revizyonları yeni akışla: sunucu yükleme oturumu + kesinleştirme
+  -- 10) PDF revizyonları yeni akışla: sunucu yükleme oturumu + kesinleştirme.
+  -- Bu bölüm sunucu (service_role) tarafında çalışan mantığı doğrular; istemci rolü
+  -- bu fonksiyonları çağıramaz, bu yüzden geçici olarak sunucu rolüne geçilir.
   DECLARE s1 jsonb; s2 jsonb; s3 jsonb;
   BEGIN
+    EXECUTE 'SET LOCAL ROLE service_role';
     s1 := private.graphic_upload_target(uid, ord, 0);
     res := private.attach_graphic_revision_v3(uid, (s1->>'session_id')::uuid, 'a.pdf', 1024);
     s2 := private.graphic_upload_target(uid, ord, 1);
