@@ -36,11 +36,45 @@ Bağlayıcı gereksinim belgesi depoda saklanır:
   davet adresini bilen ancak posta kutusuna erişemeyen kişi hesabı sahiplenemez.
 - Auth ayarında otomatik e-posta onayı (`mailer_autoconfirm`) kapatılmıştır.
 
+## Test durumu (güncel sürüm)
+
+> Bu depodaki testler **yazılmıştır, izole test ortamı olmadığı için çalıştırılmamıştır.**
+> Daha önceki sürümlerde raporlanan "geçti" sonuçları eski koda aittir ve güncel sürümün
+> doğrulaması sayılmaz. Test ortamı açıldığında sonuçlar yeniden raporlanacaktır.
+
+| Test | Kapsam | Durum |
+| --- | --- | --- |
+| `tests/asama1-guvenlik.test.mjs` | Aşama 1 yetki/denetim/eşzamanlılık | Yazıldı, çalıştırılmadı |
+| `tests/audit-rollback.sql` | Denetim yazımı başarısızsa geri alma | Yazıldı, çalıştırılmadı |
+| `tests/asama2-dogrulama.sql` | Sipariş kuralları, yeni PDF akışı, işlem anahtarı | Yazıldı, çalıştırılmadı |
+| `tests/asama2-akis.test.mjs` | Eşzamanlı kesinleştirme, temizlik yarışı, PDF geçerliliği, izinler, aynı adlı müşteriler | Yazıldı, çalıştırılmadı |
+
+## Şemanın boş test ortamına uygulanması
+
+Hangi aracın hangi geçmişi yönettiği:
+
+- `supabase/migrations/*.sql` — Aşama 1 ve Aşama 2 temel şeması; canlıda Supabase
+  migration geçmişi yönetir.
+- `drizzle/migrations/*.sql` — Aşama 2 düzeltmeleri (`0000`…); canlıda Drizzle Kit
+  journal'ı (`drizzle/migrations/meta/_journal.json`) yönetir.
+- `supabase/setup/roles-asama2.sql` — tekrarlanabilir rol/izin kurulumu (idempotent);
+  Admin varsayılan sipariş izinleri ile `orders.edit_all`, Asistan/Müdür için rol
+  varsayılanının kaldırılması. Kişisel izinlere (`user_permission_overrides`) dokunmaz.
+
+```sh
+TEST_SUPABASE_DB_URL=postgresql://... bun run db:apply-schema
+node scripts/setup-storage.mjs
+```
+
+Betik yalnızca **boş** veritabanında çalışır; `public.orders` varsa hiçbir değişiklik
+yapmadan durur (çıkış kodu 78). Mevcut ortamdaki migration'lar tekrar çalıştırılmaz.
+
 ## Güvenlik testleri
 
 Aşama 1 yetki, denetim ve eşzamanlılık senaryoları doğrudan API/veritabanı seviyesinde
 test edilir. **Testler yalnızca ayrı bir test projesinde çalışır**; gerçek proje
 hedeflendiğinde hiçbir değişiklik yapmadan durur (çıkış kodu 78).
+
 
 ```sh
 TEST_SUPABASE_URL=... \
