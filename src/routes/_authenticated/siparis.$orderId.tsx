@@ -160,6 +160,7 @@ function OrderDetail() {
     );
 
   const cancelled = order.closure_status === "iptal";
+  const stale = baseVersion !== null && order.row_version !== baseVersion;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -167,7 +168,7 @@ function OrderDetail() {
     setBusy(true);
     const { error } = await supabase.rpc("update_order", {
       _order_id: order.id,
-      _row_version: order.row_version,
+      _row_version: baseVersion ?? order.row_version,
       _work_order_no: form.work_order_no,
       _name: form.name,
       _quantity: Number(form.quantity),
@@ -178,9 +179,13 @@ function OrderDetail() {
       _priority: form.priority,
       _note: form.note,
       _critical_note: form.critical_note,
+      _idempotency_key: keyFor("update"),
     });
     setBusy(false);
     if (error) return void toast.error(orderErrorText(error.message));
+    clearKey("update");
+    setBaseVersion(null);
+    setForm(null);
     toast.success("Sipariş güncellendi");
     refresh();
   }
@@ -189,10 +194,13 @@ function OrderDetail() {
     if (!order) return;
     const { error } = await supabase.rpc("set_graphic_status", {
       _order_id: order.id,
-      _row_version: order.row_version,
+      _row_version: baseVersion ?? order.row_version,
       _status: status,
+      _idempotency_key: keyFor("status:" + status),
     });
     if (error) return void toast.error(orderErrorText(error.message));
+    clearKey("status:" + status);
+    setBaseVersion(null);
     toast.success("Grafik durumu güncellendi");
     refresh();
   }
@@ -202,10 +210,12 @@ function OrderDetail() {
     if (!cancelReason.trim()) return void toast.error("İptal gerekçesi zorunludur.");
     const { error } = await supabase.rpc("cancel_order", {
       _order_id: order.id,
-      _row_version: order.row_version,
+      _row_version: baseVersion ?? order.row_version,
       _reason: cancelReason.trim(),
+      _idempotency_key: keyFor("cancel"),
     });
     if (error) return void toast.error(orderErrorText(error.message));
+    clearKey("cancel");
     setCancelReason("");
     toast.success("Sipariş iptal edildi");
     refresh();
