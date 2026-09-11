@@ -40,6 +40,17 @@
 - [x] Yeni sipariş yan panelde; sipariş tarihi formda; revizyon geçmişinde yükleyen
 - [x] Yükleniyor / hata / boş / filtreye uyan yok durumları ayrı
 
+### Parça 4 — Kod incelemesi düzeltmeleri
+- [x] PDF kesinleştirme/temizlik yarışı: atomik durum geçişleri, temizlik öncesi "ayırma"
+- [x] Aynı oturumun tekrarı önceki revizyon sonucunu döndürür; hata yolunda dosya silinmez
+- [x] `create_order` / `update_order` işlem anahtarı içerik özeti tamamlandı
+- [x] Rol/izin kurulumu tekrarlanabilir dosyada (`supabase/setup/roles-asama2.sql`)
+- [x] Migration sırası ve araç sorumlulukları belgelendi + `bun run db:apply-schema`
+- [x] Gerçek PDF geçerliliği (başlık + nesne + `/Root` + `startxref` + `%%EOF`)
+- [x] Liste geniş ekranı kullanır; firma gruplaması `customer_id` anahtarlı
+- [x] Yeni testler yazıldı (`tests/asama2-akis.test.mjs`, güncellenmiş `asama2-dogrulama.sql`)
+- [ ] Testler çalıştırılmadı — izole test ortamı yok
+
 ## Tamamlanma şartları (Aşama 2)
 - [x] İzin verilen akışlar gerçek kalıcı veriyle çalışır
 - [x] Migration / uygulama aynı şemayı temsil eder
