@@ -36,11 +36,45 @@ Bağlayıcı gereksinim belgesi depoda saklanır:
   davet adresini bilen ancak posta kutusuna erişemeyen kişi hesabı sahiplenemez.
 - Auth ayarında otomatik e-posta onayı (`mailer_autoconfirm`) kapatılmıştır.
 
+## Test durumu (güncel sürüm)
+
+> Bu depodaki testler **yazılmıştır, izole test ortamı olmadığı için çalıştırılmamıştır.**
+> Daha önceki sürümlerde raporlanan "geçti" sonuçları eski koda aittir ve güncel sürümün
+> doğrulaması sayılmaz. Test ortamı açıldığında sonuçlar yeniden raporlanacaktır.
+
+| Test | Kapsam | Durum |
+| --- | --- | --- |
+| `tests/asama1-guvenlik.test.mjs` | Aşama 1 yetki/denetim/eşzamanlılık | Yazıldı, çalıştırılmadı |
+| `tests/audit-rollback.sql` | Denetim yazımı başarısızsa geri alma | Yazıldı, çalıştırılmadı |
+| `tests/asama2-dogrulama.sql` | Sipariş kuralları, yeni PDF akışı, işlem anahtarı | Yazıldı, çalıştırılmadı |
+| `tests/asama2-akis.test.mjs` | Eşzamanlı kesinleştirme, temizlik yarışı, PDF geçerliliği, izinler, aynı adlı müşteriler | Yazıldı, çalıştırılmadı |
+
+## Şemanın boş test ortamına uygulanması
+
+Hangi aracın hangi geçmişi yönettiği:
+
+- `supabase/migrations/*.sql` — Aşama 1 ve Aşama 2 temel şeması; canlıda Supabase
+  migration geçmişi yönetir.
+- `drizzle/migrations/*.sql` — Aşama 2 düzeltmeleri (`0000`…); canlıda Drizzle Kit
+  journal'ı (`drizzle/migrations/meta/_journal.json`) yönetir.
+- `supabase/setup/roles-asama2.sql` — tekrarlanabilir rol/izin kurulumu (idempotent);
+  Admin varsayılan sipariş izinleri ile `orders.edit_all`, Asistan/Müdür için rol
+  varsayılanının kaldırılması. Kişisel izinlere (`user_permission_overrides`) dokunmaz.
+
+```sh
+TEST_SUPABASE_DB_URL=postgresql://... bun run db:apply-schema
+node scripts/setup-storage.mjs
+```
+
+Betik yalnızca **boş** veritabanında çalışır; `public.orders` varsa hiçbir değişiklik
+yapmadan durur (çıkış kodu 78). Mevcut ortamdaki migration'lar tekrar çalıştırılmaz.
+
 ## Güvenlik testleri
 
 Aşama 1 yetki, denetim ve eşzamanlılık senaryoları doğrudan API/veritabanı seviyesinde
 test edilir. **Testler yalnızca ayrı bir test projesinde çalışır**; gerçek proje
 hedeflendiğinde hiçbir değişiklik yapmadan durur (çıkış kodu 78).
+
 
 ```sh
 TEST_SUPABASE_URL=... \
@@ -119,14 +153,24 @@ işlem anahtarı (idempotency) ile korunur; **Grafik Hazır üretimi başlatmaz*
 ### PDF akışı (sunucu denetimli)
 
 - Yükleme: `startGraphicUpload` → yalnızca o yüklemeye ait imzalı hedef; dosya gönderilir;
-  `finalizeGraphicUpload` sunucuda gerçek boyutu, PDF imzasını ve oturum sahipliğini doğrular,
-  ardından revizyon + güncel dosya + denetim kaydı tek veritabanı işleminde oluşur.
+  `finalizeGraphicUpload` sunucuda gerçek boyutu, oturum sahipliğini ve **gerçek PDF
+  geçerliliğini** (`src/lib/pdf-validate.ts`: sürüm başlığı, nesne, `/Root`, `startxref`,
+  `%%EOF`) doğrular; ardından revizyon + güncel dosya + denetim kaydı tek veritabanı
+  işleminde oluşur.
+- Yarış koruması: oturumun durumu veritabanında atomik geçişlerle yönetilir
+  (`consumed_at`, `cleanup_claimed_at`, `cleaned_at`). Temizliğe ayrılmış veya temizlenmiş
+  oturum kesinleştirilemez; kesinleştirilmiş oturum temizliğe alınamaz.
+- Tekrar: aynı oturumun ikinci kesinleştirmesi yeni revizyon üretmez, önceki sonucu
+  `replayed: true` ile döndürür. Kesinleştirme hatasında dosya **silinmez** (yanıt kaybı
+  veya eşzamanlı istek olabilir); kaydı olmayan dosyayı yalnızca temizlik işi alır.
+  Doğrulamada (boyut/PDF) reddedilen dosya, henüz kayıt oluşmadığı için silinir.
 - Çakışma: `expected_revision` uyuşmazsa `REVIZYON_CAKISMASI` döner, önceki güncel PDF korunur
   ve kullanıcının dosyası ekranda saklanır.
 - Erişim: `graphicAccessLink` yetkiyi denetler, `graphic_asset.link_created` denetim kaydı yazar
   ve 5 dakikalık imzalı bağlantı üretir. Doğrudan depolama politikası yoktur.
-- Temizlik: `POST /api/public/grafik-temizlik` (cron gizli anahtarıyla) 60 dakikadan eski,
-  kesinleştirilmemiş yüklemeleri siler; kayıtlı revizyonlara dokunmaz.
+- Temizlik: `POST /api/public/grafik-temizlik` (cron gizli anahtarıyla) önce oturumları
+  atomik olarak temizliğe ayırır (`srv_graphic_claim_orphans`), sonra dosyaları siler.
+  Kayıtlı revizyonun dosyası hiçbir yolla silinmez.
 - Depolama kurulumu: `node scripts/setup-storage.mjs` (özel alan, 50 MB, yalnızca PDF).
 
 

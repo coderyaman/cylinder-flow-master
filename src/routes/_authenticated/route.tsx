@@ -78,7 +78,7 @@ function AppShell() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto w-full max-w-[1800px] px-4 py-8">
         <Outlet />
       </main>
     </div>

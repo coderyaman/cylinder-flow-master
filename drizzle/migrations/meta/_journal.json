@@ -29,6 +29,13 @@
       "when": 1789168887475,
       "tag": "0003_asama2_eski_pdf_rpc_kapatma",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789169604934,
+      "tag": "0004_asama2_pdf_yaris_ve_idempotency",
+      "breakpoints": true
     }
   ]
 }

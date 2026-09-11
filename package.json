@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test:security": "bun tests/asama1-guvenlik.test.mjs",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:asama2": "bun tests/asama2-akis.test.mjs",
+    "db:apply-schema": "bun scripts/apply-schema.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

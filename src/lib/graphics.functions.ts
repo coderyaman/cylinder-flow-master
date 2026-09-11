@@ -45,60 +45,73 @@ export const finalizeGraphicUpload = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { validatePdf } = await import("@/lib/pdf-validate");
 
     const { data: sess, error: sErr } = await supabaseAdmin
       .from("graphic_upload_sessions")
-      .select("id, user_id, storage_path, consumed_at")
+      .select("id, user_id, storage_path, consumed_at, cleaned_at, cleanup_claimed_at")
       .eq("id", data.sessionId)
       .maybeSingle();
     if (sErr) fail(sErr.message);
     if (!sess) fail("BULUNAMADI: Yükleme oturumu yok.");
     if (sess.user_id !== context.userId) fail("YETKISIZ: Bu yükleme oturumu size ait değil.");
-    if (sess.consumed_at) fail("OTURUM_KULLANILDI: Bu yükleme zaten kesinleştirildi.");
 
-    const cleanup = async () => {
-      await supabaseAdmin.storage.from(BUCKET).remove([sess.storage_path]);
-    };
+    // Kesinleştirilmiş oturumun tekrarı: veritabanı önceki sonucu döndürür, dosya silinmez.
+    if (!sess.consumed_at) {
+      if (sess.cleaned_at || sess.cleanup_claimed_at) {
+        fail("OTURUM_TEMIZLENDI: Bu yükleme temizliğe alındı; dosyayı yeniden yükleyin.");
+      }
 
-    const dl = await supabaseAdmin.storage.from(BUCKET).download(sess.storage_path);
-    if (dl.error || !dl.data) fail("DOSYA_GECERSIZ: Yüklenen dosya bulunamadı.");
+      const dl = await supabaseAdmin.storage.from(BUCKET).download(sess.storage_path);
+      if (dl.error || !dl.data) fail("DOSYA_GECERSIZ: Yüklenen dosya bulunamadı.");
 
-    const blob = dl.data;
-    const size = blob.size;
-    if (size <= 0 || size > MAX_BYTES) {
-      await cleanup();
-      fail("DOSYA_GECERSIZ: Dosya boş olamaz ve 50 MB sınırını aşamaz.");
+      const blob = dl.data;
+      const size = blob.size;
+
+      // Doğrulama başarısızsa yalnızca bu oturumun (henüz kaydedilmemiş) dosyası silinir.
+      const rejectAndCleanup = async (message: string): Promise<never> => {
+        await supabaseAdmin.storage.from(BUCKET).remove([sess.storage_path]);
+        fail(message);
+      };
+
+      if (size <= 0 || size > MAX_BYTES) {
+        await rejectAndCleanup("DOSYA_GECERSIZ: Dosya boş olamaz ve 50 MB sınırını aşamaz.");
+      }
+
+      const check = await validatePdf(blob);
+      if (!check.ok) await rejectAndCleanup(`DOSYA_GECERSIZ: ${check.reason}`);
+
+      let checksum: string | null = null;
+      if (size <= 10 * 1024 * 1024) {
+        const digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+        checksum = Array.from(new Uint8Array(digest))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      const { data: result, error } = await supabaseAdmin.rpc("srv_attach_graphic_revision", {
+        _actor: context.userId,
+        _session_id: data.sessionId,
+        _filename: data.filename,
+        _byte_size: size,
+        ...(checksum ? { _checksum: checksum } : {}),
+      });
+      // Kesinleştirme hatasında dosya SİLİNMEZ: eşzamanlı bir istek kaydı oluşturmuş
+      // veya yanıt kaybolmuş olabilir. Kaydı olmayan dosyayı yalnızca temizlik işi alır.
+      if (error) fail(error.message);
+
+      return result as { id: string; revision_no: number; replayed?: boolean };
     }
 
-    const head = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
-    const magic = String.fromCharCode(...head);
-    if (magic !== "%PDF-") {
-      await cleanup();
-      fail("DOSYA_GECERSIZ: Dosya geçerli bir PDF değil.");
-    }
-
-    let checksum: string | null = null;
-    if (size <= 10 * 1024 * 1024) {
-      const digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
-      checksum = Array.from(new Uint8Array(digest))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-    }
-
-    const { data: result, error } = await supabaseAdmin.rpc("srv_attach_graphic_revision", {
+    // Yanıtı kaybolmuş başarılı kesinleştirmenin tekrarı.
+    const { data: replay, error: rErr } = await supabaseAdmin.rpc("srv_attach_graphic_revision", {
       _actor: context.userId,
       _session_id: data.sessionId,
       _filename: data.filename,
-      _byte_size: size,
-      ...(checksum ? { _checksum: checksum } : {}),
+      _byte_size: 1,
     });
-    if (error) {
-      // Kesinleştirilemeyen yükleme silinir; önceki güncel PDF olduğu gibi kalır.
-      await cleanup();
-      fail(error.message);
-    }
-
-    return result as { id: string; revision_no: number };
+    if (rErr) fail(rErr.message);
+    return replay as { id: string; revision_no: number; replayed?: boolean };
   });
 
 /** Yetki denetimli, kısa ömürlü erişim bağlantısı üretir ve denetime yazar. */
