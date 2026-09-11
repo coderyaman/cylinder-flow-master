@@ -11,7 +11,9 @@
 - [x] Grafik durumu, PDF revizyonları, özel depolama, imzalı indirme
 - [x] Sunucu RPC'leri + audit aynı transaction
 - [x] Ekranlar: müşteri yönetimi, sipariş listesi/kartı, grafik paneli
-- [x] Aşama 2 testleri gerçek şema üzerinde çalıştırıldı (ASAMA2_OK, YETKI_OK)
+- [ ] Aşama 2 testleri: eski sürümde tek seferlik `ASAMA2_OK/YETKI_OK` alınmıştı; bu sonuç
+      güncel sürümün doğrulaması DEĞİLDİR. Güncel testler yazıldı, izole ortam olmadığı
+      için çalıştırılmadı.
 - [x] Uçtan uca gerçek veri akışı (müşteri → sipariş → PDF → grafik durumu) doğrulandı
 - [x] PRD ve plan depoda saklanır
 ## Aşama 2 düzeltmeleri
