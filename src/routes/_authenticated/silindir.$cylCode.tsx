@@ -255,9 +255,30 @@ function CylinderCard() {
               label="Kabul tarihi"
               value={new Date(receipt.received_on).toLocaleDateString("tr-TR")}
             />
-            <Field label="Ölçülen çevre" value={`${formatMm(receipt.measured_circumference_mm)} mm`} />
-            <Field label="Ölçülen çap" value={`${formatMm(receipt.measured_diameter_mm)} mm`} />
-            <Field label="Ölçülen boy" value={`${formatMm(receipt.measured_length_mm)} mm`} />
+            <Field
+              label="Ölçülen çevre"
+              value={
+                (receipt as any).measurements_recorded === false
+                  ? "Ölçüm kaydı yok"
+                  : `${formatMm(receipt.measured_circumference_mm)} mm`
+              }
+            />
+            <Field
+              label="Ölçülen çap"
+              value={
+                (receipt as any).measurements_recorded === false
+                  ? "Ölçüm kaydı yok"
+                  : `${formatMm(receipt.measured_diameter_mm)} mm`
+              }
+            />
+            <Field
+              label="Ölçülen boy"
+              value={
+                (receipt as any).measurements_recorded === false
+                  ? "Ölçüm kaydı yok"
+                  : `${formatMm(receipt.measured_length_mm)} mm`
+              }
+            />
             <Field label="Mil tipi" value={SHAFT_LABELS[receipt.shaft_type]} />
             <Field label="Yüzey durumu" value={SURFACE_LABELS[receipt.surface_state]} />
             <Field label="Kullanılabilirlik" value={USABILITY_LABELS[receipt.usability]} />
@@ -537,8 +558,9 @@ function LabelCard({ receipt, canPrint }: { receipt: Receipt; canPrint: boolean 
           <p className="mt-2 font-mono text-lg font-bold">{receipt.cyl_code}</p>
           <p className="text-xs text-muted-foreground">{receipt.customers?.name ?? "—"}</p>
           <p className="text-xs text-muted-foreground">
-            Ø {formatMm(receipt.measured_diameter_mm)} · Boy{" "}
-            {formatMm(receipt.measured_length_mm)} mm
+            {(receipt as any).measurements_recorded === false
+              ? "Ölçüm kaydı yok"
+              : `Ø ${formatMm(receipt.measured_diameter_mm)} · Boy ${formatMm(receipt.measured_length_mm)} mm`}
           </p>
         </div>
         <p className="text-xs text-muted-foreground">

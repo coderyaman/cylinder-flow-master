@@ -108,3 +108,21 @@
       yalnızca 2'si kuyrukta
 - [ ] Denenmedi: aynı üyenin sunucu tarafında tekrar üretime alınma reddi (arayüzde seçim kapalı;
       kural kodda var, çalıştırılmadı) ve otomatik testler (izole test ortamı hâlâ yok)
+
+## Aşama 6A — Operatör tablet ekranı, Torna ve tekil D-Krom/Sökme
+- [x] `operations` / `operation_notes` tabloları, `op_start`, `op_complete_torna`,
+      `op_complete_sokme`, `op_add_note`, `op_ack_note` RPC'leri; istasyon yetkisi, doğru üye,
+      serbest bırakılmış rota, sırası gelen adım, makine meşguliyeti ve çift başlatma kontrolü
+- [x] Operatör ekranı: Aktif İşlerim, QR Oku / Kod Gir, Yetkili İstasyon Kuyruğu,
+      Blokeli / Karar Bekleyen İşler, Bugün Yaptıklarım; genel Duraklat yok
+- [x] QR okutmak süreyi başlatmaz; Başlat anında sunucu zamanı, operatör ve makine yazılır
+- [x] Canlı test: CYL-2026-00004 D-Krom/Sökme başlatıldı ve tamamlandı → yalnızca sonraki adım
+      (Bakır Kaplama) kuyruğa girdi
+- [x] Canlı test: planlanan imalat üyesi Torna'da tamamlandı → tek gerçek kayıt CYL-2026-00010
+      oluştu, üyeye bağlandı, ölçüm kaydı yok işaretlendi, aşağı akış otomatik başlamadı
+      (ayrı "Üretime Al" kararı bekliyor)
+- [x] Arayüz düzeltmesi: tamamlanan rota adımı "Tamamlandı" gösterir; ölçümü olmayan yeni imalat
+      kaydı 0 yerine "Ölçüm kaydı yok" / sipariş nominali gösterir (rota, depo, silindir kartı)
+- [ ] Denenmedi: Bakır/Taşlama/CFM/Gravür/Krom formları (Aşama 6B) — bu istasyonlarda tanımlı
+      makine olmadığı için başlatma da denenemedi; not/uyarı/bloke akışı canlıda denenmedi;
+      otomatik testler (izole test ortamı hâlâ yok)
