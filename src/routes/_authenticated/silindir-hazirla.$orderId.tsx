@@ -370,7 +370,7 @@ function PrepareCylinders() {
                           <Button
                             size="sm"
                             variant="outline"
-                            disabled={!canManage || !!blocked || busy || !!team}
+                            disabled={!canManage || !!blocked || busy}
                             onClick={() => addExisting(c.id)}
                           >
                             Sepete ekle
