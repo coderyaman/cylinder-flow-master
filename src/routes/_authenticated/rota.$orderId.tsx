@@ -279,7 +279,11 @@ function RoutesScreen() {
                 <Badge variant={m.kind === "mevcut" ? "secondary" : "outline"}>
                   {m.kind === "mevcut" ? "Fiziksel silindir" : "Planlanan imalat"}
                 </Badge>
-                {rec && <Badge variant="outline">{SURFACE_LABELS[rec.surface_state as keyof typeof SURFACE_LABELS]}</Badge>}
+                {rec && (rec as any).measurements_recorded !== false && (
+                  <Badge variant="outline">
+                    {SURFACE_LABELS[rec.surface_state as keyof typeof SURFACE_LABELS]}
+                  </Badge>
+                )}
                 {released ? (
                   <Badge>Üretime alındı</Badge>
                 ) : (
@@ -385,7 +389,9 @@ function RoutesScreen() {
                               ? "Kuyrukta"
                               : s.status === "atlandi"
                                 ? "Atlandı"
-                                : "Planlandı"}
+                                : s.status === "tamamlandi"
+                                  ? "Tamamlandı"
+                                  : "Planlandı"}
                           </td>
                           <td className="px-2 py-1.5">
                             <input
