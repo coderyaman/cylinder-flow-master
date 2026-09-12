@@ -532,6 +532,156 @@ export type Database = {
           },
         ]
       }
+      operation_notes: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: Database["public"]["Enums"]["op_note_kind"]
+          operation_id: string | null
+          receipt_id: string | null
+          team_member_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["op_note_kind"]
+          operation_id?: string | null
+          receipt_id?: string | null
+          team_member_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["op_note_kind"]
+          operation_id?: string | null
+          receipt_id?: string | null
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_notes_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_notes_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_notes_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operations: {
+        Row: {
+          created_at: string
+          finished_at: string | null
+          finished_by: string | null
+          id: string
+          machine_id: string
+          note: string | null
+          op_label: string
+          performed_works: Database["public"]["Enums"]["op_work"][]
+          result: Database["public"]["Enums"]["op_result"] | null
+          round_no: number
+          route_step_id: string
+          skip_queue_reason: string | null
+          started_at: string
+          started_by: string | null
+          station_id: string
+          status: Database["public"]["Enums"]["op_status"]
+          team_member_id: string
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string | null
+          finished_by?: string | null
+          id?: string
+          machine_id: string
+          note?: string | null
+          op_label: string
+          performed_works?: Database["public"]["Enums"]["op_work"][]
+          result?: Database["public"]["Enums"]["op_result"] | null
+          round_no?: number
+          route_step_id: string
+          skip_queue_reason?: string | null
+          started_at?: string
+          started_by?: string | null
+          station_id: string
+          status?: Database["public"]["Enums"]["op_status"]
+          team_member_id: string
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string | null
+          finished_by?: string | null
+          id?: string
+          machine_id?: string
+          note?: string | null
+          op_label?: string
+          performed_works?: Database["public"]["Enums"]["op_work"][]
+          result?: Database["public"]["Enums"]["op_result"] | null
+          round_no?: number
+          route_step_id?: string
+          skip_queue_reason?: string | null
+          started_at?: string
+          started_by?: string | null
+          station_id?: string
+          status?: Database["public"]["Enums"]["op_status"]
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operations_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operations_route_step_id_fkey"
+            columns: ["route_step_id"]
+            isOneToOne: true
+            referencedRelation: "route_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operations_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operations_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_carts: {
         Row: {
           created_at: string
@@ -1159,6 +1309,10 @@ export type Database = {
         Args: { _current: number; _given: number }
         Returns: undefined
       }
+      assert_station_allowed: {
+        Args: { _station_id: string; _uid: string }
+        Returns: undefined
+      }
       attach_graphic_revision: {
         Args: {
           _byte_size: number
@@ -1300,6 +1454,54 @@ export type Database = {
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      op_ack_note: { Args: { _note_id: string }; Returns: undefined }
+      op_add_note: {
+        Args: {
+          _body: string
+          _kind: Database["public"]["Enums"]["op_note_kind"]
+          _operation_id: string
+        }
+        Returns: string
+      }
+      op_close_common: {
+        Args: {
+          _auto_queue: boolean
+          _note: string
+          _op_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+          _uid: string
+        }
+        Returns: Json
+      }
+      op_complete_sokme: {
+        Args: {
+          _idempotency_key?: string
+          _note?: string
+          _operation_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+        }
+        Returns: Json
+      }
+      op_complete_torna: {
+        Args: {
+          _idempotency_key?: string
+          _note?: string
+          _operation_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+          _works: Database["public"]["Enums"]["op_work"][]
+        }
+        Returns: Json
+      }
+      op_start: {
+        Args: {
+          _idempotency_key?: string
+          _machine_id: string
+          _qr_code?: string
+          _skip_queue_reason?: string
+          _step_id: string
+        }
+        Returns: Json
+      }
       receive_cylinder: {
         Args: {
           _customer_id: string
@@ -1456,6 +1658,16 @@ export type Database = {
         | "musteri_onayi"
         | "revize"
         | "grafik_hazir"
+      op_note_kind: "not" | "uyari" | "bloke"
+      op_result: "basarili" | "sorunlu"
+      op_status: "devam" | "tamamlandi" | "bloke"
+      op_work:
+        | "yeni_imalat"
+        | "cevre_dusurme"
+        | "cevre_yukseltme"
+        | "mil_cakma"
+        | "yuzuk_degisimi"
+        | "tamir"
       order_closure_status: "acik" | "iptal"
       order_priority: "normal" | "yuksek" | "acil"
       planned_op:
@@ -1637,6 +1849,17 @@ export const Constants = {
         "musteri_onayi",
         "revize",
         "grafik_hazir",
+      ],
+      op_note_kind: ["not", "uyari", "bloke"],
+      op_result: ["basarili", "sorunlu"],
+      op_status: ["devam", "tamamlandi", "bloke"],
+      op_work: [
+        "yeni_imalat",
+        "cevre_dusurme",
+        "cevre_yukseltme",
+        "mil_cakma",
+        "yuzuk_degisimi",
+        "tamir",
       ],
       order_closure_status: ["acik", "iptal"],
       order_priority: ["normal", "yuksek", "acil"],
