@@ -90,3 +90,21 @@
 - [x] Canlı doğrulama: seç → ikinci siparişte seçilemiyor → çıkar → serbest → yeniden seç →
       yeni imalatla tamamla → takım kur → yenile → üyeler korunuyor
 - [ ] Ertelendi: Aşama 4 otomatik testleri (izole test ortamı yok)
+
+## Aşama 5 — Rota önizleme, üretime alma ve istasyon kuyrukları
+- [x] Aşama 4 düzeltmesi: Tamir Bekliyor aday yalnızca "Tamir planıyla ekle" ile seçilebilir
+      (sunucuda da zorunlu); hurda/iptal/başka müşteri/başka siparişe ayrılmış engelli kalır
+- [x] Depo ve aday listesi aynı cylinder_receipts kayıtlarını kullanır; sepet sunucuda tutulduğu
+      için yenileme taslağı silmez; uygunluk sepete eklemede sunucuda tekrar kontrol edilir
+- [x] Takım ekranında "Rotaları Hazırla"; her üye için ayrı rota, kimlik/tür/yüzey/ölçü/ek işler
+- [x] Şablon önerisi (değişmez reçete değil), adım ekleme/çıkarma, atlama + zorunlu gerekçe
+- [x] Rota sürümlenir; yeni sürüm önceki bekleyen adımları superseded yapar
+- [x] "Üretime Al" (production.release): müşteri, aktif üyelik, rezervasyon, kullanılabilirlik ve
+      rota geçerliliği sunucuda kontrol; hazır olmayanlar nedeniyle raporlanır; kısmi alma mümkün
+- [x] Yalnızca ilk gerekli adım kuyruğa girer; sonraki adımlar planlı kalır
+- [x] İstasyon kuyrukları ekranı: firma, iş emri, kimlik, işlem, ek işler, öncelik, bekleme, kritik not
+- [x] Canlı test kayıtlarıyla doğrulama: rota kaydet → mevcut üyeyi üretime al → D-Krom/Sökme
+      kuyruğunda göründü → planlanan imalat üyesi Torna kuyruğuna alındı → toplam 13 adımın
+      yalnızca 2'si kuyrukta
+- [ ] Denenmedi: aynı üyenin sunucu tarafında tekrar üretime alınma reddi (arayüzde seçim kapalı;
+      kural kodda var, çalıştırılmadı) ve otomatik testler (izole test ortamı hâlâ yok)
