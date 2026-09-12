@@ -72,3 +72,21 @@
 - [x] QR okutma (kamera) + kodla arama; okutma operasyon başlatmaz
 - [x] Canlı doğrulama: kabul oluştur → tabloda bul → kartı aç → etiketi gör → aynı kodla yeniden aç
 - [ ] Ertelendi: kapsamlı sağlamlaştırma ve Aşama 3 otomatik testleri (izole test ortamı yok)
+
+## Aşama 4 — Sepet, rezervasyon ve takım
+- [x] Sipariş kartında "Silindirleri Hazırla" (team.manage yetkisiyle)
+- [x] Aynı müşteriye ait depo adayları; hedeften çevre/boy farkı açıkça gösterilir
+- [x] Başka müşteri, başka siparişe ayrılmış, üretimde, sevk, hurda, iptal ve
+      kullanılamaz/şartlı silindirler seçilemez; nedeni satırda yazar
+- [x] Sepete ekleme sunucuda rezervasyon oluşturur; aynı silindir iki siparişe ayrılamaz
+      (kısmi tekil indeks); çıkarınca rezervasyon bırakılır, geçmiş korunur
+- [x] Sepet sunucuda saklanır; sayfa yenilense de korunur
+- [x] Planlanan ek işler (çevre düşürme/yükseltme, ana kaplama, mil çakma, yüzük değişimi,
+      tamir) — yapılmış operasyon olarak kaydedilmez
+- [x] "Yeni İmalat Ekle" yalnızca planlanan ihtiyaç; CYL/QR veya depo stoğu oluşturmaz
+- [x] Gereken / seçilen / planlanan / eksik sayaçları; eksik varken takım kurulamaz
+- [x] Takım benzersiz kod alır, siparişe bağlanır, mevcut ve planlanan üyeleri ayrı gösterir
+- [x] Takım kurmak üretimi başlatmaz; üretim öncesi üye ekleme/çıkarma mümkün
+- [x] Canlı doğrulama: seç → ikinci siparişte seçilemiyor → çıkar → serbest → yeniden seç →
+      yeni imalatla tamamla → takım kur → yenile → üyeler korunuyor
+- [ ] Ertelendi: Aşama 4 otomatik testleri (izole test ortamı yok)
