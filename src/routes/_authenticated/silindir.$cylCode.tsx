@@ -255,9 +255,30 @@ function CylinderCard() {
               label="Kabul tarihi"
               value={new Date(receipt.received_on).toLocaleDateString("tr-TR")}
             />
-            <Field label="Ölçülen çevre" value={`${formatMm(receipt.measured_circumference_mm)} mm`} />
-            <Field label="Ölçülen çap" value={`${formatMm(receipt.measured_diameter_mm)} mm`} />
-            <Field label="Ölçülen boy" value={`${formatMm(receipt.measured_length_mm)} mm`} />
+            <Field
+              label="Ölçülen çevre"
+              value={
+                (receipt as any).measurements_recorded === false
+                  ? "Ölçüm kaydı yok"
+                  : `${formatMm(receipt.measured_circumference_mm)} mm`
+              }
+            />
+            <Field
+              label="Ölçülen çap"
+              value={
+                (receipt as any).measurements_recorded === false
+                  ? "Ölçüm kaydı yok"
+                  : `${formatMm(receipt.measured_diameter_mm)} mm`
+              }
+            />
+            <Field
+              label="Ölçülen boy"
+              value={
+                (receipt as any).measurements_recorded === false
+                  ? "Ölçüm kaydı yok"
+                  : `${formatMm(receipt.measured_length_mm)} mm`
+              }
+            />
             <Field label="Mil tipi" value={SHAFT_LABELS[receipt.shaft_type]} />
             <Field label="Yüzey durumu" value={SURFACE_LABELS[receipt.surface_state]} />
             <Field label="Kullanılabilirlik" value={USABILITY_LABELS[receipt.usability]} />
