@@ -99,19 +99,20 @@ function ActiveJob() {
       return;
     }
     setBusy(true);
+    const noteArg = note.trim() ? { _note: note.trim() } : {};
     const { data, error } = isTorna
       ? await supabase.rpc("op_complete_torna", {
           _operation_id: operationId,
           _result: result,
           _works: works,
-          _note: note.trim() || undefined,
           _idempotency_key: completeKey,
+          ...noteArg,
         })
       : await supabase.rpc("op_complete_sokme", {
           _operation_id: operationId,
           _result: result,
-          _note: note.trim() || undefined,
           _idempotency_key: completeKey,
+          ...noteArg,
         });
     setBusy(false);
     if (error) {
