@@ -20,6 +20,7 @@ import { Route as AuthenticatedSiparislerRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIstasyonlarRouteImport } from './routes/_authenticated/admin/istasyonlar'
 import { Route as AuthenticatedAdminKullanicilarRouteImport } from './routes/_authenticated/admin/kullanicilar'
 import { Route as AuthenticatedAdminMusterilerRouteImport } from './routes/_authenticated/admin/musteriler'
+import { Route as AuthenticatedOperatorIndexRouteImport } from './routes/_authenticated/operator/index'
 import { Route as AuthenticatedRotaOrderIdRouteImport } from './routes/_authenticated/rota.$orderId'
 import { Route as AuthenticatedSilindirHazirlaOrderIdRouteImport } from './routes/_authenticated/silindir-hazirla.$orderId'
 import { Route as AuthenticatedSilindirCylCodeRouteImport } from './routes/_authenticated/silindir.$cylCode'
@@ -83,6 +84,12 @@ const AuthenticatedAdminMusterilerRoute =
     path: '/admin/musteriler',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOperatorIndexRoute =
+  AuthenticatedOperatorIndexRouteImport.update({
+    id: '/operator/',
+    path: '/operator/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRotaOrderIdRoute =
   AuthenticatedRotaOrderIdRouteImport.update({
     id: '/rota/$orderId',
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
   '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
   '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
+  '/operator/': typeof AuthenticatedOperatorIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesByTo {
   '/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
   '/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
   '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
+  '/operator': typeof AuthenticatedOperatorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
   '/_authenticated/siparis/$orderId': typeof AuthenticatedSiparisOrderIdRoute
   '/api/public/grafik-temizlik': typeof ApiPublicGrafikTemizlikRoute
+  '/_authenticated/operator/': typeof AuthenticatedOperatorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/silindir/$cylCode'
     | '/siparis/$orderId'
     | '/api/public/grafik-temizlik'
+    | '/operator/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/silindir/$cylCode'
     | '/siparis/$orderId'
     | '/api/public/grafik-temizlik'
+    | '/operator'
   id:
     | '__root__'
     | '/'
@@ -219,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/silindir/$cylCode'
     | '/_authenticated/siparis/$orderId'
     | '/api/public/grafik-temizlik'
+    | '/_authenticated/operator/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -307,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMusterilerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/operator/': {
+      id: '/_authenticated/operator/'
+      path: '/operator'
+      fullPath: '/operator/'
+      preLoaderRoute: typeof AuthenticatedOperatorIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rota/$orderId': {
       id: '/_authenticated/rota/$orderId'
       path: '/rota/$orderId'
@@ -358,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSilindirHazirlaOrderIdRoute: typeof AuthenticatedSilindirHazirlaOrderIdRoute
   AuthenticatedSilindirCylCodeRoute: typeof AuthenticatedSilindirCylCodeRoute
   AuthenticatedSiparisOrderIdRoute: typeof AuthenticatedSiparisOrderIdRoute
+  AuthenticatedOperatorIndexRoute: typeof AuthenticatedOperatorIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -374,6 +395,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedSilindirHazirlaOrderIdRoute,
   AuthenticatedSilindirCylCodeRoute: AuthenticatedSilindirCylCodeRoute,
   AuthenticatedSiparisOrderIdRoute: AuthenticatedSiparisOrderIdRoute,
+  AuthenticatedOperatorIndexRoute: AuthenticatedOperatorIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
