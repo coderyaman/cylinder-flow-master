@@ -279,7 +279,7 @@ function RoutesScreen() {
                 <Badge variant={m.kind === "mevcut" ? "secondary" : "outline"}>
                   {m.kind === "mevcut" ? "Fiziksel silindir" : "Planlanan imalat"}
                 </Badge>
-                {rec && <Badge variant="outline">{SURFACE_LABELS[rec.surface_state]}</Badge>}
+                {rec && <Badge variant="outline">{SURFACE_LABELS[rec.surface_state as keyof typeof SURFACE_LABELS]}</Badge>}
                 {released ? (
                   <Badge>Üretime alındı</Badge>
                 ) : (
@@ -395,7 +395,7 @@ function RoutesScreen() {
                               onChange={(e) =>
                                 setDrafts((p) => {
                                   const arr = [...(p[m.id] ?? [])];
-                                  arr[i] = { ...arr[i], skipped: e.target.checked };
+                                  arr[i] = { ...arr[i]!, skipped: e.target.checked };
                                   return { ...p, [m.id]: arr };
                                 })
                               }
@@ -410,7 +410,7 @@ function RoutesScreen() {
                               onChange={(e) =>
                                 setDrafts((p) => {
                                   const arr = [...(p[m.id] ?? [])];
-                                  arr[i] = { ...arr[i], skip_reason: e.target.value };
+                                  arr[i] = { ...arr[i]!, skip_reason: e.target.value };
                                   return { ...p, [m.id]: arr };
                                 })
                               }
