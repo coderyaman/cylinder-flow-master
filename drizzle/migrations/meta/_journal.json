@@ -57,6 +57,13 @@
       "when": 1789171120966,
       "tag": "0007_asama4_sepet_rezervasyon_takim",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789250527297,
+      "tag": "0008_asama5_rota_ve_kuyruk",
+      "breakpoints": true
     }
   ]
 }

@@ -715,6 +715,101 @@ export type Database = {
           },
         ]
       }
+      route_plans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["route_plan_status"]
+          team_member_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["route_plan_status"]
+          team_member_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["route_plan_status"]
+          team_member_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_plans_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_steps: {
+        Row: {
+          created_at: string
+          id: string
+          op_label: string
+          plan_id: string
+          queued_at: string | null
+          round_no: number
+          seq: number
+          skip_reason: string | null
+          skipped: boolean
+          station_id: string
+          status: Database["public"]["Enums"]["route_step_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          op_label: string
+          plan_id: string
+          queued_at?: string | null
+          round_no?: number
+          seq: number
+          skip_reason?: string | null
+          skipped?: boolean
+          station_id: string
+          status?: Database["public"]["Enums"]["route_step_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          op_label?: string
+          plan_id?: string
+          queued_at?: string | null
+          round_no?: number
+          seq?: number
+          skip_reason?: string | null
+          skipped?: boolean
+          station_id?: string
+          status?: Database["public"]["Enums"]["route_step_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_steps_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "route_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_steps_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stations: {
         Row: {
           code: string
@@ -752,6 +847,8 @@ export type Database = {
           kind: Database["public"]["Enums"]["cart_item_kind"]
           planned_ops: Database["public"]["Enums"]["planned_op"][]
           receipt_id: string | null
+          released_at: string | null
+          released_by: string | null
           removed_at: string | null
           removed_by: string | null
           sequence_no: number
@@ -766,6 +863,8 @@ export type Database = {
           kind: Database["public"]["Enums"]["cart_item_kind"]
           planned_ops?: Database["public"]["Enums"]["planned_op"][]
           receipt_id?: string | null
+          released_at?: string | null
+          released_by?: string | null
           removed_at?: string | null
           removed_by?: string | null
           sequence_no: number
@@ -780,6 +879,8 @@ export type Database = {
           kind?: Database["public"]["Enums"]["cart_item_kind"]
           planned_ops?: Database["public"]["Enums"]["planned_op"][]
           receipt_id?: string | null
+          released_at?: string | null
+          released_by?: string | null
           removed_at?: string | null
           removed_by?: string | null
           sequence_no?: number
@@ -1204,6 +1305,20 @@ export type Database = {
         Returns: Json
       }
       record_label_print: { Args: { _receipt_id: string }; Returns: number }
+      release_to_production: {
+        Args: { _idempotency_key?: string; _member_ids: string[] }
+        Returns: Json
+      }
+      route_save_plan: {
+        Args: {
+          _idempotency_key?: string
+          _member_id: string
+          _reason?: string
+          _steps: Json
+        }
+        Returns: string
+      }
+      route_suggest: { Args: { _member_id: string }; Returns: Json }
       set_graphic_status: {
         Args: {
           _idempotency_key?: string
@@ -1338,6 +1453,8 @@ export type Database = {
         | "yuzuk_degisimi"
         | "tamir"
       reservation_status: "aktif" | "birakildi"
+      route_plan_status: "taslak" | "yururlukte" | "superseded"
+      route_step_status: "planlandi" | "kuyrukta" | "atlandi" | "superseded"
       supply_status:
         | "belirsiz"
         | "depoda_mevcut"
@@ -1513,6 +1630,8 @@ export const Constants = {
         "tamir",
       ],
       reservation_status: ["aktif", "birakildi"],
+      route_plan_status: ["taslak", "yururlukte", "superseded"],
+      route_step_status: ["planlandi", "kuyrukta", "atlandi", "superseded"],
       supply_status: [
         "belirsiz",
         "depoda_mevcut",
