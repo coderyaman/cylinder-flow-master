@@ -315,10 +315,17 @@ function OrderDetail() {
             {order.customers?.name} · sipariş {order.ordered_on} · termin {order.due_on}
           </p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {cancelled && <Badge variant="destructive">İptal edildi</Badge>}
           <Badge variant="secondary">{GRAPHIC_STATUS_LABELS[order.graphic_status]}</Badge>
           <Badge variant="outline">{SUPPLY_STATUS_LABELS[order.supply_status]}</Badge>
+          {hasPermission("team.manage") && !cancelled && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/silindir-hazirla/$orderId" params={{ orderId: order.id }}>
+                Silindirleri Hazırla
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

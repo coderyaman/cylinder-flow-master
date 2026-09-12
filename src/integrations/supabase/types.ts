@@ -71,6 +71,63 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_items: {
+        Row: {
+          cart_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: Database["public"]["Enums"]["cart_item_kind"]
+          note: string | null
+          planned_ops: Database["public"]["Enums"]["planned_op"][]
+          receipt_id: string | null
+          removed_at: string | null
+          removed_by: string | null
+          removed_reason: string | null
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["cart_item_kind"]
+          note?: string | null
+          planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          receipt_id?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["cart_item_kind"]
+          note?: string | null
+          planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          receipt_id?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "order_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       command_log: {
         Row: {
           actor_id: string | null
@@ -190,6 +247,7 @@ export type Database = {
           id: string
           label_print_count: number
           last_label_printed_at: string | null
+          lifecycle: Database["public"]["Enums"]["cyl_lifecycle"]
           measured_circumference_mm: number
           measured_diameter_mm: number
           measured_length_mm: number
@@ -215,6 +273,7 @@ export type Database = {
           id?: string
           label_print_count?: number
           last_label_printed_at?: string | null
+          lifecycle?: Database["public"]["Enums"]["cyl_lifecycle"]
           measured_circumference_mm: number
           measured_diameter_mm: number
           measured_length_mm: number
@@ -240,6 +299,7 @@ export type Database = {
           id?: string
           label_print_count?: number
           last_label_printed_at?: string | null
+          lifecycle?: Database["public"]["Enums"]["cyl_lifecycle"]
           measured_circumference_mm?: number
           measured_diameter_mm?: number
           measured_length_mm?: number
@@ -260,6 +320,67 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cylinder_reservations: {
+        Row: {
+          cart_item_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          order_id: string
+          receipt_id: string
+          release_reason: string | null
+          released_at: string | null
+          released_by: string | null
+          status: Database["public"]["Enums"]["reservation_status"]
+        }
+        Insert: {
+          cart_item_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id: string
+          receipt_id: string
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          status?: Database["public"]["Enums"]["reservation_status"]
+        }
+        Update: {
+          cart_item_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id?: string
+          receipt_id?: string
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          status?: Database["public"]["Enums"]["reservation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cylinder_reservations_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            isOneToOne: false
+            referencedRelation: "cart_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cylinder_reservations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cylinder_reservations_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
             referencedColumns: ["id"]
           },
         ]
@@ -395,6 +516,44 @@ export type Database = {
             columns: ["station_id"]
             isOneToOne: false
             referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_carts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          order_id: string
+          status: Database["public"]["Enums"]["cart_status"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id: string
+          status?: Database["public"]["Enums"]["cart_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id?: string
+          status?: Database["public"]["Enums"]["cart_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_carts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -582,6 +741,105 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      team_members: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          cart_item_id: string
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["cart_item_kind"]
+          planned_ops: Database["public"]["Enums"]["planned_op"][]
+          receipt_id: string | null
+          removed_at: string | null
+          removed_by: string | null
+          sequence_no: number
+          team_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          cart_item_id: string
+          id?: string
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["cart_item_kind"]
+          planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          receipt_id?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          sequence_no: number
+          team_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          cart_item_id?: string
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["cart_item_kind"]
+          planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          receipt_id?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          sequence_no?: number
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            isOneToOne: false
+            referencedRelation: "cart_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          order_id: string
+          team_code: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id: string
+          team_code: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id?: string
+          team_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_invites: {
         Row: {
@@ -822,6 +1080,53 @@ export type Database = {
         }
         Returns: number
       }
+      cart_add_existing: {
+        Args: {
+          _idempotency_key?: string
+          _order_id: string
+          _planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          _receipt_id: string
+        }
+        Returns: string
+      }
+      cart_add_planned: {
+        Args: {
+          _idempotency_key?: string
+          _note?: string
+          _order_id: string
+          _planned_ops?: Database["public"]["Enums"]["planned_op"][]
+        }
+        Returns: string
+      }
+      cart_ensure: {
+        Args: { _order_id: string; _uid: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          id: string
+          order_id: string
+          status: Database["public"]["Enums"]["cart_status"]
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "order_carts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cart_remove_item: {
+        Args: { _item_id: string; _reason?: string }
+        Returns: undefined
+      }
+      cart_set_item_ops: {
+        Args: {
+          _item_id: string
+          _planned_ops: Database["public"]["Enums"]["planned_op"][]
+        }
+        Returns: undefined
+      }
       claim_invite: { Args: never; Returns: Json }
       command_begin:
         | {
@@ -859,6 +1164,10 @@ export type Database = {
           _work_order_no: string
         }
         Returns: string
+      }
+      create_team: {
+        Args: { _idempotency_key?: string; _order_id: string }
+        Returns: Json
       }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
@@ -941,6 +1250,7 @@ export type Database = {
         Args: { _actor: string; _expected_revision: number; _order_id: string }
         Returns: Json
       }
+      team_sync_new_items: { Args: { _order_id: string }; Returns: number }
       update_cylinder_receipt: {
         Args: {
           _idempotency_key?: string
@@ -999,6 +1309,15 @@ export type Database = {
         | "patron"
         | "muhasebe"
         | "admin"
+      cart_item_kind: "mevcut" | "yeni_imalat"
+      cart_status: "taslak" | "takim_olusturuldu"
+      cyl_lifecycle:
+        | "depoda"
+        | "kontrol_bekliyor"
+        | "tamir_bekliyor"
+        | "uretimde"
+        | "sevk_edildi"
+        | "hurda"
       cyl_receipt_status: "kabul" | "iptal"
       cyl_shaft_type: "konik" | "silindirik" | "flansli" | "diger"
       cyl_surface_state: "temiz" | "bakirli" | "kromlu" | "asinmis" | "hasarli"
@@ -1011,6 +1330,14 @@ export type Database = {
         | "grafik_hazir"
       order_closure_status: "acik" | "iptal"
       order_priority: "normal" | "yuksek" | "acil"
+      planned_op:
+        | "cevre_dusurme"
+        | "cevre_yukseltme"
+        | "ana_kaplama"
+        | "mil_cakma"
+        | "yuzuk_degisimi"
+        | "tamir"
+      reservation_status: "aktif" | "birakildi"
       supply_status:
         | "belirsiz"
         | "depoda_mevcut"
@@ -1154,6 +1481,16 @@ export const Constants = {
         "muhasebe",
         "admin",
       ],
+      cart_item_kind: ["mevcut", "yeni_imalat"],
+      cart_status: ["taslak", "takim_olusturuldu"],
+      cyl_lifecycle: [
+        "depoda",
+        "kontrol_bekliyor",
+        "tamir_bekliyor",
+        "uretimde",
+        "sevk_edildi",
+        "hurda",
+      ],
       cyl_receipt_status: ["kabul", "iptal"],
       cyl_shaft_type: ["konik", "silindirik", "flansli", "diger"],
       cyl_surface_state: ["temiz", "bakirli", "kromlu", "asinmis", "hasarli"],
@@ -1167,6 +1504,15 @@ export const Constants = {
       ],
       order_closure_status: ["acik", "iptal"],
       order_priority: ["normal", "yuksek", "acil"],
+      planned_op: [
+        "cevre_dusurme",
+        "cevre_yukseltme",
+        "ana_kaplama",
+        "mil_cakma",
+        "yuzuk_degisimi",
+        "tamir",
+      ],
+      reservation_status: ["aktif", "birakildi"],
       supply_status: [
         "belirsiz",
         "depoda_mevcut",
