@@ -251,7 +251,11 @@ export type Database = {
           measured_circumference_mm: number
           measured_diameter_mm: number
           measured_length_mm: number
+          measurements_recorded: boolean
+          nominal_circumference_mm: number | null
+          nominal_length_mm: number | null
           note: string | null
+          origin: Database["public"]["Enums"]["cyl_origin"]
           received_on: string
           row_version: number
           shaft_type: Database["public"]["Enums"]["cyl_shaft_type"]
@@ -274,10 +278,14 @@ export type Database = {
           label_print_count?: number
           last_label_printed_at?: string | null
           lifecycle?: Database["public"]["Enums"]["cyl_lifecycle"]
-          measured_circumference_mm: number
-          measured_diameter_mm: number
-          measured_length_mm: number
+          measured_circumference_mm?: number
+          measured_diameter_mm?: number
+          measured_length_mm?: number
+          measurements_recorded?: boolean
+          nominal_circumference_mm?: number | null
+          nominal_length_mm?: number | null
           note?: string | null
+          origin?: Database["public"]["Enums"]["cyl_origin"]
           received_on?: string
           row_version?: number
           shaft_type: Database["public"]["Enums"]["cyl_shaft_type"]
@@ -303,7 +311,11 @@ export type Database = {
           measured_circumference_mm?: number
           measured_diameter_mm?: number
           measured_length_mm?: number
+          measurements_recorded?: boolean
+          nominal_circumference_mm?: number | null
+          nominal_length_mm?: number | null
           note?: string | null
+          origin?: Database["public"]["Enums"]["cyl_origin"]
           received_on?: string
           row_version?: number
           shaft_type?: Database["public"]["Enums"]["cyl_shaft_type"]
@@ -1433,6 +1445,7 @@ export type Database = {
         | "uretimde"
         | "sevk_edildi"
         | "hurda"
+      cyl_origin: "kabul" | "yeni_imalat"
       cyl_receipt_status: "kabul" | "iptal"
       cyl_shaft_type: "konik" | "silindirik" | "flansli" | "diger"
       cyl_surface_state: "temiz" | "bakirli" | "kromlu" | "asinmis" | "hasarli"
@@ -1454,7 +1467,12 @@ export type Database = {
         | "tamir"
       reservation_status: "aktif" | "birakildi"
       route_plan_status: "taslak" | "yururlukte" | "superseded"
-      route_step_status: "planlandi" | "kuyrukta" | "atlandi" | "superseded"
+      route_step_status:
+        | "planlandi"
+        | "kuyrukta"
+        | "atlandi"
+        | "superseded"
+        | "tamamlandi"
       supply_status:
         | "belirsiz"
         | "depoda_mevcut"
@@ -1608,6 +1626,7 @@ export const Constants = {
         "sevk_edildi",
         "hurda",
       ],
+      cyl_origin: ["kabul", "yeni_imalat"],
       cyl_receipt_status: ["kabul", "iptal"],
       cyl_shaft_type: ["konik", "silindirik", "flansli", "diger"],
       cyl_surface_state: ["temiz", "bakirli", "kromlu", "asinmis", "hasarli"],
@@ -1631,7 +1650,13 @@ export const Constants = {
       ],
       reservation_status: ["aktif", "birakildi"],
       route_plan_status: ["taslak", "yururlukte", "superseded"],
-      route_step_status: ["planlandi", "kuyrukta", "atlandi", "superseded"],
+      route_step_status: [
+        "planlandi",
+        "kuyrukta",
+        "atlandi",
+        "superseded",
+        "tamamlandi",
+      ],
       supply_status: [
         "belirsiz",
         "depoda_mevcut",

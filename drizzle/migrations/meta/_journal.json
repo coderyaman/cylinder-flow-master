@@ -64,6 +64,13 @@
       "when": 1789250527297,
       "tag": "0008_asama5_rota_ve_kuyruk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789251511716,
+      "tag": "0009_asama6a_hazirlik",
+      "breakpoints": true
     }
   ]
 }
