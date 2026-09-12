@@ -112,12 +112,13 @@ function JobCard() {
       return;
     }
     setBusy(true);
+    const matched = isPlanned ? null : extractCylCode(code);
     const { data, error } = await supabase.rpc("op_start", {
       _step_id: stepId,
       _machine_id: machineId,
-      _qr_code: isPlanned ? undefined : (extractCylCode(code) ?? undefined),
-      _skip_queue_reason: skipReason.trim() || undefined,
       _idempotency_key: idemKey,
+      ...(matched ? { _qr_code: matched } : {}),
+      ...(skipReason.trim() ? { _skip_queue_reason: skipReason.trim() } : {}),
     });
     setBusy(false);
     if (error) {
