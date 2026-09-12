@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -28,12 +28,12 @@ export const Route = createFileRoute("/_authenticated/operator/")({
       {
         name: "description",
         content:
-          "Aktif işleriniz, yetkili istasyon kuyruğunuz, blokeli işler ve bugün tamamladıklarınız tek dokunmatik ekranda.",
+          "Seçili istasyonun aktif işleri, kuyruğu, blokeli işleri ve bugün tamamlananları tek dokunmatik ekranda.",
       },
       { property: "og:title", content: "Operatör Ekranı — Rotagravür MES" },
       {
         property: "og:description",
-        content: "Tablet için sade operatör akışı: QR oku, makine seç, başlat, tamamla.",
+        content: "İstasyon bağlamında sade operatör akışı: QR oku, makine seç, başlat, tamamla.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -44,6 +44,8 @@ export const Route = createFileRoute("/_authenticated/operator/")({
 
 const MEMBER_SELECT =
   "kind, planned_ops, cylinder_receipts(cyl_code), teams(team_code, orders(work_order_no, name, priority, critical_note, due_on, customers(name)))";
+
+const STATION_KEY = "operator.station";
 
 function jobInfo(m: any) {
   const o = m?.teams?.orders;
@@ -67,36 +69,74 @@ function OperatorHome() {
   const [scanOpen, setScanOpen] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const [stationId, setStationId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(t);
   }, []);
 
+  const stationsQuery = useQuery({
+    queryKey: ["op-stations", isAdmin, stationIds.join(",")],
+    queryFn: async () => {
+      let q = supabase
+        .from("stations")
+        .select("id, code, name, sort_order")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (!isAdmin) q = q.in("id", stationIds.length > 0 ? stationIds : ["00000000-0000-0000-0000-000000000000"]);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const stations = useMemo(() => stationsQuery.data ?? [], [stationsQuery.data]);
+
+  useEffect(() => {
+    if (stations.length === 0) return;
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem(STATION_KEY) : null;
+    setStationId((current) => {
+      if (current && stations.some((s: any) => s.id === current)) return current;
+      if (stored && stations.some((s: any) => s.id === stored)) return stored;
+      return (stations[0] as any).id as string;
+    });
+  }, [stations]);
+
+  useEffect(() => {
+    if (stationId && typeof window !== "undefined")
+      window.localStorage.setItem(STATION_KEY, stationId);
+  }, [stationId]);
+
+  const station = stations.find((s: any) => s.id === stationId) ?? null;
+  const stationName = station?.name ?? "";
+
   const activeQuery = useQuery({
-    queryKey: ["op-active", userId],
+    queryKey: ["op-active", userId, stationId],
     refetchInterval: 30000,
+    enabled: !!userId && !!stationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("operations")
-        .select(`*, stations(code, name), machines(code, name), team_members(${MEMBER_SELECT})`)
+        .select(`*, stations(id, code, name), machines(code, name), team_members(${MEMBER_SELECT})`)
         .eq("started_by", userId!)
         .eq("status", "devam")
         .order("started_at");
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!userId,
   });
 
   const blockedQuery = useQuery({
-    queryKey: ["op-blocked"],
+    queryKey: ["op-blocked", stationId],
     refetchInterval: 60000,
+    enabled: !!stationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("operations")
         .select(`*, stations(code, name), team_members(${MEMBER_SELECT})`)
         .eq("status", "bloke")
+        .eq("station_id", stationId!)
         .order("finished_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -104,8 +144,9 @@ function OperatorHome() {
   });
 
   const queueQuery = useQuery({
-    queryKey: ["op-queue", stationIds.join(","), isAdmin],
+    queryKey: ["op-queue", stationId],
     refetchInterval: 30000,
+    enabled: !!stationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("route_steps")
@@ -113,6 +154,7 @@ function OperatorHome() {
           `id, op_label, queued_at, station_id, stations(code, name, sort_order), route_plans(team_members(${MEMBER_SELECT}))`,
         )
         .eq("status", "kuyrukta")
+        .eq("station_id", stationId!)
         .order("queued_at");
       if (error) throw error;
       const { data: started, error: e2 } = await supabase
@@ -120,14 +162,28 @@ function OperatorHome() {
         .select("route_step_id");
       if (e2) throw e2;
       const busy = new Set((started ?? []).map((o) => o.route_step_id));
-      return (data ?? [])
-        .filter((s: any) => !busy.has(s.id))
-        .filter((s: any) => isAdmin || stationIds.includes(s.station_id));
+      return (data ?? []).filter((s: any) => !busy.has(s.id));
+    },
+  });
+
+  const otherQueueQuery = useQuery({
+    queryKey: ["op-queue-other"],
+    refetchInterval: 60000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("route_steps")
+        .select(
+          "id, station_id, stations(code, name), route_plans(team_members(cylinder_receipts(cyl_code)))",
+        )
+        .eq("status", "kuyrukta");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
   const todayQuery = useQuery({
-    queryKey: ["op-today", userId],
+    queryKey: ["op-today", userId, stationId],
+    enabled: !!userId && !!stationId,
     queryFn: async () => {
       const start = new Date();
       start.setHours(0, 0, 0, 0);
@@ -135,41 +191,115 @@ function OperatorHome() {
         .from("operations")
         .select(`id, op_label, finished_at, result, stations(name), team_members(${MEMBER_SELECT})`)
         .eq("finished_by", userId!)
+        .eq("station_id", stationId!)
         .gte("finished_at", start.toISOString())
         .order("finished_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!userId,
   });
 
-  function openByCode(raw: string) {
-    const code = extractCylCode(raw) ?? raw.trim().toUpperCase();
-    const step = (queueQuery.data ?? []).find(
-      (s: any) => s.route_plans?.team_members?.cylinder_receipts?.cyl_code === code,
-    );
-    if (!step) {
-      toast.error("Bu koda ait, yetkili istasyonunuzda bekleyen bir iş bulunamadı.");
-      return;
-    }
-    setScanOpen(false);
-    navigate({ to: "/operator/is/$stepId", params: { stepId: step.id }, search: { qr: code } });
-  }
-
-  const active = activeQuery.data ?? [];
+  const allActive = activeQuery.data ?? [];
+  const active = allActive.filter((op: any) => op.station_id === stationId);
+  const otherActive = allActive.filter((op: any) => op.station_id !== stationId);
   const queue = queueQuery.data ?? [];
   const blocked = blockedQuery.data ?? [];
   const today = todayQuery.data ?? [];
 
+  function openByCode(raw: string) {
+    const code = extractCylCode(raw) ?? raw.trim().toUpperCase();
+    const step = queue.find(
+      (s: any) => s.route_plans?.team_members?.cylinder_receipts?.cyl_code === code,
+    );
+    if (step) {
+      setScanOpen(false);
+      navigate({ to: "/operator/is/$stepId", params: { stepId: step.id }, search: { qr: code } });
+      return;
+    }
+    const elsewhere = (otherQueueQuery.data ?? []).find(
+      (s: any) => s.route_plans?.team_members?.cylinder_receipts?.cyl_code === code,
+    );
+    if (!elsewhere) {
+      toast.error("Bu koda ait bekleyen bir iş bulunamadı.");
+      return;
+    }
+    const target = stations.find((s: any) => s.id === elsewhere.station_id);
+    if (target) {
+      toast.info(`Bu iş ${target.name} istasyonunda bekliyor. İstasyon değiştirildi.`);
+      setStationId(target.id);
+      setScanOpen(false);
+      return;
+    }
+    toast.error(
+      `Bu iş ${elsewhere.stations?.name ?? "başka bir"} istasyonunda bekliyor; o istasyonda yetkiniz yok.`,
+    );
+  }
+
+  if (stationsQuery.isLoading) {
+    return <p className="text-sm text-muted-foreground">Yükleniyor…</p>;
+  }
+
+  if (stations.length === 0) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Operatör Ekranı</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Size tanımlı istasyon yok. Yöneticinizden istasyon yetkisi isteyin.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Operatör Ekranı</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {stationName} — Operatör Ekranı
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Yalnızca yetkili olduğunuz istasyonlardaki işler görünür. QR okutmak süreyi başlatmaz;
-          makineyi seçip Başlat'a basmanız gerekir.
+          Bu ekrandaki tüm listeler yalnızca {stationName} istasyonuna aittir. QR okutmak süreyi
+          başlatmaz; makineyi seçip Başlat'a basmanız gerekir.
         </p>
+        {isAdmin && (
+          <Link to="/kuyruk" className="mt-2 inline-block text-sm underline">
+            Yönetim ekranına dön
+          </Link>
+        )}
       </div>
+
+      {stations.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {stations.map((s: any) => (
+            <Button
+              key={s.id}
+              type="button"
+              size="lg"
+              variant={s.id === stationId ? "default" : "outline"}
+              onClick={() => setStationId(s.id)}
+            >
+              {s.name}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {otherActive.length > 0 && (
+        <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+          Diğer istasyonda aktif işiniz var:{" "}
+          {otherActive.map((op: any, i: number) => (
+            <span key={op.id}>
+              {i > 0 && ", "}
+              <Link
+                to="/operator/aktif/$operationId"
+                params={{ operationId: op.id }}
+                className="underline"
+              >
+                {op.stations?.name}
+              </Link>
+            </span>
+          ))}
+        </div>
+      )}
 
       <Button size="lg" className="h-16 w-full text-lg" onClick={() => setScanOpen(true)}>
         QR Oku / Kod Gir
@@ -179,7 +309,7 @@ function OperatorHome() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Aktif İşlerim ({active.length})</CardTitle>
           <CardDescription>
-            Aynı anda farklı makinelerde birden fazla iş yürütebilirsiniz.
+            {stationName} istasyonunda yürüttüğünüz işler.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -199,7 +329,6 @@ function OperatorHome() {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-sm">{info.ident}</span>
-                    <Badge variant="secondary">{op.stations?.name}</Badge>
                     <Badge variant="outline">{op.machines?.name}</Badge>
                     <span className="ml-auto text-sm tabular-nums text-muted-foreground">
                       {elapsedText(op.started_at, now)}
@@ -218,7 +347,9 @@ function OperatorHome() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Yetkili İstasyon Kuyruğu ({queue.length})</CardTitle>
+          <CardTitle className="text-base">
+            {stationName} Kuyruğu ({queue.length})
+          </CardTitle>
           <CardDescription>
             En üstteki iş sıradaki önerilen iştir. Aşağıdaki bir işi alırsanız kısa gerekçe
             istenir.
@@ -227,10 +358,6 @@ function OperatorHome() {
         <CardContent className="space-y-3">
           {queueQuery.isLoading ? (
             <p className="text-sm text-muted-foreground">Yükleniyor…</p>
-          ) : !isAdmin && stationIds.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Size tanımlı istasyon yok. Yöneticinizden istasyon yetkisi isteyin.
-            </p>
           ) : queue.length === 0 ? (
             <p className="text-sm text-muted-foreground">Kuyrukta bekleyen iş yok.</p>
           ) : (
@@ -247,7 +374,6 @@ function OperatorHome() {
                   <div className="flex flex-wrap items-center gap-2">
                     {i === 0 && <Badge>Sıradaki önerilen</Badge>}
                     <span className="font-mono text-sm">{info.ident}</span>
-                    <Badge variant="secondary">{s.stations?.name}</Badge>
                     {info.priority !== "normal" && (
                       <Badge variant="destructive">
                         {info.priority === "acil" ? "Acil" : "Yüksek"}
@@ -300,7 +426,7 @@ function OperatorHome() {
                 <div key={op.id} className="rounded-lg border border-destructive/40 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-sm">{info.ident}</span>
-                    <Badge variant="destructive">{op.stations?.name}</Badge>
+                    <Badge variant="destructive">Bloke</Badge>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {info.customer} · {info.workOrder} · {info.job}
@@ -327,7 +453,6 @@ function OperatorHome() {
               return (
                 <div key={op.id} className="flex flex-wrap items-center gap-2 text-sm">
                   <span className="font-mono">{info.ident}</span>
-                  <span className="text-muted-foreground">{op.stations?.name}</span>
                   <span>{op.op_label}</span>
                   <Badge variant={op.result === "basarili" ? "secondary" : "destructive"}>
                     {op.result === "basarili" ? "Başarılı" : "Sorunlu"}
