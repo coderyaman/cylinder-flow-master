@@ -193,17 +193,28 @@ function PrepareCylinders() {
   function reasonUnavailable(c: Receipt): string | null {
     if (inCart.has(c.id)) return "Bu siparişin sepetinde";
     if (reservedBy.has(c.id)) return `Ayrılmış: #${reservedBy.get(c.id)}`;
+    if (c.lifecycle === "tamir_bekliyor") return "Tamir bekliyor — tamir planı gerekli";
     if (c.lifecycle !== "depoda") return LIFECYCLE_LABELS[c.lifecycle];
     if (c.usability !== "kullanilabilir") return USABILITY_LABELS[c.usability];
     return null;
   }
 
-  async function addExisting(receiptId: string) {
+  /** Tamir bekleyen aday, yalnızca yetkili Tamir işini planlayarak seçebilir. */
+  function repairSelectable(c: Receipt): boolean {
+    return (
+      c.lifecycle === "tamir_bekliyor" &&
+      c.status !== "iptal" &&
+      !inCart.has(c.id) &&
+      !reservedBy.has(c.id)
+    );
+  }
+
+  async function addExisting(receiptId: string, ops: PlannedOp[] = []) {
     setBusy(true);
     const { error } = await supabase.rpc("cart_add_existing", {
       _order_id: orderId,
       _receipt_id: receiptId,
-      _planned_ops: [],
+      _planned_ops: ops,
       _idempotency_key: newIdempotencyKey(),
     });
     if (!error) await supabase.rpc("team_sync_new_items", { _order_id: orderId });
@@ -367,14 +378,25 @@ function PrepareCylinders() {
                           )}
                         </td>
                         <td className="px-3 py-1.5 text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!canManage || !!blocked || busy}
-                            onClick={() => addExisting(c.id)}
-                          >
-                            Sepete ekle
-                          </Button>
+                          {repairSelectable(c) ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!canManage || busy}
+                              onClick={() => addExisting(c.id, ["tamir"])}
+                            >
+                              Tamir planıyla ekle
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={!canManage || !!blocked || busy}
+                              onClick={() => addExisting(c.id)}
+                            >
+                              Sepete ekle
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -514,9 +536,16 @@ function PrepareCylinders() {
       {team && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              Takım <span className="font-mono">{team.team_code}</span>
-            </CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-base">
+                Takım <span className="font-mono">{team.team_code}</span>
+              </CardTitle>
+              <Button asChild size="sm" variant="outline" className="ml-auto">
+                <Link to="/rota/$orderId" params={{ orderId }}>
+                  Rotaları Hazırla
+                </Link>
+              </Button>
+            </div>
             <CardDescription>
               Üretim başlamadığı sürece üyeler değiştirilebilir; değişiklikler denetim kaydında
               korunur.
