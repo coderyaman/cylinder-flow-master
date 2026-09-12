@@ -305,19 +305,23 @@ function JobCard() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="skip">Sıradaki iş yerine bu işi alıyorsanız gerekçe</Label>
-            <Textarea
-              id="skip"
-              rows={2}
-              placeholder="Örn. fiziksel silindir henüz gelmedi, usta talimatı"
-              value={skipReason}
-              onChange={(e) => setSkipReason(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Bu gerekçe rota adımını atlamaz; yalnızca kuyruk sırası değişikliğini kaydeder.
-            </p>
-          </div>
+          {!q.data?.isNext && (
+            <div className="space-y-2">
+              <Label htmlFor="skip">
+                {step.stations?.name} kuyruğunda sıradaki iş yerine bu işi alıyorsanız gerekçe
+              </Label>
+              <Textarea
+                id="skip"
+                rows={2}
+                placeholder="Örn. fiziksel silindir henüz gelmedi, usta talimatı"
+                value={skipReason}
+                onChange={(e) => setSkipReason(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Bu gerekçe rota adımını atlamaz; yalnızca kuyruk sırası değişikliğini kaydeder.
+              </p>
+            </div>
+          )}
 
           <Button
             size="lg"
