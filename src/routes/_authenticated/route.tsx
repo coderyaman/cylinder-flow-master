@@ -20,6 +20,7 @@ const NAV = [
   { to: "/panel", label: "Genel" },
   { to: "/siparisler", label: "Siparişler" },
   { to: "/depo", label: "Depo", permission: "inventory.receive" },
+  { to: "/kuyruk", label: "Kuyruklar", permission: "team.manage" },
   { to: "/admin/musteriler", label: "Müşteriler", permission: "admin.configure" },
   { to: "/admin/kullanicilar", label: "Kullanıcılar", permission: "admin.configure" },
   { to: "/admin/istasyonlar", label: "İstasyonlar", permission: "admin.configure" },
