@@ -104,13 +104,13 @@ function ActiveJob() {
           _operation_id: operationId,
           _result: result,
           _works: works,
-          _note: note.trim() || null,
+          _note: note.trim() || undefined,
           _idempotency_key: completeKey,
         })
       : await supabase.rpc("op_complete_sokme", {
           _operation_id: operationId,
           _result: result,
-          _note: note.trim() || null,
+          _note: note.trim() || undefined,
           _idempotency_key: completeKey,
         });
     setBusy(false);

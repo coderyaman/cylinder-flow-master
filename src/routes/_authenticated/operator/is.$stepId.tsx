@@ -115,8 +115,8 @@ function JobCard() {
     const { data, error } = await supabase.rpc("op_start", {
       _step_id: stepId,
       _machine_id: machineId,
-      _qr_code: isPlanned ? null : extractCylCode(code),
-      _skip_queue_reason: skipReason.trim() || null,
+      _qr_code: isPlanned ? undefined : (extractCylCode(code) ?? undefined),
+      _skip_queue_reason: skipReason.trim() || undefined,
       _idempotency_key: idemKey,
     });
     setBusy(false);
