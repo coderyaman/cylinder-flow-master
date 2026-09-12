@@ -558,8 +558,9 @@ function LabelCard({ receipt, canPrint }: { receipt: Receipt; canPrint: boolean 
           <p className="mt-2 font-mono text-lg font-bold">{receipt.cyl_code}</p>
           <p className="text-xs text-muted-foreground">{receipt.customers?.name ?? "—"}</p>
           <p className="text-xs text-muted-foreground">
-            Ø {formatMm(receipt.measured_diameter_mm)} · Boy{" "}
-            {formatMm(receipt.measured_length_mm)} mm
+            {(receipt as any).measurements_recorded === false
+              ? "Ölçüm kaydı yok"
+              : `Ø ${formatMm(receipt.measured_diameter_mm)} · Boy ${formatMm(receipt.measured_length_mm)} mm`}
           </p>
         </div>
         <p className="text-xs text-muted-foreground">
