@@ -138,7 +138,7 @@ function WarehousePage() {
       let q = supabase
         .from("cylinder_receipts")
         .select(
-          "id, cyl_code, customer_id, waybill_no, received_on, measured_circumference_mm, measured_diameter_mm, measured_length_mm, shaft_type, surface_state, usability, status, customers(name)",
+          "id, cyl_code, customer_id, waybill_no, received_on, measured_circumference_mm, measured_diameter_mm, measured_length_mm, shaft_type, surface_state, usability, status, measurements_recorded, customers(name)",
           { count: "exact" },
         );
       if (!search.iptal) q = q.eq("status", "kabul");
@@ -419,13 +419,19 @@ function WarehousePage() {
                         {r.customers?.name ?? "—"}
                       </td>
                       <td className={`${td} text-right tabular-nums`}>
-                        {formatMm(r.measured_circumference_mm)}
+                        {(r as any).measurements_recorded === false
+                          ? "—"
+                          : formatMm(r.measured_circumference_mm)}
                       </td>
                       <td className={`${td} text-right tabular-nums`}>
-                        {formatMm(r.measured_diameter_mm)}
+                        {(r as any).measurements_recorded === false
+                          ? "—"
+                          : formatMm(r.measured_diameter_mm)}
                       </td>
                       <td className={`${td} text-right tabular-nums`}>
-                        {formatMm(r.measured_length_mm)}
+                        {(r as any).measurements_recorded === false
+                          ? "—"
+                          : formatMm(r.measured_length_mm)}
                       </td>
                       <td className={td}>{SHAFT_LABELS[r.shaft_type]}</td>
                       <td className={td}>{SURFACE_LABELS[r.surface_state]}</td>
