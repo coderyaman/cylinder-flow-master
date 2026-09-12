@@ -99,7 +99,7 @@ function OperatorHome() {
     setStationId((current) => {
       if (current && stations.some((s: any) => s.id === current)) return current;
       if (stored && stations.some((s: any) => s.id === stored)) return stored;
-      return stations[0].id;
+      return (stations[0] as any).id as string;
     });
   }, [stations]);
 
