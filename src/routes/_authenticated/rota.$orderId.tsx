@@ -88,7 +88,7 @@ function RoutesScreen() {
       const { data: members, error: e2 } = await supabase
         .from("team_members")
         .select(
-          "*, cylinder_receipts(cyl_code, surface_state, measured_circumference_mm, measured_diameter_mm, measured_length_mm, lifecycle)",
+          "*, cylinder_receipts(cyl_code, surface_state, measured_circumference_mm, measured_diameter_mm, measured_length_mm, lifecycle, measurements_recorded, nominal_circumference_mm, nominal_length_mm)",
         )
         .eq("team_id", team.id)
         .eq("is_active", true)
@@ -297,9 +297,11 @@ function RoutesScreen() {
                 </span>
               </div>
               <CardDescription>
-                {rec
-                  ? `Çevre ${formatMm(rec.measured_circumference_mm)} · Çap ${formatMm(rec.measured_diameter_mm)} · Boy ${formatMm(rec.measured_length_mm)}`
-                  : "Fiziksel silindir yok; Torna tamamlanınca oluşacak."}
+                {!rec
+                  ? "Fiziksel silindir yok; Torna tamamlanınca oluşacak."
+                  : (rec as any).measurements_recorded === false
+                    ? `Ölçüm kaydı yok · Sipariş nominali: Çevre ${formatMm((rec as any).nominal_circumference_mm)} · Boy ${formatMm((rec as any).nominal_length_mm)}`
+                    : `Çevre ${formatMm(rec.measured_circumference_mm)} · Çap ${formatMm(rec.measured_diameter_mm)} · Boy ${formatMm(rec.measured_length_mm)}`}
                 {" · Planlanan ek işler: "}
                 {(m.planned_ops ?? []).length === 0
                   ? "—"
