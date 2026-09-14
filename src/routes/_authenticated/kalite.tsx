@@ -67,7 +67,7 @@ function QualityPage() {
       let query = supabase
         .from("quality_issues")
         .select(
-          "*, stations(code, name), defect_categories!quality_issues_category_code_fkey(label), cylinder_receipts(cyl_code), team_members(id, stage_no, teams(team_code, orders(work_order_no, name, customers(name))))",
+          "*, stations(code, name), defect_categories!quality_issues_category_code_fkey(label), cylinder_receipts(cyl_code), team_members(id, stage_no, is_active, teams(team_code, orders(id, customer_id, work_order_no, name, customers(name))))",
         )
         .order("requested_at", { ascending: false });
       if (!showClosed) query = query.in("status", ["acik", "bilgi_bekleniyor", "karar_verildi"]);
