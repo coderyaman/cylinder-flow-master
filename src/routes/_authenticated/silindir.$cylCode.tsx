@@ -121,7 +121,11 @@ function CylinderCard() {
 
   const ownRecord = !!receipt && receipt.created_by === userId;
   const canEdit =
-    !!receipt && receipt.status === "kabul" && canCorrect && (ownRecord || hasPermission("team.manage"));
+    !!receipt &&
+    receipt.status === "kabul" &&
+    !(receipt as any).visit_closed_at &&
+    canCorrect &&
+    (ownRecord || hasPermission("team.manage"));
 
   function startEdit() {
     if (!receipt) return;
