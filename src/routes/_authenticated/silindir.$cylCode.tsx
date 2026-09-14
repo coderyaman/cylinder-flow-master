@@ -235,6 +235,7 @@ function CylinderCard() {
         </div>
         <div className="flex flex-wrap gap-2">
           {receipt.status === "iptal" && <Badge variant="destructive">İptal edildi</Badge>}
+          {(receipt as any).visit_closed_at && <Badge variant="destructive">Sevk edildi</Badge>}
           {canEdit && !editing && (
             <Button variant="outline" onClick={startEdit}>
               Kaydı düzelt
@@ -242,6 +243,16 @@ function CylinderCard() {
           )}
         </div>
       </div>
+
+      {(receipt as any).visit_closed_at && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          Bu ziyaret sevk edilerek kapatıldı (
+          {new Date((receipt as any).visit_closed_at).toLocaleString("tr-TR")}). Bu QR ile yeni
+          işlem başlatılamaz; geçmiş kayıtlar salt okunur görünür. Aynı metal yeniden gelirse yeni
+          kabul ve yeni CYL/QR oluşturulur.
+        </div>
+      )}
+
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
