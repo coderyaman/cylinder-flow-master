@@ -146,3 +146,19 @@
       Tamamla isteği, önceki uyarı/notların sonraki istasyonda görünmesi
 - [ ] Denenmedi: kademe serbest kalması (değiştirilen üyenin atanmış kademesi yoktu)
 - [ ] İzole otomatik test ortamı hâlâ yok
+
+## Aşama 8 — Takım bazlı Prova ve son kontrol
+- [x] `proof_runs` / `proof_run_members`, takım sevk hazırlığı ve parmak izi (`0017`)
+- [x] `proof_gate`: adet, fiziksel üyelik, tamamlanmış adım, hazırlık, bloke, kademe 1…N tekilliği;
+      planlanan/çıkarılan üyeler hazır sayılmaz; uyarı bloke sayılmaz
+- [x] `proof_start` (yetki, PROVA makinesi, meşguliyet, aktif üye QR'si) ve `proof_complete`
+      (4 sonuç, idempotency, onay parmak izi, kalite olayı üretimi)
+- [x] Prova operatör ekranı `/operator/prova`: takım listesi, kapı gerekçeleri, üye tablosu,
+      PDF erişimi, makine seçimi, sonuç formu, tur geçmişi
+- [x] Canlı deneme: eksik takım başlatılamadı (gerekçeler listelendi) → hazır test takımı
+      Prova'ya alındı → Onaylandı ile Sevkiyata Hazır → üyelik değişince onay geçersiz oldu
+      → Tur 2 "Silindir Düzeltilecek" ile üye Müdür kararına düştü, sevk hazırlığı kalktı
+- [ ] Denenmedi: Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrar gönderilen Tamamla,
+      Müdür tarafında Prova kaynaklı kararın uygulanması, `proof_release_hold`
+- [ ] Not: deneme için `TEST-PROVA` makinesi eklendi; A4-TEST-1 test siparişi adedi 1'e çekildi ve
+      üretilmemiş planlanan test üyesi kapsam dışı bırakıldı (gerçek iş kaydı değiştirilmedi)

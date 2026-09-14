@@ -970,6 +970,141 @@ export type Database = {
         }
         Relationships: []
       }
+      proof_run_members: {
+        Row: {
+          created_at: string
+          flagged: boolean
+          id: string
+          quality_issue_id: string | null
+          receipt_id: string | null
+          run_id: string
+          stage_no: number | null
+          team_member_id: string
+        }
+        Insert: {
+          created_at?: string
+          flagged?: boolean
+          id?: string
+          quality_issue_id?: string | null
+          receipt_id?: string | null
+          run_id: string
+          stage_no?: number | null
+          team_member_id: string
+        }
+        Update: {
+          created_at?: string
+          flagged?: boolean
+          id?: string
+          quality_issue_id?: string | null
+          receipt_id?: string | null
+          run_id?: string
+          stage_no?: number | null
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_run_members_quality_issue_id_fkey"
+            columns: ["quality_issue_id"]
+            isOneToOne: false
+            referencedRelation: "quality_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proof_run_members_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proof_run_members_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "proof_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proof_run_members_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proof_runs: {
+        Row: {
+          category_code: string | null
+          created_at: string
+          finished_at: string | null
+          finished_by: string | null
+          id: string
+          machine_id: string
+          membership_fingerprint: string
+          note: string | null
+          result: Database["public"]["Enums"]["proof_result"] | null
+          round_no: number
+          started_at: string
+          started_by: string | null
+          status: Database["public"]["Enums"]["proof_status"]
+          team_id: string
+        }
+        Insert: {
+          category_code?: string | null
+          created_at?: string
+          finished_at?: string | null
+          finished_by?: string | null
+          id?: string
+          machine_id: string
+          membership_fingerprint: string
+          note?: string | null
+          result?: Database["public"]["Enums"]["proof_result"] | null
+          round_no: number
+          started_at?: string
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["proof_status"]
+          team_id: string
+        }
+        Update: {
+          category_code?: string | null
+          created_at?: string
+          finished_at?: string | null
+          finished_by?: string | null
+          id?: string
+          machine_id?: string
+          membership_fingerprint?: string
+          note?: string | null
+          result?: Database["public"]["Enums"]["proof_result"] | null
+          round_no?: number
+          started_at?: string
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["proof_status"]
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_runs_category_code_fkey"
+            columns: ["category_code"]
+            isOneToOne: false
+            referencedRelation: "defect_categories"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "proof_runs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proof_runs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quality_issues: {
         Row: {
           billable: boolean | null
@@ -985,6 +1120,7 @@ export type Database = {
           master_consult_note: string | null
           note_id: string | null
           operation_id: string | null
+          proof_run_id: string | null
           proposed_action: Database["public"]["Enums"]["quality_action"]
           receipt_id: string | null
           requested_at: string
@@ -1010,6 +1146,7 @@ export type Database = {
           master_consult_note?: string | null
           note_id?: string | null
           operation_id?: string | null
+          proof_run_id?: string | null
           proposed_action?: Database["public"]["Enums"]["quality_action"]
           receipt_id?: string | null
           requested_at?: string
@@ -1035,6 +1172,7 @@ export type Database = {
           master_consult_note?: string | null
           note_id?: string | null
           operation_id?: string | null
+          proof_run_id?: string | null
           proposed_action?: Database["public"]["Enums"]["quality_action"]
           receipt_id?: string | null
           requested_at?: string
@@ -1073,6 +1211,13 @@ export type Database = {
             columns: ["operation_id"]
             isOneToOne: false
             referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_issues_proof_run_id_fkey"
+            columns: ["proof_run_id"]
+            isOneToOne: false
+            referencedRelation: "proof_runs"
             referencedColumns: ["id"]
           },
           {
@@ -1360,30 +1505,52 @@ export type Database = {
       }
       teams: {
         Row: {
+          approved_run_id: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
           created_at: string
           created_by: string | null
           id: string
           order_id: string
           proof_queued_at: string | null
+          shipment_ready_at: string | null
+          shipment_ready_fingerprint: string | null
           team_code: string
         }
         Insert: {
+          approved_run_id?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           order_id: string
           proof_queued_at?: string | null
+          shipment_ready_at?: string | null
+          shipment_ready_fingerprint?: string | null
           team_code: string
         }
         Update: {
+          approved_run_id?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           order_id?: string
           proof_queued_at?: string | null
+          shipment_ready_at?: string | null
+          shipment_ready_fingerprint?: string | null
           team_code?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "teams_approved_run_id_fkey"
+            columns: ["approved_run_id"]
+            isOneToOne: false
+            referencedRelation: "proof_runs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "teams_order_id_fkey"
             columns: ["order_id"]
@@ -1880,6 +2047,31 @@ export type Database = {
         }
         Returns: Json
       }
+      proof_complete: {
+        Args: {
+          _category_code?: string
+          _idempotency_key?: string
+          _member_ids?: string[]
+          _note?: string
+          _result: Database["public"]["Enums"]["proof_result"]
+          _run_id: string
+        }
+        Returns: Json
+      }
+      proof_gate: { Args: { _team_id: string }; Returns: Json }
+      proof_release_hold: {
+        Args: { _idempotency_key?: string; _reason: string; _team_id: string }
+        Returns: Json
+      }
+      proof_start: {
+        Args: {
+          _idempotency_key?: string
+          _machine_id: string
+          _qr_code?: string
+          _team_id: string
+        }
+        Returns: Json
+      }
       quality_decide: {
         Args: {
           _decision: Database["public"]["Enums"]["quality_decision"]
@@ -2003,6 +2195,11 @@ export type Database = {
         Args: { _actor: string; _operation_id: string }
         Returns: Json
       }
+      srv_team_graphic: {
+        Args: { _actor: string; _team_id: string }
+        Returns: Json
+      }
+      team_proof_fingerprint: { Args: { _team_id: string }; Returns: string }
       team_replace_member: {
         Args: {
           _idempotency_key?: string
@@ -2119,6 +2316,12 @@ export type Database = {
         | "mil_cakma"
         | "yuzuk_degisimi"
         | "tamir"
+      proof_result:
+        | "onaylandi"
+        | "tekrar_prova"
+        | "silindir_duzeltilecek"
+        | "takim_yeniden"
+      proof_status: "devam" | "tamamlandi"
       quality_action:
         | "yeniden_kontrol"
         | "tekrar_islem"
@@ -2337,6 +2540,13 @@ export const Constants = {
         "yuzuk_degisimi",
         "tamir",
       ],
+      proof_result: [
+        "onaylandi",
+        "tekrar_prova",
+        "silindir_duzeltilecek",
+        "takim_yeniden",
+      ],
+      proof_status: ["devam", "tamamlandi"],
       quality_action: [
         "yeniden_kontrol",
         "tekrar_islem",
