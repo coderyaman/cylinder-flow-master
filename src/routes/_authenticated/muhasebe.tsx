@@ -83,10 +83,19 @@ function AccountingScreen() {
       const { data, error } = await supabase
         .from("accounting_packages")
         .select(
-          "id, order_id, trigger, status, needs_review, created_at, processed_at, processed_by, shipment_id, orders(work_order_no, name, quantity, shipped_at, cancelled_at, closure_status, customers(name)), profiles:processed_by(full_name)",
+          "id, order_id, trigger, status, needs_review, created_at, processed_at, processed_by, shipment_id, orders(work_order_no, name, quantity, shipped_at, cancelled_at, closure_status, customers(name)) ",
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
+      const userIds = [...new Set((data ?? []).map((p: any) => p.processed_by).filter(Boolean))];
+      const names = new Map<string, string>();
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", userIds as string[]);
+        for (const pr of profs ?? []) names.set(pr.id, pr.full_name);
+      }
       return (data ?? []).map((p: any): PackageRow => {
         const o = p.orders ?? {};
         return {
@@ -97,7 +106,7 @@ function AccountingScreen() {
           needs_review: p.needs_review,
           created_at: p.created_at,
           processed_at: p.processed_at,
-          processed_by_name: p.profiles?.full_name ?? null,
+          processed_by_name: names.get(p.processed_by) ?? null,
           work_order_no: o.work_order_no ?? "—",
           order_name: o.name ?? "—",
           customer: o.customers?.name ?? "—",
