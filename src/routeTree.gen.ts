@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedArsivRouteImport } from './routes/_authenticated/arsiv'
 import { Route as AuthenticatedDepoRouteImport } from './routes/_authenticated/depo'
 import { Route as AuthenticatedKaliteRouteImport } from './routes/_authenticated/kalite'
 import { Route as AuthenticatedKayitlarRouteImport } from './routes/_authenticated/kayitlar'
@@ -45,6 +46,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedArsivRoute = AuthenticatedArsivRouteImport.update({
+  id: '/arsiv',
+  path: '/arsiv',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDepoRoute = AuthenticatedDepoRouteImport.update({
   id: '/depo',
@@ -156,6 +162,7 @@ const AuthenticatedOperatorIsStepIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/arsiv': typeof AuthenticatedArsivRoute
   '/depo': typeof AuthenticatedDepoRoute
   '/kalite': typeof AuthenticatedKaliteRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/arsiv': typeof AuthenticatedArsivRoute
   '/depo': typeof AuthenticatedDepoRoute
   '/kalite': typeof AuthenticatedKaliteRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/arsiv': typeof AuthenticatedArsivRoute
   '/_authenticated/depo': typeof AuthenticatedDepoRoute
   '/_authenticated/kalite': typeof AuthenticatedKaliteRoute
   '/_authenticated/kayitlar': typeof AuthenticatedKayitlarRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/arsiv'
     | '/depo'
     | '/kalite'
     | '/kayitlar'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/arsiv'
     | '/depo'
     | '/kalite'
     | '/kayitlar'
@@ -276,6 +287,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/arsiv'
     | '/_authenticated/depo'
     | '/_authenticated/kalite'
     | '/_authenticated/kayitlar'
@@ -326,6 +338,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/arsiv': {
+      id: '/_authenticated/arsiv'
+      path: '/arsiv'
+      fullPath: '/arsiv'
+      preLoaderRoute: typeof AuthenticatedArsivRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/depo': {
       id: '/_authenticated/depo'
@@ -464,6 +483,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedArsivRoute: typeof AuthenticatedArsivRoute
   AuthenticatedDepoRoute: typeof AuthenticatedDepoRoute
   AuthenticatedKaliteRoute: typeof AuthenticatedKaliteRoute
   AuthenticatedKayitlarRoute: typeof AuthenticatedKayitlarRoute
@@ -485,6 +505,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedArsivRoute: AuthenticatedArsivRoute,
   AuthenticatedDepoRoute: AuthenticatedDepoRoute,
   AuthenticatedKaliteRoute: AuthenticatedKaliteRoute,
   AuthenticatedKayitlarRoute: AuthenticatedKayitlarRoute,
