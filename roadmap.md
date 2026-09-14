@@ -126,3 +126,23 @@
 - [ ] Denenmedi: Bakır/Taşlama/CFM/Gravür/Krom formları (Aşama 6B) — bu istasyonlarda tanımlı
       makine olmadığı için başlatma da denenemedi; not/uyarı/bloke akışı canlıda denenmedi;
       otomatik testler (izole test ortamı hâlâ yok)
+
+## Aşama 7 — Kalite bildirimi, karar, rework ve silindir değiştirme
+- [x] Parça 1: uyarı/bloke ayrımı, operatör önerisi, usta danışma notu, Kalite/Karar Bekleyenler
+      ekranı, yönetici kararı (devam / rework / silindir değişimi / red-ek bilgi), makine işgali
+- [x] Parça 2 (migration 0016): `rework_suggest` / `rework_approve` / `team_replace_member`
+- [x] Canlı test: blokeli silindirde yeni operasyon başlatma reddedildi ("BLOKE")
+- [x] Canlı test: rework onayı → tur 2 rotası, yalnızca Bakır kuyrukta, eski plan/adımlar
+      superseded, önceki 3 operasyon ve süreleri korundu; ikinci onay `already_applied`
+- [x] Canlı test: iç hata → "Ücretsiz"; red kararı blokeyi kaldırmadı (operasyon bloke kaldı,
+      sorumluluk bilinmiyor, faturalandırma boş)
+- [x] Canlı test: başka siparişe ayrılmış silindir reddedildi ("REZERVE"); yeni imalat ile üye
+      değişimi → eski üye pasif (neden + yerine geçen üye), eski silindir Tamir Bekliyor/şartlı
+      olarak depoda, rezervasyon bırakıldı, açık rota kalmadı, yeni üye ayrı Üretime Al bekliyor,
+      prova sayacı 1/2
+- [ ] Denenmedi: Gravür hatasında doğrudan Gravür'e dönüş reddi ve Sökme'den başlayan yeniden
+      hazırlama döngüsü (canlıda Gravür kaynaklı bloke oluşturulmadı)
+- [ ] Denenmedi (6B'den devam): aynı kademenin iki üyeye atanmasının reddi, tekrar gönderilen
+      Tamamla isteği, önceki uyarı/notların sonraki istasyonda görünmesi
+- [ ] Denenmedi: kademe serbest kalması (değiştirilen üyenin atanmış kademesi yoktu)
+- [ ] İzole otomatik test ortamı hâlâ yok
