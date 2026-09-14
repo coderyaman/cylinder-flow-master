@@ -316,12 +316,13 @@ function TeamProof({
       toast.error("En az bir aktif üye seçilmelidir.");
       return;
     }
+    if (!activeRun) return;
     setBusy(true);
     const { data, error } = await supabase.rpc("proof_complete", {
-      _run_id: activeRun.id,
+      _run_id: activeRun.id as string,
       _result: result,
-      _note: note.trim() || undefined,
-      _category_code: result === "onaylandi" ? undefined : category,
+      ...(note.trim() ? { _note: note.trim() } : {}),
+      ...(result === "onaylandi" ? {} : { _category_code: category }),
       _member_ids: result === "silindir_duzeltilecek" ? picked : [],
       _idempotency_key: completeKey,
     });
