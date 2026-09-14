@@ -14,13 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_overrides: {
+        Row: {
+          billing: Database["public"]["Enums"]["billing_class"]
+          created_at: string
+          created_by: string | null
+          id: string
+          item_kind: string
+          order_id: string
+          reason: string
+          ref_id: string
+        }
+        Insert: {
+          billing: Database["public"]["Enums"]["billing_class"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_kind: string
+          order_id: string
+          reason: string
+          ref_id: string
+        }
+        Update: {
+          billing?: Database["public"]["Enums"]["billing_class"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_kind?: string
+          order_id?: string
+          reason?: string
+          ref_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_overrides_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounting_packages: {
         Row: {
           created_at: string
           id: string
+          last_fingerprint: string | null
+          needs_review: boolean
           order_id: string
           processed_at: string | null
           processed_by: string | null
+          review_reason: string | null
           shipment_id: string | null
           status: Database["public"]["Enums"]["accounting_status"]
           trigger: string
@@ -28,9 +72,12 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          last_fingerprint?: string | null
+          needs_review?: boolean
           order_id: string
           processed_at?: string | null
           processed_by?: string | null
+          review_reason?: string | null
           shipment_id?: string | null
           status?: Database["public"]["Enums"]["accounting_status"]
           trigger: string
@@ -38,9 +85,12 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          last_fingerprint?: string | null
+          needs_review?: boolean
           order_id?: string
           processed_at?: string | null
           processed_by?: string | null
+          review_reason?: string | null
           shipment_id?: string | null
           status?: Database["public"]["Enums"]["accounting_status"]
           trigger?: string
@@ -58,6 +108,54 @@ export type Database = {
             columns: ["shipment_id"]
             isOneToOne: false
             referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_processings: {
+        Row: {
+          fingerprint: string
+          id: string
+          item_count: number
+          order_id: string
+          package_id: string
+          processed_at: string
+          processed_by: string | null
+          snapshot: Json
+        }
+        Insert: {
+          fingerprint: string
+          id?: string
+          item_count: number
+          order_id: string
+          package_id: string
+          processed_at?: string
+          processed_by?: string | null
+          snapshot: Json
+        }
+        Update: {
+          fingerprint?: string
+          id?: string
+          item_count?: number
+          order_id?: string
+          package_id?: string
+          processed_at?: string
+          processed_by?: string | null
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_processings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_processings_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_packages"
             referencedColumns: ["id"]
           },
         ]
@@ -116,6 +214,30 @@ export type Database = {
           new_value?: Json | null
           old_value?: Json | null
           reason?: string | null
+        }
+        Relationships: []
+      }
+      billing_rules: {
+        Row: {
+          default_billing: Database["public"]["Enums"]["billing_class"]
+          label: string
+          station_code: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          default_billing?: Database["public"]["Enums"]["billing_class"]
+          label: string
+          station_code: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          default_billing?: Database["public"]["Enums"]["billing_class"]
+          label?: string
+          station_code?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1868,6 +1990,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accounting_items: { Args: { _order_id: string }; Returns: Json }
+      accounting_process: {
+        Args: { _idempotency_key?: string; _note?: string; _order_id: string }
+        Returns: string
+      }
+      accounting_set_billing: {
+        Args: {
+          _billing: Database["public"]["Enums"]["billing_class"]
+          _idempotency_key?: string
+          _item_kind: string
+          _order_id: string
+          _reason: string
+          _ref_id: string
+        }
+        Returns: string
+      }
       admin_create_customer: { Args: { _name: string }; Returns: string }
       admin_create_machine: {
         Args: { _code: string; _name: string; _station_id: string }
@@ -2465,6 +2603,10 @@ export type Database = {
         | "cevre_yukseltme"
         | "cevre_dusurme"
         | "nokta_tamiri"
+      billing_class:
+        | "faturalandirilabilir"
+        | "faturalandirilmayacak"
+        | "karar_bekliyor"
       cart_item_kind: "mevcut" | "yeni_imalat"
       cart_status: "taslak" | "takim_olusturuldu"
       cyl_lifecycle:
@@ -2685,6 +2827,11 @@ export const Constants = {
         "cevre_yukseltme",
         "cevre_dusurme",
         "nokta_tamiri",
+      ],
+      billing_class: [
+        "faturalandirilabilir",
+        "faturalandirilmayacak",
+        "karar_bekliyor",
       ],
       cart_item_kind: ["mevcut", "yeni_imalat"],
       cart_status: ["taslak", "takim_olusturuldu"],
