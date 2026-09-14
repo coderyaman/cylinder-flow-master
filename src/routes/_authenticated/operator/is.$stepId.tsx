@@ -100,6 +100,20 @@ function JobCard() {
       );
       const pending = (stationQueue ?? []).filter((s) => !startedIds.has(s.id));
       const isNext = pending.length === 0 || pending[0]?.id === stepId;
+
+      // Gravür kapısı: siparişin erişilebilir güncel PDF'i olmadan başlatılamaz.
+      const orderId = (step as any)?.route_plans?.team_members?.teams?.orders?.id;
+      const isGravur = (step as any)?.stations?.code === "GRAVUR";
+      const { data: asset } =
+        isGravur && orderId
+          ? await supabase
+              .from("graphic_assets")
+              .select("id, revision_no")
+              .eq("order_id", orderId)
+              .eq("is_current", true)
+              .maybeSingle()
+          : { data: null };
+
       return {
         step,
         machines: machines ?? [],
@@ -107,6 +121,8 @@ function JobCard() {
         notes: notes ?? [],
         existing,
         isNext,
+        isGravur,
+        asset,
       };
     },
   });
@@ -116,6 +132,18 @@ function JobCard() {
   const receipt = member?.cylinder_receipts;
   const order = member?.teams?.orders;
   const isPlanned = member?.kind === "yeni_imalat" && !receipt;
+
+  // Gravür'de PDF ve kademe zorunludur; kontrol sunucuda da tekrarlanır.
+  const gravurBlock: string | null = !q.data?.isGravur
+    ? null
+    : !receipt
+      ? "Gravür yalnızca imal edilmiş fiziksel silindirde başlatılır."
+      : member?.stage_no == null
+        ? "Kademe atanmadan Gravür başlatılamaz."
+        : !q.data?.asset
+          ? "Bu siparişin erişilebilir güncel grafik PDF'i yok; Gravür başlatılamaz."
+          : null;
+
 
   async function start() {
     if (!machineId) {
@@ -323,10 +351,16 @@ function JobCard() {
             </div>
           )}
 
+          {gravurBlock && (
+            <p className="rounded-md border border-destructive/40 p-3 text-sm font-medium text-destructive">
+              {gravurBlock}
+            </p>
+          )}
+
           <Button
             size="lg"
             className="h-16 w-full text-lg"
-            disabled={!canStart || busy}
+            disabled={!canStart || busy || !!gravurBlock}
             onClick={start}
           >
             {busy ? "Başlatılıyor…" : "Başlat"}
