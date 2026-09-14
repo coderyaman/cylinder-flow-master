@@ -479,6 +479,241 @@ function IssueDetail({
   );
 }
 
+/** Onaylı rework: hedef işlemler, yeni rota ve dönüş noktası önizlenir, sonra onaylanır. */
+function ReworkPanel({ issue, onDone }: { issue: any; onDone: () => Promise<void> }) {
+  const [preview, setPreview] = useState<any | null>(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [key] = useState(() => newIdempotencyKey());
+
+  async function load() {
+    setBusy(true);
+    const { data, error } = await supabase.rpc("rework_suggest", { _issue_id: issue.id });
+    setBusy(false);
+    if (error) return void toast.error(opErrorText(error.message));
+    setPreview(data);
+  }
+
+  async function approve() {
+    if (!preview) return;
+    setBusy(true);
+    const { data, error } = await supabase.rpc("rework_approve", {
+      _issue_id: issue.id,
+      _steps: preview.steps,
+      _reason: reason.trim() || null,
+      _idempotency_key: key,
+    });
+    setBusy(false);
+    if (error) return void toast.error(opErrorText(error.message));
+    const r = data as any;
+    toast.success(
+      r?.already_applied
+        ? "Bu karar için rework turu zaten açılmış; ikinci tur oluşturulmadı."
+        : `Rework turu ${r?.round_no} açıldı; yalnızca ilk adım kuyruğa girdi.`,
+    );
+    await onDone();
+  }
+
+  return (
+    <div className="space-y-3 rounded-md border border-border p-3">
+      <p className="font-medium">Onaylı rework yürütme</p>
+      <p className="text-xs text-muted-foreground">
+        Önizleme üretimi başlatmaz. Onay yeni bir operasyon turu açar; eski işlemler, ölçümler,
+        süreler ve işçilikler korunur, eski bekleyen adımlar kapanır.
+      </p>
+      <Button variant="outline" disabled={busy} onClick={load}>
+        Rework rotasını önizle
+      </Button>
+
+      {preview && (
+        <div className="space-y-2">
+          <p className="text-sm">
+            Tespit: <strong>{preview.detected_station}</strong> · Başlangıç:{" "}
+            <strong>{preview.start_station}</strong> · Normal akışa dönüş:{" "}
+            <strong>{preview.return_point ?? "—"}</strong> ·{" "}
+            {billableText(preview.billable)}
+          </p>
+          {preview.gravure_loop && (
+            <p className="text-xs text-muted-foreground">
+              Gravür hatasında doğrudan Gravür'e dönülmez; yeniden hazırlama döngüsü uygulanır.
+            </p>
+          )}
+          <table className="w-full text-sm">
+            <thead className="border-y bg-muted/50 text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-2 py-1 text-left">Sıra</th>
+                <th className="px-2 py-1 text-left">İstasyon</th>
+                <th className="px-2 py-1 text-left">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(preview.steps ?? []).map((s: any) => (
+                <tr key={s.seq} className="border-b last:border-0">
+                  <td className="px-2 py-1">{s.seq}</td>
+                  <td className="px-2 py-1">{s.station_name}</td>
+                  <td className="px-2 py-1">{s.op_label}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="space-y-2">
+            <Label htmlFor="rework-gerekce">Onay notu (isteğe bağlı)</Label>
+            <Textarea
+              id="rework-gerekce"
+              rows={2}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </div>
+          <Button disabled={busy} onClick={approve}>
+            Rework turunu onayla ve kuyruğa al
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Silindir değiştirme: eski üyelik geçmişiyle kapanır, yeni üye üretime alınmayı bekler. */
+function ReplacePanel({ issue, onDone }: { issue: any; onDone: () => Promise<void> }) {
+  const order = issue.team_members?.teams?.orders;
+  const [mode, setMode] = useState<"mevcut" | "yeni_imalat">("mevcut");
+  const [receiptId, setReceiptId] = useState("");
+  const [reason, setReason] = useState("");
+  const [lifecycle, setLifecycle] = useState<CylLifecycle>("kontrol_bekliyor");
+  const [ops, setOps] = useState<PlannedOp[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [key] = useState(() => newIdempotencyKey());
+
+  const candidates = useQuery({
+    queryKey: ["replace-candidates", order?.customer_id],
+    enabled: !!order?.customer_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cylinder_receipts")
+        .select("id, cyl_code, lifecycle, usability, surface_state")
+        .eq("customer_id", order.customer_id)
+        .eq("status", "kabul")
+        .in("lifecycle", ["depoda", "tamir_bekliyor"])
+        .order("cyl_code");
+      if (error) throw error;
+      const ids = (data ?? []).map((r) => r.id);
+      const { data: res } = ids.length
+        ? await supabase
+            .from("cylinder_reservations")
+            .select("receipt_id")
+            .in("receipt_id", ids)
+            .eq("status", "aktif")
+        : { data: [] as any[] };
+      const taken = new Set((res ?? []).map((r: any) => r.receipt_id));
+      return (data ?? []).filter((r) => !taken.has(r.id));
+    },
+  });
+
+  async function replace() {
+    if (!reason.trim()) return void toast.error("Çıkarılma nedeni zorunludur.");
+    if (mode === "mevcut" && !receiptId) return void toast.error("Yeni aday silindiri seçin.");
+    setBusy(true);
+    const { data, error } = await supabase.rpc("team_replace_member", {
+      _member_id: issue.team_member_id,
+      _reason: reason.trim(),
+      _replacement_receipt_id: mode === "mevcut" ? receiptId : null,
+      _planned_ops: ops,
+      _old_lifecycle: lifecycle,
+      _issue_id: issue.id,
+      _idempotency_key: key,
+    });
+    setBusy(false);
+    if (error) return void toast.error(teamErrorText(error.message));
+    const r = data as any;
+    toast.success(
+      `Üye değiştirildi. Prova hazırlığı ${r?.ready}/${r?.active_members}. Yeni üye için rota hazırlayıp ayrıca Üretime Al kararı verin.`,
+    );
+    await onDone();
+  }
+
+  return (
+    <div className="space-y-3 rounded-md border border-border p-3">
+      <p className="font-medium">Silindir değiştirme</p>
+      <p className="text-xs text-muted-foreground">
+        Eski üyenin geçmişi korunur; eski silindir gerçek fiziksel durumuyla depoda kalır ve
+        otomatik olarak başka siparişe açılmaz. Yeni üyeye eski ölçüm veya kademe aktarılmaz.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="mod">Yerine ne gelecek?</Label>
+          <select
+            id="mod"
+            className="h-10 w-full rounded-md border border-input bg-background px-3"
+            value={mode}
+            onChange={(e) => setMode(e.target.value as "mevcut" | "yeni_imalat")}
+          >
+            <option value="mevcut">Aynı müşteriden mevcut silindir</option>
+            <option value="yeni_imalat">Yeni imalat ihtiyacı</option>
+          </select>
+        </div>
+        {mode === "mevcut" && (
+          <div className="space-y-2">
+            <Label htmlFor="aday">Aday silindir</Label>
+            <select
+              id="aday"
+              className="h-10 w-full rounded-md border border-input bg-background px-3"
+              value={receiptId}
+              onChange={(e) => setReceiptId(e.target.value)}
+            >
+              <option value="">Seçin…</option>
+              {(candidates.data ?? []).map((c: any) => (
+                <option key={c.id} value={c.id}>
+                  {c.cyl_code} · {LIFECYCLE_LABELS[c.lifecycle as CylLifecycle]}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="space-y-2">
+          <Label htmlFor="eski-durum">Eski silindirin fiziksel durumu</Label>
+          <select
+            id="eski-durum"
+            className="h-10 w-full rounded-md border border-input bg-background px-3"
+            value={lifecycle}
+            onChange={(e) => setLifecycle(e.target.value as CylLifecycle)}
+          >
+            <option value="kontrol_bekliyor">Kontrol bekliyor</option>
+            <option value="tamir_bekliyor">Tamir bekliyor</option>
+            <option value="hurda">Hurda</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {PLANNED_OPS.map((o) => (
+          <label key={o} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={ops.includes(o)}
+              onChange={(e) =>
+                setOps((p) => (e.target.checked ? [...p, o] : p.filter((x) => x !== o)))
+              }
+            />
+            {PLANNED_OP_LABELS[o]}
+          </label>
+        ))}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="cikarma-nedeni">Çıkarılma nedeni (zorunlu)</Label>
+        <Textarea
+          id="cikarma-nedeni"
+          rows={2}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        />
+      </div>
+      <Button disabled={busy} onClick={replace}>
+        Üyeyi değiştir
+      </Button>
+    </div>
+  );
+}
+
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
