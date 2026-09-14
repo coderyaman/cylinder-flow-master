@@ -750,7 +750,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return (
     <div>
       <p className="text-xs uppercase text-muted-foreground">{label}</p>
-      <p>{children}</p>
+      <div>{children}</div>
     </div>
   );
 }
