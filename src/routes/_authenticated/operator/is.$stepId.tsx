@@ -145,6 +145,22 @@ function JobCard() {
           : null;
 
 
+  const openWarnings = (q.data?.notes ?? []).filter(
+    (n: any) => n.kind === "uyari" && !n.acknowledged_at,
+  );
+
+  async function ack(noteId: string) {
+    setBusy(true);
+    const { error } = await supabase.rpc("op_ack_note", { _note_id: noteId });
+    setBusy(false);
+    if (error) {
+      toast.error(opErrorText(error.message));
+      return;
+    }
+    toast.success("Uyarı kontrol edildi olarak kapatıldı.");
+    await q.refetch();
+  }
+
   async function start() {
     if (!machineId) {
       toast.error("Makine seçin.");
@@ -261,6 +277,39 @@ function JobCard() {
         </CardContent>
       </Card>
 
+      {openWarnings.length > 0 && (
+        <Card className="border-destructive/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-destructive">
+              Önceki istasyondan açık uyarı ({openWarnings.length})
+            </CardTitle>
+            <CardDescription>
+              Uyarı üretimi durdurmaz; okuduktan sonra "Kontrol Edildi" ile kapatın. Geçmiş korunur.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {openWarnings.map((n: any) => (
+              <div key={n.id} className="flex flex-wrap items-center gap-2">
+                <Badge variant="destructive">Uyarı</Badge>
+                <span>{n.body}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(n.created_at).toLocaleString("tr-TR")}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto"
+                  disabled={busy}
+                  onClick={() => ack(n.id)}
+                >
+                  Kontrol Edildi
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {(q.data?.notes ?? []).length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -268,11 +317,14 @@ function JobCard() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {q.data!.notes.map((n: any) => (
-              <div key={n.id} className="flex gap-2">
+              <div key={n.id} className="flex flex-wrap gap-2">
                 <Badge variant={n.kind === "not" ? "secondary" : "destructive"}>
                   {OP_NOTE_LABELS[n.kind as never]}
                 </Badge>
                 <span>{n.body}</span>
+                {n.kind === "uyari" && n.acknowledged_at && (
+                  <Badge variant="outline">Kontrol edildi</Badge>
+                )}
               </div>
             ))}
           </CardContent>

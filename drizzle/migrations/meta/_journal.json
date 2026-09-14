@@ -92,6 +92,27 @@
       "when": 1789384814824,
       "tag": "0012_gravur_grafik_yetki_duzeltmesi",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789385294675,
+      "tag": "0013_asama7_parca1_kalite_bildirimi_ve_karar",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789385925767,
+      "tag": "0014_asama7_uyari_kapanisi",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789385978360,
+      "tag": "0015_asama7_devam_karari_operasyonu_surdurur",
+      "breakpoints": true
     }
   ]
 }
