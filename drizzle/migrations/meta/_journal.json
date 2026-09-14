@@ -162,6 +162,13 @@
       "when": 1789418889489,
       "tag": "0022_rota_kaydinda_tamamlanan_adim_korumasi",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789419073277,
+      "tag": "0023_prova_kaynakli_rework_rotasi",
+      "breakpoints": true
     }
   ]
 }
