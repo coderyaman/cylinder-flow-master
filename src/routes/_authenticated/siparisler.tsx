@@ -160,6 +160,8 @@ function OrdersPage() {
         );
 
       if (!search.iptal) query = query.neq("closure_status", "iptal");
+      // Sevk edilen siparişler aktif listeden çıkar; kayıtlar Arşiv'de okunur kalır.
+      query = query.is("shipped_at", null);
       if (search.firma) query = query.eq("customer_id", search.firma);
       if (search.grafik) query = query.eq("graphic_status", search.grafik as GraphicStatus);
       if (search.tedarik) query = query.eq("supply_status", search.tedarik as SupplyStatus);

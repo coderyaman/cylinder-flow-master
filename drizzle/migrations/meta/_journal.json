@@ -134,6 +134,13 @@
       "when": 1789415894607,
       "tag": "0018_asama8_prova_cyl_bazli_kapatma",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789417176736,
+      "tag": "0019_asama9_sevkiyat_ve_arsiv",
+      "breakpoints": true
     }
   ]
 }

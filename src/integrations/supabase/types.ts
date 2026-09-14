@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_packages: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          processed_at: string | null
+          processed_by: string | null
+          shipment_id: string | null
+          status: Database["public"]["Enums"]["accounting_status"]
+          trigger: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          shipment_id?: string | null
+          status?: Database["public"]["Enums"]["accounting_status"]
+          trigger: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          shipment_id?: string | null
+          status?: Database["public"]["Enums"]["accounting_status"]
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_packages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_packages_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           key: string
@@ -264,6 +312,8 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           usability: Database["public"]["Enums"]["cyl_usability"]
+          visit_closed_at: string | null
+          visit_closed_reason: string | null
           waybill_no: string | null
         }
         Insert: {
@@ -294,6 +344,8 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           usability: Database["public"]["Enums"]["cyl_usability"]
+          visit_closed_at?: string | null
+          visit_closed_reason?: string | null
           waybill_no?: string | null
         }
         Update: {
@@ -324,6 +376,8 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           usability?: Database["public"]["Enums"]["cyl_usability"]
+          visit_closed_at?: string | null
+          visit_closed_reason?: string | null
           waybill_no?: string | null
         }
         Relationships: [
@@ -857,6 +911,8 @@ export type Database = {
           priority: Database["public"]["Enums"]["order_priority"]
           quantity: number
           row_version: number
+          shipped_at: string | null
+          shipped_by: string | null
           supply_status: Database["public"]["Enums"]["supply_status"]
           target_length_mm: number
           updated_at: string
@@ -883,6 +939,8 @@ export type Database = {
           priority?: Database["public"]["Enums"]["order_priority"]
           quantity: number
           row_version?: number
+          shipped_at?: string | null
+          shipped_by?: string | null
           supply_status?: Database["public"]["Enums"]["supply_status"]
           target_length_mm: number
           updated_at?: string
@@ -909,6 +967,8 @@ export type Database = {
           priority?: Database["public"]["Enums"]["order_priority"]
           quantity?: number
           row_version?: number
+          shipped_at?: string | null
+          shipped_by?: string | null
           supply_status?: Database["public"]["Enums"]["supply_status"]
           target_length_mm?: number
           updated_at?: string
@@ -1370,6 +1430,128 @@ export type Database = {
             columns: ["station_id"]
             isOneToOne: false
             referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipment_items: {
+        Row: {
+          circumference_mm: number | null
+          created_at: string
+          cyl_code: string | null
+          diameter_mm: number | null
+          id: string
+          length_mm: number | null
+          receipt_id: string | null
+          shipment_id: string
+          stage_no: number | null
+          team_member_id: string
+        }
+        Insert: {
+          circumference_mm?: number | null
+          created_at?: string
+          cyl_code?: string | null
+          diameter_mm?: number | null
+          id?: string
+          length_mm?: number | null
+          receipt_id?: string | null
+          shipment_id: string
+          stage_no?: number | null
+          team_member_id: string
+        }
+        Update: {
+          circumference_mm?: number | null
+          created_at?: string
+          cyl_code?: string | null
+          diameter_mm?: number | null
+          id?: string
+          length_mm?: number | null
+          receipt_id?: string | null
+          shipment_id?: string
+          stage_no?: number | null
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_items_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_items_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipments: {
+        Row: {
+          created_at: string
+          id: string
+          member_count: number
+          membership_fingerprint: string
+          note: string | null
+          order_id: string
+          proof_run_id: string | null
+          shipped_at: string
+          shipped_by: string | null
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_count: number
+          membership_fingerprint: string
+          note?: string | null
+          order_id: string
+          proof_run_id?: string | null
+          shipped_at?: string
+          shipped_by?: string | null
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_count?: number
+          membership_fingerprint?: string
+          note?: string | null
+          order_id?: string
+          proof_run_id?: string | null
+          shipped_at?: string
+          shipped_by?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_proof_run_id_fkey"
+            columns: ["proof_run_id"]
+            isOneToOne: false
+            referencedRelation: "proof_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -2155,6 +2337,11 @@ export type Database = {
         }
         Returns: number
       }
+      ship_team: {
+        Args: { _idempotency_key?: string; _note?: string; _team_id: string }
+        Returns: Json
+      }
+      shipment_gate: { Args: { _team_id: string }; Returns: Json }
       srv_attach_graphic_revision: {
         Args: {
           _actor: string
@@ -2262,6 +2449,7 @@ export type Database = {
       }
     }
     Enums: {
+      accounting_status: "bekliyor" | "islendi"
       app_role:
         | "grafik"
         | "depo"
@@ -2480,6 +2668,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      accounting_status: ["bekliyor", "islendi"],
       app_role: [
         "grafik",
         "depo",
