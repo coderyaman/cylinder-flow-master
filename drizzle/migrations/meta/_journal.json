@@ -120,6 +120,13 @@
       "when": 1789393447420,
       "tag": "0016_asama7_parca2_rework_ve_silindir_degisimi",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789394722472,
+      "tag": "0017_asama8_prova_ve_son_kontrol",
+      "breakpoints": true
     }
   ]
 }
