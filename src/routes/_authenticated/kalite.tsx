@@ -508,8 +508,8 @@ function ReworkPanel({ issue, onDone }: { issue: any; onDone: () => Promise<void
     const { data, error } = await supabase.rpc("rework_approve", {
       _issue_id: issue.id,
       _steps: preview.steps,
-      _reason: reason.trim() || undefined,
       _idempotency_key: key,
+      ...(reason.trim() ? { _reason: reason.trim() } : {}),
     });
     setBusy(false);
     if (error) return void toast.error(opErrorText(error.message));
@@ -625,7 +625,7 @@ function ReplacePanel({ issue, onDone }: { issue: any; onDone: () => Promise<voi
     const { data, error } = await supabase.rpc("team_replace_member", {
       _member_id: issue.team_member_id,
       _reason: reason.trim(),
-      _replacement_receipt_id: mode === "mevcut" ? receiptId : undefined,
+      ...(mode === "mevcut" ? { _replacement_receipt_id: receiptId } : {}),
       _planned_ops: ops,
       _old_lifecycle: lifecycle,
       _issue_id: issue.id,
