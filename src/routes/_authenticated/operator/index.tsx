@@ -305,6 +305,12 @@ function OperatorHome() {
         QR Oku / Kod Gir
       </Button>
 
+      <Link to="/operator/prova" search={{ team: undefined }} className="block">
+        <Button size="lg" variant="outline" className="h-14 w-full text-base">
+          Prova ve Son Kontrol (takım bazlı)
+        </Button>
+      </Link>
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Aktif İşlerim ({active.length})</CardTitle>
