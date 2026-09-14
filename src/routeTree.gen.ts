@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminIstasyonlarRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminKullanicilarRouteImport } from './routes/_authenticated/admin/kullanicilar'
 import { Route as AuthenticatedAdminMusterilerRouteImport } from './routes/_authenticated/admin/musteriler'
 import { Route as AuthenticatedOperatorIndexRouteImport } from './routes/_authenticated/operator/index'
+import { Route as AuthenticatedOperatorProvaRouteImport } from './routes/_authenticated/operator/prova'
 import { Route as AuthenticatedRotaOrderIdRouteImport } from './routes/_authenticated/rota.$orderId'
 import { Route as AuthenticatedSilindirHazirlaOrderIdRouteImport } from './routes/_authenticated/silindir-hazirla.$orderId'
 import { Route as AuthenticatedSilindirCylCodeRouteImport } from './routes/_authenticated/silindir.$cylCode'
@@ -98,6 +99,12 @@ const AuthenticatedOperatorIndexRoute =
     path: '/operator/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOperatorProvaRoute =
+  AuthenticatedOperatorProvaRouteImport.update({
+    id: '/operator/prova',
+    path: '/operator/prova',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRotaOrderIdRoute =
   AuthenticatedRotaOrderIdRouteImport.update({
     id: '/rota/$orderId',
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/operator/prova': typeof AuthenticatedOperatorProvaRoute
   '/rota/$orderId': typeof AuthenticatedRotaOrderIdRoute
   '/silindir-hazirla/$orderId': typeof AuthenticatedSilindirHazirlaOrderIdRoute
   '/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
@@ -173,6 +181,7 @@ export interface FileRoutesByTo {
   '/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/operator/prova': typeof AuthenticatedOperatorProvaRoute
   '/rota/$orderId': typeof AuthenticatedRotaOrderIdRoute
   '/silindir-hazirla/$orderId': typeof AuthenticatedSilindirHazirlaOrderIdRoute
   '/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
@@ -196,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/istasyonlar': typeof AuthenticatedAdminIstasyonlarRoute
   '/_authenticated/admin/kullanicilar': typeof AuthenticatedAdminKullanicilarRoute
   '/_authenticated/admin/musteriler': typeof AuthenticatedAdminMusterilerRoute
+  '/_authenticated/operator/prova': typeof AuthenticatedOperatorProvaRoute
   '/_authenticated/rota/$orderId': typeof AuthenticatedRotaOrderIdRoute
   '/_authenticated/silindir-hazirla/$orderId': typeof AuthenticatedSilindirHazirlaOrderIdRoute
   '/_authenticated/silindir/$cylCode': typeof AuthenticatedSilindirCylCodeRoute
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/admin/istasyonlar'
     | '/admin/kullanicilar'
     | '/admin/musteriler'
+    | '/operator/prova'
     | '/rota/$orderId'
     | '/silindir-hazirla/$orderId'
     | '/silindir/$cylCode'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin/istasyonlar'
     | '/admin/kullanicilar'
     | '/admin/musteriler'
+    | '/operator/prova'
     | '/rota/$orderId'
     | '/silindir-hazirla/$orderId'
     | '/silindir/$cylCode'
@@ -262,6 +274,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/istasyonlar'
     | '/_authenticated/admin/kullanicilar'
     | '/_authenticated/admin/musteriler'
+    | '/_authenticated/operator/prova'
     | '/_authenticated/rota/$orderId'
     | '/_authenticated/silindir-hazirla/$orderId'
     | '/_authenticated/silindir/$cylCode'
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOperatorIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/operator/prova': {
+      id: '/_authenticated/operator/prova'
+      path: '/operator/prova'
+      fullPath: '/operator/prova'
+      preLoaderRoute: typeof AuthenticatedOperatorProvaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rota/$orderId': {
       id: '/_authenticated/rota/$orderId'
       path: '/rota/$orderId'
@@ -434,6 +454,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminIstasyonlarRoute: typeof AuthenticatedAdminIstasyonlarRoute
   AuthenticatedAdminKullanicilarRoute: typeof AuthenticatedAdminKullanicilarRoute
   AuthenticatedAdminMusterilerRoute: typeof AuthenticatedAdminMusterilerRoute
+  AuthenticatedOperatorProvaRoute: typeof AuthenticatedOperatorProvaRoute
   AuthenticatedRotaOrderIdRoute: typeof AuthenticatedRotaOrderIdRoute
   AuthenticatedSilindirHazirlaOrderIdRoute: typeof AuthenticatedSilindirHazirlaOrderIdRoute
   AuthenticatedSilindirCylCodeRoute: typeof AuthenticatedSilindirCylCodeRoute
@@ -453,6 +474,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminIstasyonlarRoute: AuthenticatedAdminIstasyonlarRoute,
   AuthenticatedAdminKullanicilarRoute: AuthenticatedAdminKullanicilarRoute,
   AuthenticatedAdminMusterilerRoute: AuthenticatedAdminMusterilerRoute,
+  AuthenticatedOperatorProvaRoute: AuthenticatedOperatorProvaRoute,
   AuthenticatedRotaOrderIdRoute: AuthenticatedRotaOrderIdRoute,
   AuthenticatedSilindirHazirlaOrderIdRoute:
     AuthenticatedSilindirHazirlaOrderIdRoute,
