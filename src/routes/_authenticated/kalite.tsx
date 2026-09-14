@@ -7,6 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { newIdempotencyKey } from "@/lib/orders";
 import { formatMm } from "@/lib/cylinders";
+import {
+  LIFECYCLE_LABELS,
+  PLANNED_OP_LABELS,
+  PLANNED_OPS,
+  teamErrorText,
+  type CylLifecycle,
+  type PlannedOp,
+} from "@/lib/teams";
 import { opErrorText, OP_NOTE_LABELS } from "@/lib/operations";
 import {
   billableText,
