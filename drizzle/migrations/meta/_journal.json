@@ -85,6 +85,13 @@
       "when": 1789383699842,
       "tag": "0011_asama6b_istasyon_formlari",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789384814824,
+      "tag": "0012_gravur_grafik_yetki_duzeltmesi",
+      "breakpoints": true
     }
   ]
 }
