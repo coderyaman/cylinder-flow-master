@@ -389,14 +389,14 @@ function ActiveJob() {
             </p>
           )}
           {!isOpen && (
-            <p className="sm:col-span-2">
+            <div className="sm:col-span-2">
               <Badge variant={op.status === "bloke" ? "destructive" : "secondary"}>
                 {op.status === "bloke" ? "Bloke" : "Tamamlandı"}
               </Badge>{" "}
               <span className="text-muted-foreground">
                 Tamamlanan kayıt operatör tarafından değiştirilemez.
               </span>
-            </p>
+            </div>
           )}
         </CardContent>
       </Card>
