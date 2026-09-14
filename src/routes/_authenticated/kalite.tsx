@@ -394,6 +394,13 @@ function IssueDetail({
           </div>
         )}
 
+        {canDecide && issue.decision === "rework" && !issue.resolved_at && (
+          <ReworkPanel issue={issue} onDone={onDone} />
+        )}
+        {canDecide && issue.decision === "silindir_degisimi" && !issue.resolved_at && (
+          <ReplacePanel issue={issue} onDone={onDone} />
+        )}
+
         {canDecide && !["karar_verildi", "reddedildi"].includes(issue.status) && (
           <div className="space-y-3 rounded-md border border-border p-3">
             <p className="font-medium">Yönetici kararı</p>
