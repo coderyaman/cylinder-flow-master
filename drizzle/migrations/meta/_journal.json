@@ -169,6 +169,20 @@
       "when": 1789419073277,
       "tag": "0023_prova_kaynakli_rework_rotasi",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789420209888,
+      "tag": "0024_asama10_muhasebe_ticari_degerlendirme",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789420438266,
+      "tag": "0025_muhasebe_prova_tek_takim_operasyonu",
+      "breakpoints": true
     }
   ]
 }

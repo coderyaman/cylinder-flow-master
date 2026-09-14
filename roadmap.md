@@ -197,3 +197,11 @@
 - Üretime alınmış üyenin rotası düzeltilemiyor: TAKIM-2026-0004 / TAKIM-2026-0005 rotalarında Krom adımı
   yok ve rota ekranı serbest bırakıldıktan sonra kilitli; yetkili için kontrollü rota düzeltme yolu gerekli
 - Aşama 10: muhasebe ekranı (accounting_packages, accounting.process)
+
+## Aşama 10 — Muhasebe ve ticari değerlendirme (prototip, canlı denendi)
+- Muhasebe Bekleyenler / İşlenenler listeleri; sevk edilmiş siparişler + üretim görmüş iptaller (üretim görmemiş iptal havuza girmez).
+- Sipariş detayı: Faturalandırılabilir / Faturalandırılmayacak / Ticari karar bekliyor grupları, kopyalanabilir özet, kalem başına ticari istisna (gerekçe zorunlu, audit).
+- Ticari varsayılanlar billing_rules; iç hata rework ücretsiz, müşteri revizyonu faturalandırılabilir, belirsiz → karar bekliyor.
+- Prova tek takım operasyonu sayılır (migration 0025: CYL bazlı eski PROVA operasyonları ticari kalem değil).
+- Canlı: 562341 → 7 kalem (6 operasyon + 1 Prova turu), İşlendi, tekrar gönderim ikinci kayıt üretmedi, ticari istisna sonrası "Yeniden İnceleme Gerekli".
+- Açık: gerçek sipariş ticari kararları değiştirilmedi; iptal kaynaklı paket canlı denenmedi.
