@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { PLANNED_OP_LABELS, type PlannedOp } from "@/lib/teams";
 import { elapsedText } from "@/lib/operations";
 import { QrScanner, extractCylCode } from "@/components/qr-scan";
+import { ProofOperator } from "@/components/proof-operator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,7 @@ function OperatorHome() {
   const [codeInput, setCodeInput] = useState("");
   const [now, setNow] = useState(() => Date.now());
   const [stationId, setStationId] = useState<string | null>(null);
+  const [proofTeam, setProofTeam] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30000);
