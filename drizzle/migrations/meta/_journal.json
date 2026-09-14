@@ -99,6 +99,13 @@
       "when": 1789385294675,
       "tag": "0013_asama7_parca1_kalite_bildirimi_ve_karar",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789385925767,
+      "tag": "0014_asama7_uyari_kapanisi",
+      "breakpoints": true
     }
   ]
 }
