@@ -386,17 +386,30 @@ function IssueDetail({
                 Akışa devam et (blokeyi kaldır)
               </Button>
             )}
-            {issue.decision === "rework" && (
+            {issue.decision === "rework" && issue.resolved_at && (
               <p className="mt-2">
-                Rework rotası, takım ekranındaki{" "}
+                Rework turu açıldı. Adımlar{" "}
                 <Link
                   to="/rota/$orderId"
                   params={{ orderId: order?.id ?? "" }}
                   className="underline"
                 >
-                  rota önizlemesinden
+                  rota ekranından
                 </Link>{" "}
-                hazırlanır.
+                izlenir.
+              </p>
+            )}
+            {issue.decision === "silindir_degisimi" && issue.resolved_at && (
+              <p className="mt-2">
+                Üye değiştirildi. Yeni üyenin rotasını{" "}
+                <Link
+                  to="/rota/$orderId"
+                  params={{ orderId: order?.id ?? "" }}
+                  className="underline"
+                >
+                  rota ekranından
+                </Link>{" "}
+                hazırlayıp ayrıca Üretime Al kararı verin.
               </p>
             )}
           </div>
