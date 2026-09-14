@@ -1126,7 +1126,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          quality_issue_id: string | null
           reason: string | null
+          rework_round: number | null
           status: Database["public"]["Enums"]["route_plan_status"]
           team_member_id: string
           version: number
@@ -1135,7 +1137,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          quality_issue_id?: string | null
           reason?: string | null
+          rework_round?: number | null
           status?: Database["public"]["Enums"]["route_plan_status"]
           team_member_id: string
           version: number
@@ -1144,12 +1148,21 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          quality_issue_id?: string | null
           reason?: string | null
+          rework_round?: number | null
           status?: Database["public"]["Enums"]["route_plan_status"]
           team_member_id?: string
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "route_plans_quality_issue_id_fkey"
+            columns: ["quality_issue_id"]
+            isOneToOne: false
+            referencedRelation: "quality_issues"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "route_plans_team_member_id_fkey"
             columns: ["team_member_id"]
@@ -1258,6 +1271,9 @@ export type Database = {
           released_by: string | null
           removed_at: string | null
           removed_by: string | null
+          removed_reason: string | null
+          replaced_by_member_id: string | null
+          replaces_member_id: string | null
           sequence_no: number
           stage_no: number | null
           team_id: string
@@ -1276,6 +1292,9 @@ export type Database = {
           released_by?: string | null
           removed_at?: string | null
           removed_by?: string | null
+          removed_reason?: string | null
+          replaced_by_member_id?: string | null
+          replaces_member_id?: string | null
           sequence_no: number
           stage_no?: number | null
           team_id: string
@@ -1294,6 +1313,9 @@ export type Database = {
           released_by?: string | null
           removed_at?: string | null
           removed_by?: string | null
+          removed_reason?: string | null
+          replaced_by_member_id?: string | null
+          replaces_member_id?: string | null
           sequence_no?: number
           stage_no?: number | null
           team_id?: string
@@ -1311,6 +1333,20 @@ export type Database = {
             columns: ["receipt_id"]
             isOneToOne: false
             referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_replaced_by_member_id_fkey"
+            columns: ["replaced_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_replaces_member_id_fkey"
+            columns: ["replaces_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
@@ -1897,6 +1933,16 @@ export type Database = {
         Args: { _idempotency_key?: string; _member_ids: string[] }
         Returns: Json
       }
+      rework_approve: {
+        Args: {
+          _idempotency_key?: string
+          _issue_id: string
+          _reason?: string
+          _steps: Json
+        }
+        Returns: Json
+      }
+      rework_suggest: { Args: { _issue_id: string }; Returns: Json }
       route_save_plan: {
         Args: {
           _idempotency_key?: string
@@ -1955,6 +2001,18 @@ export type Database = {
       }
       srv_operation_graphic: {
         Args: { _actor: string; _operation_id: string }
+        Returns: Json
+      }
+      team_replace_member: {
+        Args: {
+          _idempotency_key?: string
+          _issue_id?: string
+          _member_id: string
+          _old_lifecycle?: Database["public"]["Enums"]["cyl_lifecycle"]
+          _planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          _reason: string
+          _replacement_receipt_id?: string
+        }
         Returns: Json
       }
       team_sync_new_items: { Args: { _order_id: string }; Returns: number }
