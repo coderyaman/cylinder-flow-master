@@ -28,8 +28,29 @@ export const OP_NOTE_LABELS: Record<OpNoteKind, string> = {
   bloke: "Bloke",
 };
 
-/** Bu parçada yalnızca Torna ve tekil D-Krom/Sökme tamamlanabilir. */
-export const COMPLETABLE_STATIONS = ["TORNA", "SOKME"] as const;
+export type BakirWork = Database["public"]["Enums"]["bakir_work"];
+
+/** Bakır'da bir operasyonda birden çok gerçekleşen iş kaydedilebilir. */
+export const BAKIR_WORK_LABELS: Record<BakirWork, string> = {
+  bakir_kaplama: "Bakır Kaplama",
+  ana_kaplama: "Ana Kaplama",
+  cevre_yukseltme: "Çevre Yükseltme",
+  cevre_dusurme: "Çevre Düşürme",
+  nokta_tamiri: "Nokta Tamiri",
+};
+
+export const BAKIR_WORKS = Object.keys(BAKIR_WORK_LABELS) as BakirWork[];
+
+/** Tamamlama formu tanımlı istasyonlar. */
+export const COMPLETABLE_STATIONS = [
+  "TORNA",
+  "SOKME",
+  "BAKIR",
+  "TASLAMA",
+  "CFM",
+  "GRAVUR",
+  "KROM",
+] as const;
 
 export function opErrorText(message: string): string {
   if (message.includes("QR_UYUSMUYOR"))

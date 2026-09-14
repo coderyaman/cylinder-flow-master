@@ -532,6 +532,73 @@ export type Database = {
           },
         ]
       }
+      operation_measurements: {
+        Row: {
+          circumference_mm: number | null
+          coating_thickness_um: number | null
+          diameter_mm: number | null
+          id: string
+          measured_at: string
+          measured_by: string | null
+          note: string | null
+          operation_id: string
+          receipt_id: string | null
+          round_no: number
+          station_code: string
+          team_member_id: string
+        }
+        Insert: {
+          circumference_mm?: number | null
+          coating_thickness_um?: number | null
+          diameter_mm?: number | null
+          id?: string
+          measured_at?: string
+          measured_by?: string | null
+          note?: string | null
+          operation_id: string
+          receipt_id?: string | null
+          round_no?: number
+          station_code: string
+          team_member_id: string
+        }
+        Update: {
+          circumference_mm?: number | null
+          coating_thickness_um?: number | null
+          diameter_mm?: number | null
+          id?: string
+          measured_at?: string
+          measured_by?: string | null
+          note?: string | null
+          operation_id?: string
+          receipt_id?: string | null
+          round_no?: number
+          station_code?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operation_measurements_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: true
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_measurements_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operation_measurements_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operation_notes: {
         Row: {
           acknowledged_at: string | null
@@ -595,9 +662,11 @@ export type Database = {
       }
       operations: {
         Row: {
+          bakir_works: Database["public"]["Enums"]["bakir_work"][]
           created_at: string
           finished_at: string | null
           finished_by: string | null
+          graphic_asset_id: string | null
           id: string
           machine_id: string
           note: string | null
@@ -614,9 +683,11 @@ export type Database = {
           team_member_id: string
         }
         Insert: {
+          bakir_works?: Database["public"]["Enums"]["bakir_work"][]
           created_at?: string
           finished_at?: string | null
           finished_by?: string | null
+          graphic_asset_id?: string | null
           id?: string
           machine_id: string
           note?: string | null
@@ -633,9 +704,11 @@ export type Database = {
           team_member_id: string
         }
         Update: {
+          bakir_works?: Database["public"]["Enums"]["bakir_work"][]
           created_at?: string
           finished_at?: string | null
           finished_by?: string | null
+          graphic_asset_id?: string | null
           id?: string
           machine_id?: string
           note?: string | null
@@ -652,6 +725,13 @@ export type Database = {
           team_member_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "operations_graphic_asset_id_fkey"
+            columns: ["graphic_asset_id"]
+            isOneToOne: false
+            referencedRelation: "graphic_assets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "operations_machine_id_fkey"
             columns: ["machine_id"]
@@ -1008,12 +1088,14 @@ export type Database = {
           is_active: boolean
           kind: Database["public"]["Enums"]["cart_item_kind"]
           planned_ops: Database["public"]["Enums"]["planned_op"][]
+          proof_ready_at: string | null
           receipt_id: string | null
           released_at: string | null
           released_by: string | null
           removed_at: string | null
           removed_by: string | null
           sequence_no: number
+          stage_no: number | null
           team_id: string
         }
         Insert: {
@@ -1024,12 +1106,14 @@ export type Database = {
           is_active?: boolean
           kind: Database["public"]["Enums"]["cart_item_kind"]
           planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          proof_ready_at?: string | null
           receipt_id?: string | null
           released_at?: string | null
           released_by?: string | null
           removed_at?: string | null
           removed_by?: string | null
           sequence_no: number
+          stage_no?: number | null
           team_id: string
         }
         Update: {
@@ -1040,12 +1124,14 @@ export type Database = {
           is_active?: boolean
           kind?: Database["public"]["Enums"]["cart_item_kind"]
           planned_ops?: Database["public"]["Enums"]["planned_op"][]
+          proof_ready_at?: string | null
           receipt_id?: string | null
           released_at?: string | null
           released_by?: string | null
           removed_at?: string | null
           removed_by?: string | null
           sequence_no?: number
+          stage_no?: number | null
           team_id?: string
         }
         Relationships: [
@@ -1078,6 +1164,7 @@ export type Database = {
           created_by: string | null
           id: string
           order_id: string
+          proof_queued_at: string | null
           team_code: string
         }
         Insert: {
@@ -1085,6 +1172,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           order_id: string
+          proof_queued_at?: string | null
           team_code: string
         }
         Update: {
@@ -1092,6 +1180,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           order_id?: string
+          proof_queued_at?: string | null
           team_code?: string
         }
         Relationships: [
@@ -1473,12 +1562,56 @@ export type Database = {
         }
         Returns: Json
       }
+      op_complete_bakir: {
+        Args: {
+          _circumference_mm?: number
+          _coating_thickness_um?: number
+          _diameter_mm?: number
+          _idempotency_key?: string
+          _note?: string
+          _operation_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+          _works: Database["public"]["Enums"]["bakir_work"][]
+        }
+        Returns: Json
+      }
+      op_complete_krom: {
+        Args: {
+          _idempotency_key?: string
+          _note?: string
+          _operation_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+        }
+        Returns: Json
+      }
+      op_complete_simple: {
+        Args: {
+          _idempotency_key?: string
+          _note?: string
+          _operation_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+          _station_code: string
+        }
+        Returns: Json
+      }
       op_complete_sokme: {
         Args: {
           _idempotency_key?: string
           _note?: string
           _operation_id: string
           _result: Database["public"]["Enums"]["op_result"]
+        }
+        Returns: Json
+      }
+      op_complete_taslama: {
+        Args: {
+          _circumference_mm?: number
+          _diameter_mm?: number
+          _idempotency_key?: string
+          _note?: string
+          _operation_id: string
+          _result: Database["public"]["Enums"]["op_result"]
+          _stage_no?: number
         }
         Returns: Json
       }
@@ -1491,6 +1624,48 @@ export type Database = {
           _works: Database["public"]["Enums"]["op_work"][]
         }
         Returns: Json
+      }
+      op_open_for_complete: {
+        Args: { _op_id: string; _station_code: string; _uid: string }
+        Returns: {
+          bakir_works: Database["public"]["Enums"]["bakir_work"][]
+          created_at: string
+          finished_at: string | null
+          finished_by: string | null
+          graphic_asset_id: string | null
+          id: string
+          machine_id: string
+          note: string | null
+          op_label: string
+          performed_works: Database["public"]["Enums"]["op_work"][]
+          result: Database["public"]["Enums"]["op_result"] | null
+          round_no: number
+          route_step_id: string
+          skip_queue_reason: string | null
+          started_at: string
+          started_by: string | null
+          station_id: string
+          status: Database["public"]["Enums"]["op_status"]
+          team_member_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "operations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      op_record_measurement: {
+        Args: {
+          _circ: number
+          _coating: number
+          _diam: number
+          _note: string
+          _op: Database["public"]["Tables"]["operations"]["Row"]
+          _station_code: string
+          _uid: string
+        }
+        Returns: undefined
       }
       op_start: {
         Args: {
@@ -1579,6 +1754,10 @@ export type Database = {
         Args: { _actor: string; _expected_revision: number; _order_id: string }
         Returns: Json
       }
+      srv_operation_graphic: {
+        Args: { _actor: string; _operation_id: string }
+        Returns: Json
+      }
       team_sync_new_items: { Args: { _order_id: string }; Returns: number }
       update_cylinder_receipt: {
         Args: {
@@ -1638,6 +1817,12 @@ export type Database = {
         | "patron"
         | "muhasebe"
         | "admin"
+      bakir_work:
+        | "bakir_kaplama"
+        | "ana_kaplama"
+        | "cevre_yukseltme"
+        | "cevre_dusurme"
+        | "nokta_tamiri"
       cart_item_kind: "mevcut" | "yeni_imalat"
       cart_status: "taslak" | "takim_olusturuldu"
       cyl_lifecycle:
@@ -1827,6 +2012,13 @@ export const Constants = {
         "patron",
         "muhasebe",
         "admin",
+      ],
+      bakir_work: [
+        "bakir_kaplama",
+        "ana_kaplama",
+        "cevre_yukseltme",
+        "cevre_dusurme",
+        "nokta_tamiri",
       ],
       cart_item_kind: ["mevcut", "yeni_imalat"],
       cart_status: ["taslak", "takim_olusturuldu"],
