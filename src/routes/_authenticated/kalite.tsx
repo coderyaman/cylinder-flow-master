@@ -508,7 +508,7 @@ function ReworkPanel({ issue, onDone }: { issue: any; onDone: () => Promise<void
     const { data, error } = await supabase.rpc("rework_approve", {
       _issue_id: issue.id,
       _steps: preview.steps,
-      _reason: reason.trim() || null,
+      _reason: reason.trim() || undefined,
       _idempotency_key: key,
     });
     setBusy(false);
@@ -625,7 +625,7 @@ function ReplacePanel({ issue, onDone }: { issue: any; onDone: () => Promise<voi
     const { data, error } = await supabase.rpc("team_replace_member", {
       _member_id: issue.team_member_id,
       _reason: reason.trim(),
-      _replacement_receipt_id: mode === "mevcut" ? receiptId : null,
+      _replacement_receipt_id: mode === "mevcut" ? receiptId : undefined,
       _planned_ops: ops,
       _old_lifecycle: lifecycle,
       _issue_id: issue.id,
