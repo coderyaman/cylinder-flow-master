@@ -23,6 +23,8 @@ const NAV = [
   { to: "/kuyruk", label: "Kuyruklar", permission: "team.manage" },
   { to: "/operator", label: "Operatör", permission: "operation.start" },
   { to: "/kalite", label: "Kalite", permission: "rework.approve" },
+  { to: "/sevkiyat", label: "Sevkiyat", permission: "shipment.confirm" },
+  { to: "/arsiv", label: "Arşiv" },
   { to: "/admin/musteriler", label: "Müşteriler", permission: "admin.configure" },
   { to: "/admin/kullanicilar", label: "Kullanıcılar", permission: "admin.configure" },
   { to: "/admin/istasyonlar", label: "İstasyonlar", permission: "admin.configure" },
