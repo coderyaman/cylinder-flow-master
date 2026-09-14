@@ -252,6 +252,31 @@ function OperatorHome() {
     );
   }
 
+  if ((station as any)?.code === "PROVA") {
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        {stations.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {stations.map((s: any) => (
+              <Button
+                key={s.id}
+                type="button"
+                variant={s.id === stationId ? "default" : "outline"}
+                onClick={() => {
+                  setProofTeam(null);
+                  setStationId(s.id);
+                }}
+              >
+                {s.name}
+              </Button>
+            ))}
+          </div>
+        )}
+        <ProofOperator teamId={proofTeam} onSelect={setProofTeam} />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
