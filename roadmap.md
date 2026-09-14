@@ -178,3 +178,22 @@
 - Prova: Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrarlanan Tamamla, Müdür kararının uygulanması, takım blokesinin kaldırılması
 - Kademe tekilliği, tekrar Tamamla, uyarı/not aktarımı testleri
 - Aşama 10: muhasebe ekranı (accounting_packages, accounting.process)
+
+## Prova hazırlık ve karar sonrası dönüş (prototip, canlı denendi)
+- `proof_gate` üye kırılımı: rota durumu, bekleyen adım, açık iş, açık kalite kaydı, kademe (`0020`)
+- Prova ekranında her eksik için sonraki işlem bağlantısı ve sorumlu rol; Karar Bekleyenler kartı;
+  Takım Bloke kartı + `proof_release_hold` (yalnızca `proof.rework.approve`)
+- `/kalite?issue=...` derin bağlantısı: kalite kaydı doğrudan açılır
+- Silindir rotasına Prova adımı eklenemez (`route_steps` tetikleyicisi, `0021`); rota ekranındaki
+  istasyon listesinden Prova çıkarıldı; kalan geçersiz PROVA adımları `superseded` (audit)
+- Rota yeniden kaydedilirken tamamlanmış/atlanmış adımlar korunur (`0022`)
+- Prova'da tespit edilen hatalarda rework D-Krom/Sökme'den başlar (`0023`)
+- Canlı deneme (A4-TEST-1 / TAKIM-2026-0001): Müdür "Onaylı rework" → Tur 2 rotası kuyruğa alındı →
+  Sökme, Bakır, Taşlama, CFM, Gravür, Krom tamamlandı → takım Prova Kuyruğu'nda tek satır (1/1 hazır)
+
+### Açık işler
+- Prova: Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrarlanan Tamamla idempotency denemesi,
+  `proof_release_hold` canlı denenmedi (deneme takımında bloke kalmamıştı)
+- Üretime alınmış üyenin rotası düzeltilemiyor: TAKIM-2026-0004 / TAKIM-2026-0005 rotalarında Krom adımı
+  yok ve rota ekranı serbest bırakıldıktan sonra kilitli; yetkili için kontrollü rota düzeltme yolu gerekli
+- Aşama 10: muhasebe ekranı (accounting_packages, accounting.process)
