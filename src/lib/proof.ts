@@ -19,6 +19,12 @@ export const PROOF_RESULT_HINTS: Record<ProofResult, string> = {
 
 export const PROOF_RESULTS = Object.keys(PROOF_RESULT_LABELS) as ProofResult[];
 
+export type MemberIssue = {
+  code: string;
+  text: string;
+  issue_id?: string | null;
+};
+
 export type ProofMember = {
   member_id: string;
   stage_no: number | null;
@@ -33,6 +39,40 @@ export type ProofMember = {
   circumference_mm: number | null;
   diameter_mm: number | null;
   length_mm: number | null;
+  has_plan: boolean;
+  next_step: {
+    step_id: string;
+    station_code: string;
+    station_name: string;
+    op_label: string;
+    status: string;
+  } | null;
+  open_op: {
+    operation_id: string;
+    station_code: string;
+    station_name: string;
+    status: string;
+  } | null;
+  open_issue: {
+    issue_id: string;
+    status: string;
+    severity: string;
+    decision: string | null;
+    proof_run_id: string | null;
+    description: string;
+  } | null;
+  issues: MemberIssue[];
+};
+
+export type PendingDecision = {
+  issue_id: string;
+  status: string;
+  severity: string;
+  description: string;
+  proof_run_id: string | null;
+  requested_at: string;
+  stage_no: number | null;
+  cyl_code: string | null;
 };
 
 export type ProofGate = {
@@ -51,6 +91,9 @@ export type ProofGate = {
   members: ProofMember[];
   blockers: { code: string; text: string }[];
   warnings: { cyl_code: string | null; count: number; text: string }[];
+  pending_decisions: PendingDecision[];
+  blocked_at: string | null;
+  blocked_reason: string | null;
   ready: boolean;
   active_run_id: string | null;
   fingerprint: string;
@@ -58,6 +101,71 @@ export type ProofGate = {
   approval_valid: boolean;
   approved_run_id: string | null;
 };
+
+/** Eksik açıklaması; bazı durumlarda sunucu metnini netleştirir. */
+export function issueText(m: ProofMember, issue: MemberIssue): string {
+  if (issue.code === "HAZIR_DEGIL" && !m.next_step) {
+    return "Prova İçin Hazır değil: rotada bekleyen adım yok, rotaya Krom adımı eklenip üretime alınmalı.";
+  }
+  return issue.text;
+}
+
+/** Eksik nedeninin sonraki işlemi: hangi ekran, hangi rol. */
+export function memberAction(
+  m: ProofMember,
+  issue: MemberIssue,
+  orderId: string,
+): { label: string; to: string; role: string } | { label: null; to: null; role: string } {
+  switch (issue.code) {
+    case "PLANLANAN":
+      return {
+        label: "İmalat işini aç",
+        to: "/operator",
+        role: "Torna operatörü (yeni imalat)",
+      };
+    case "URETIME_ALINMADI":
+      return {
+        label: "Üretime alma ekranını aç",
+        to: `/rota/${orderId}`,
+        role: "Yetkili Asistan / Müdür (üretime alma)",
+      };
+    case "ROTA":
+      return {
+        label: "Operasyonu aç",
+        to:
+          m.next_step && m.next_step.status === "kuyrukta"
+            ? `/operator/is/${m.next_step.step_id}`
+            : "/kuyruk",
+        role: `${m.next_step?.station_name ?? "İlgili istasyon"} operatörü`,
+      };
+    case "ACIK_IS":
+      return {
+        label: "Operasyonu aç",
+        to: m.open_op ? `/operator/aktif/${m.open_op.operation_id}` : "/operator",
+        role: `${m.open_op?.station_name ?? "İlgili istasyon"} operatörü`,
+      };
+    case "KADEME":
+      return { label: "Operasyonu aç", to: "/kuyruk", role: "Taşlama operatörü" };
+    case "HAZIR_DEGIL":
+      // Bekleyen adım yoksa rota son (Krom) adımı eksik demektir.
+      return m.next_step
+        ? { label: "Operasyonu aç", to: "/kuyruk", role: "Krom operatörü" }
+        : {
+            label: "Üretime alma ekranını aç",
+            to: `/rota/${orderId}`,
+            role: "Yetkili Asistan / Müdür",
+          };
+    case "KARAR_BEKLIYOR":
+      return {
+        label: "Kalite kaydını aç",
+        to: `/kalite?issue=${issue.issue_id ?? ""}`,
+        role: "Müdür (kalite kararı)",
+      };
+    default:
+      return { label: null, to: null, role: "Yetkili" };
+  }
+}
+
 
 export function proofErrorText(message: string): string {
   if (message.includes("QR_UYUSMUYOR")) return "Okutulan kod bu takımın aktif üyesi değil.";

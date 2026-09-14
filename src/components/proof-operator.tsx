@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -10,9 +11,12 @@ import {
   PROOF_RESULTS,
   PROOF_RESULT_HINTS,
   PROOF_RESULT_LABELS,
+  memberAction,
+  issueText,
   proofErrorText,
   mm,
   type ProofGate,
+  type ProofMember,
   type ProofResult,
 } from "@/lib/proof";
 import { proofGraphicLink } from "@/lib/proof-graphics.functions";
@@ -311,25 +315,42 @@ export function ProofOperator({
             <p className="text-sm text-muted-foreground">Karar bekleyen Prova kaydı yok.</p>
           ) : (
             (issuesQuery.data ?? []).map((q: any) => (
-              <button
-                key={q.id}
-                type="button"
-                onClick={() => onSelect(q.team_members?.team_id ?? null)}
-                className="block w-full rounded-md border border-border px-3 py-2 text-left text-sm transition-colors hover:bg-accent"
-              >
+              <div key={q.id} className="rounded-md border border-border px-3 py-2 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono">
                     {q.team_members?.cylinder_receipts?.cyl_code ?? "Planlanan imalat"}
                   </span>
                   <Badge variant="outline">{q.team_members?.teams?.team_code}</Badge>
-                  <Badge variant="destructive">Müdür kararı bekliyor</Badge>
+                  <Badge variant="destructive">
+                    {q.status === "bilgi_bekleniyor"
+                      ? "Ek bilgi bekleniyor"
+                      : "Müdür kararı bekliyor"}
+                  </Badge>
                   <span className="ml-auto tabular-nums text-muted-foreground">
                     {elapsedText(q.requested_at, now)}
                   </span>
                 </div>
                 <p className="text-muted-foreground">{q.description}</p>
-              </button>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs">
+                  <span className="text-muted-foreground">Sorumlu rol: Müdür</span>
+                  <Link
+                    to="/kalite"
+                    search={{ issue: q.id }}
+                    className="font-medium text-primary underline underline-offset-2"
+                  >
+                    Kararı İncele
+                  </Link>
+                  <button
+                    type="button"
+                    className="text-muted-foreground underline underline-offset-2"
+                    onClick={() => onSelect(q.team_members?.team_id ?? null)}
+                  >
+                    Takımı aç
+                  </button>
+                </div>
+              </div>
             ))
+
           )}
         </CardContent>
       </Card>
@@ -474,7 +495,9 @@ function TeamRow({
       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <span className="font-mono">{g.team_code}</span>
         <span>{g.quantity} silindir</span>
-        <span>Hazır {ready}/{g.quantity}</span>
+        <span>
+          {ready}/{g.quantity} silindir hazır
+        </span>
         <span>Termin {dateText(g.due_on)}</span>
         {g.priority !== "normal" && (
           <Badge variant="destructive" className="h-5">
@@ -489,11 +512,23 @@ function TeamRow({
               : ""}
         </span>
       </div>
-      {showBlockers && g.blockers.length > 0 && (
-        <p className="mt-1 text-xs text-destructive">
-          {g.blockers.map((b) => b.text).join(" · ")}
-        </p>
+      {showBlockers && (
+        <div className="mt-1 space-y-0.5 text-xs text-destructive">
+          {g.members.flatMap((m) =>
+            m.issues.map((i, k) => (
+              <p key={`${m.member_id}-${k}`}>
+                • {m.cyl_code ?? `Kademe ${m.stage_no ?? "—"} · planlanan imalat`}: {issueText(m, i)}
+              </p>
+            )),
+          )}
+          {g.blockers
+            .filter((b) => ["ADET", "KADEME_BUTUN", "TAKIM_BLOKE", "IPTAL"].includes(b.code))
+            .map((b, i) => (
+              <p key={`t-${i}`}>• {b.text}</p>
+            ))}
+        </div>
       )}
+
     </button>
   );
 }
@@ -512,11 +547,15 @@ function TeamProof({
   onChanged: () => void;
 }) {
   const queryClient = useQueryClient();
+  const { hasPermission } = useAuth();
+  const canRelease = hasPermission("proof.rework.approve");
   const [machineId, setMachineId] = useState("");
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [startKey, setStartKey] = useState(() => newIdempotencyKey());
   const [completeKey, setCompleteKey] = useState(() => newIdempotencyKey());
+  const [holdKey, setHoldKey] = useState(() => newIdempotencyKey());
+  const [holdReason, setHoldReason] = useState("");
   const [result, setResult] = useState<ProofResult | "">("");
   const [note, setNote] = useState("");
   const [category, setCategory] = useState("");
@@ -600,6 +639,24 @@ function TeamProof({
       tab?.close();
       toast.error(proofErrorText(e.message ?? "Grafik dosyası açılamadı."));
     }
+  }
+
+  async function releaseHold() {
+    setBusy(true);
+    const { error } = await supabase.rpc("proof_release_hold", {
+      _team_id: teamId,
+      _reason: holdReason.trim(),
+      _idempotency_key: holdKey,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(proofErrorText(error.message));
+      return;
+    }
+    setHoldKey(newIdempotencyKey());
+    setHoldReason("");
+    toast.success("Takım blokesi kaldırıldı.");
+    refresh();
   }
 
   async function start() {
@@ -722,49 +779,92 @@ function TeamProof({
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Aktif Silindirler (kademe sırası)</CardTitle>
           <CardDescription>
-            Planlanan imalatlar ve değiştirilmiş eski üyeler hazır sayılmaz.
+            Planlanan imalatlar ve değiştirilmiş eski üyeler hazır sayılmaz. Her eksiğin yanında
+            sonraki işlem gösterilir.
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-xs text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-1 text-left">Kademe</th>
-                <th className="py-1 text-left">Silindir</th>
-                <th className="py-1 text-left">Çevre</th>
-                <th className="py-1 text-left">Çap</th>
-                <th className="py-1 text-left">Boy</th>
-                <th className="py-1 text-left">Durum</th>
-              </tr>
-            </thead>
-            <tbody>
-              {gate.members.map((m) => (
-                <tr key={m.member_id} className="border-b border-border/60">
-                  <td className="py-1.5 tabular-nums">{m.stage_no ?? "—"}</td>
-                  <td className="py-1.5 font-mono">{m.cyl_code ?? "Planlanan imalat"}</td>
-                  <td className="py-1.5">
-                    {m.measurements_recorded ? mm(m.circumference_mm) : "Ölçüm kaydı yok"}
-                  </td>
-                  <td className="py-1.5">{m.measurements_recorded ? mm(m.diameter_mm) : "—"}</td>
-                  <td className="py-1.5">{m.measurements_recorded ? mm(m.length_mm) : "—"}</td>
-                  <td className="py-1.5">
-                    {m.proof_ready_at ? (
-                      <Badge variant="secondary">Prova İçin Hazır</Badge>
-                    ) : (
-                      <Badge variant="outline">Hazır değil</Badge>
-                    )}
-                    {m.open_warnings > 0 && (
-                      <Badge variant="outline" className="ml-1">
-                        {m.open_warnings} uyarı
-                      </Badge>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <CardContent className="space-y-2">
+          {gate.members.map((m) => (
+            <MemberRow key={m.member_id} m={m} orderId={gate.order_id} />
+          ))}
         </CardContent>
       </Card>
+
+      {gate.pending_decisions.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              Karar Bekleyenler ({gate.pending_decisions.length})
+            </CardTitle>
+            <CardDescription>
+              Beklenen karar: devam, onaylı rework, silindir değiştirme, red veya ek bilgi. Sorumlu
+              rol: Müdür.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {gate.pending_decisions.map((d) => (
+              <div key={d.issue_id} className="rounded-md border border-border px-3 py-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono">{d.cyl_code ?? "Planlanan imalat"}</span>
+                  <Badge variant={d.severity === "bloke" ? "destructive" : "secondary"}>
+                    {d.severity === "bloke" ? "Bloke" : "Uyarı"}
+                  </Badge>
+                  <Badge variant="outline">
+                    {d.status === "bilgi_bekleniyor" ? "Ek bilgi bekleniyor" : "Karar bekliyor"}
+                  </Badge>
+                  {d.proof_run_id && <Badge variant="outline">Prova kaynaklı</Badge>}
+                </div>
+                <p className="text-muted-foreground">{d.description}</p>
+                <Link
+                  to="/kalite"
+                  search={{ issue: d.issue_id }}
+                  className="text-xs font-medium text-primary underline underline-offset-2"
+                >
+                  Kararı İncele
+                </Link>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {gate.blocked_at && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Takım Bloke</CardTitle>
+            <CardDescription>
+              {gate.blocked_reason ?? "Müdür kararı bekleniyor."} Bloke, ancak karar bekleyen kalite
+              kaydı kalmadığında kaldırılabilir.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {canRelease ? (
+              <>
+                <Label htmlFor="hold-reason">Blokeyi kaldırma gerekçesi</Label>
+                <Textarea
+                  id="hold-reason"
+                  rows={2}
+                  value={holdReason}
+                  onChange={(e) => setHoldReason(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy || !holdReason.trim()}
+                  onClick={() => void releaseHold()}
+                >
+                  Takım blokesini kaldır
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Blokeyi yalnızca Prova geri dönüş yetkisi olan Müdür kaldırabilir.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
 
       {gate.warnings.length > 0 && (
         <Card>
@@ -982,6 +1082,49 @@ function TeamProof({
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+/** Takım detayında tek üye satırı: ölçüler, hazırlık durumu ve eksiğin sonraki işlemi. */
+function MemberRow({ m, orderId }: { m: ProofMember; orderId: string }) {
+  return (
+    <div className="rounded-md border border-border px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="tabular-nums text-muted-foreground">
+          Kademe {m.stage_no ?? "—"}
+        </span>
+        <span className="font-mono">{m.cyl_code ?? "Planlanan imalat"}</span>
+        {m.proof_ready_at ? (
+          <Badge variant="secondary">Prova İçin Hazır</Badge>
+        ) : (
+          <Badge variant="outline">Hazır değil</Badge>
+        )}
+        {m.open_warnings > 0 && <Badge variant="outline">{m.open_warnings} uyarı</Badge>}
+      </div>
+      <p className="mt-0.5 text-xs text-muted-foreground">
+        {m.measurements_recorded
+          ? `Çevre ${mm(m.circumference_mm)} · Çap ${mm(m.diameter_mm)} · Boy ${mm(m.length_mm)}`
+          : "Ölçüm kaydı yok"}
+      </p>
+      {m.issues.length > 0 && (
+        <div className="mt-1.5 space-y-1">
+          {m.issues.map((i, k) => {
+            const a = memberAction(m, i, orderId);
+            return (
+              <div key={k} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="text-destructive">• {issueText(m, i)}</span>
+                {a.to && (
+                  <Link to={a.to} className="font-medium text-primary underline underline-offset-2">
+                    {a.label}
+                  </Link>
+                )}
+                <span className="text-muted-foreground">Sorumlu: {a.role}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

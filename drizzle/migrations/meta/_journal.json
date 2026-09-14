@@ -141,6 +141,34 @@
       "when": 1789417176736,
       "tag": "0019_asama9_sevkiyat_ve_arsiv",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1789418446667,
+      "tag": "0020_asama8_prova_hazirlik_detayi",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789418672721,
+      "tag": "0021_rota_adimlarinda_prova_yasagi",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1789418889489,
+      "tag": "0022_rota_kaydinda_tamamlanan_adim_korumasi",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789419073277,
+      "tag": "0023_prova_kaynakli_rework_rotasi",
+      "breakpoints": true
     }
   ]
 }
