@@ -35,6 +35,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/kalite")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    issue: typeof search["issue"] === "string" ? (search["issue"] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Kalite / Karar Bekleyenler — Rotagravür MES" },
@@ -60,9 +63,14 @@ function QualityPage() {
   const canDecide = hasPermission("rework.approve");
   const qc = useQueryClient();
 
+  const { issue: issueParam } = Route.useSearch();
   const [now, setNow] = useState(() => Date.now());
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(issueParam ?? null);
   const [showClosed, setShowClosed] = useState(false);
+
+  useEffect(() => {
+    if (issueParam) setSelected(issueParam);
+  }, [issueParam]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 60000);

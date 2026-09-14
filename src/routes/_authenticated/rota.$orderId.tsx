@@ -57,17 +57,20 @@ function RoutesScreen() {
   const [releaseKey, setReleaseKey] = useState(() => newIdempotencyKey());
 
   const stationsQuery = useQuery({
-    queryKey: ["stations-active"],
+    queryKey: ["stations-active-route"],
     queryFn: async () => {
+      // Prova takım düzeyinde tek operasyondur; silindir rotasına adım olarak eklenmez.
       const { data, error } = await supabase
         .from("stations")
         .select("id, code, name, sort_order")
         .eq("is_active", true)
+        .neq("code", "PROVA")
         .order("sort_order");
       if (error) throw error;
       return data;
     },
   });
+
 
   const dataQuery = useQuery({
     queryKey: ["route-screen", orderId],
