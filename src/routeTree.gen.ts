@@ -17,6 +17,7 @@ import { Route as AuthenticatedDepoRouteImport } from './routes/_authenticated/d
 import { Route as AuthenticatedKaliteRouteImport } from './routes/_authenticated/kalite'
 import { Route as AuthenticatedKayitlarRouteImport } from './routes/_authenticated/kayitlar'
 import { Route as AuthenticatedKuyrukRouteImport } from './routes/_authenticated/kuyruk'
+import { Route as AuthenticatedMuhasebeRouteImport } from './routes/_authenticated/muhasebe'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
 import { Route as AuthenticatedSevkiyatRouteImport } from './routes/_authenticated/sevkiyat'
 import { Route as AuthenticatedSiparislerRouteImport } from './routes/_authenticated/siparisler'
@@ -70,6 +71,11 @@ const AuthenticatedKayitlarRoute = AuthenticatedKayitlarRouteImport.update({
 const AuthenticatedKuyrukRoute = AuthenticatedKuyrukRouteImport.update({
   id: '/kuyruk',
   path: '/kuyruk',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMuhasebeRoute = AuthenticatedMuhasebeRouteImport.update({
+  id: '/muhasebe',
+  path: '/muhasebe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPanelRoute = AuthenticatedPanelRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/kalite': typeof AuthenticatedKaliteRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
   '/kuyruk': typeof AuthenticatedKuyrukRoute
+  '/muhasebe': typeof AuthenticatedMuhasebeRoute
   '/panel': typeof AuthenticatedPanelRoute
   '/sevkiyat': typeof AuthenticatedSevkiyatRoute
   '/siparisler': typeof AuthenticatedSiparislerRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/kalite': typeof AuthenticatedKaliteRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
   '/kuyruk': typeof AuthenticatedKuyrukRoute
+  '/muhasebe': typeof AuthenticatedMuhasebeRoute
   '/panel': typeof AuthenticatedPanelRoute
   '/sevkiyat': typeof AuthenticatedSevkiyatRoute
   '/siparisler': typeof AuthenticatedSiparislerRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/_authenticated/kalite': typeof AuthenticatedKaliteRoute
   '/_authenticated/kayitlar': typeof AuthenticatedKayitlarRoute
   '/_authenticated/kuyruk': typeof AuthenticatedKuyrukRoute
+  '/_authenticated/muhasebe': typeof AuthenticatedMuhasebeRoute
   '/_authenticated/panel': typeof AuthenticatedPanelRoute
   '/_authenticated/sevkiyat': typeof AuthenticatedSevkiyatRoute
   '/_authenticated/siparisler': typeof AuthenticatedSiparislerRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/kalite'
     | '/kayitlar'
     | '/kuyruk'
+    | '/muhasebe'
     | '/panel'
     | '/sevkiyat'
     | '/siparisler'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/kalite'
     | '/kayitlar'
     | '/kuyruk'
+    | '/muhasebe'
     | '/panel'
     | '/sevkiyat'
     | '/siparisler'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kalite'
     | '/_authenticated/kayitlar'
     | '/_authenticated/kuyruk'
+    | '/_authenticated/muhasebe'
     | '/_authenticated/panel'
     | '/_authenticated/sevkiyat'
     | '/_authenticated/siparisler'
@@ -372,6 +384,13 @@ declare module '@tanstack/react-router' {
       path: '/kuyruk'
       fullPath: '/kuyruk'
       preLoaderRoute: typeof AuthenticatedKuyrukRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/muhasebe': {
+      id: '/_authenticated/muhasebe'
+      path: '/muhasebe'
+      fullPath: '/muhasebe'
+      preLoaderRoute: typeof AuthenticatedMuhasebeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/panel': {
@@ -488,6 +507,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKaliteRoute: typeof AuthenticatedKaliteRoute
   AuthenticatedKayitlarRoute: typeof AuthenticatedKayitlarRoute
   AuthenticatedKuyrukRoute: typeof AuthenticatedKuyrukRoute
+  AuthenticatedMuhasebeRoute: typeof AuthenticatedMuhasebeRoute
   AuthenticatedPanelRoute: typeof AuthenticatedPanelRoute
   AuthenticatedSevkiyatRoute: typeof AuthenticatedSevkiyatRoute
   AuthenticatedSiparislerRoute: typeof AuthenticatedSiparislerRoute
@@ -510,6 +530,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKaliteRoute: AuthenticatedKaliteRoute,
   AuthenticatedKayitlarRoute: AuthenticatedKayitlarRoute,
   AuthenticatedKuyrukRoute: AuthenticatedKuyrukRoute,
+  AuthenticatedMuhasebeRoute: AuthenticatedMuhasebeRoute,
   AuthenticatedPanelRoute: AuthenticatedPanelRoute,
   AuthenticatedSevkiyatRoute: AuthenticatedSevkiyatRoute,
   AuthenticatedSiparislerRoute: AuthenticatedSiparislerRoute,

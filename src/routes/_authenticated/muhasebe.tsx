@@ -270,7 +270,7 @@ function OrderAccounting({
     mutationFn: async () => {
       const { error } = await supabase.rpc("accounting_process", {
         _order_id: row.order_id,
-        _note: null,
+        _note: undefined,
         _idempotency_key: processKey,
       });
       if (error) throw error;
