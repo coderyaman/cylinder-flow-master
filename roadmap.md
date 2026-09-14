@@ -158,6 +158,12 @@
 - [x] Canlı deneme: eksik takım başlatılamadı (gerekçeler listelendi) → hazır test takımı
       Prova'ya alındı → Onaylandı ile Sevkiyata Hazır → üyelik değişince onay geçersiz oldu
       → Tur 2 "Silindir Düzeltilecek" ile üye Müdür kararına düştü, sevk hazırlığı kalktı
+- [x] Prova ana akışa bağlandı: istasyon seçicide Prova → doğrudan takım ekranı; diğer
+      istasyonlarda Prova düğmesi yok; `/operator/prova` aynı ekranı açar
+- [x] CYL bazlı Prova kapatıldı: `operations_no_cyl_proof` tetikleyicisi (`0018`); mevcut PROVA
+      kuyruk adımları `superseded`, açık PROVA operasyonu sonuç üretmeden kapatıldı (audit kaydı ile)
+- [x] Canlı deneme: iki fiziksel üyeli TAKIM-2026-0003 kuyrukta tek satır; üye QR'si (CYL-2026-00012)
+      aynı takımı açtı; tek Başlat → tek Tamamla → Onaylandı → Sevkiyata Hazır
 - [ ] Denenmedi: Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrar gönderilen Tamamla,
       Müdür tarafında Prova kaynaklı kararın uygulanması, `proof_release_hold`
 - [ ] Not: deneme için `TEST-PROVA` makinesi eklendi; A4-TEST-1 test siparişi adedi 1'e çekildi ve
