@@ -168,3 +168,13 @@
       Müdür tarafında Prova kaynaklı kararın uygulanması, `proof_release_hold`
 - [ ] Not: deneme için `TEST-PROVA` makinesi eklendi; A4-TEST-1 test siparişi adedi 1'e çekildi ve
       üretilmemiş planlanan test üyesi kapsam dışı bırakıldı (gerçek iş kaydı değiştirilmedi)
+
+## Aşama 9 — Sevkiyat ve Arşiv (prototip, canlı denendi)
+- Sevkiyat ekranı (Sevkiyata Hazır / Sevk Edilenler), Sevk Et onayı, sunucu tarafı `shipment_gate` + `ship_team`
+- Arşiv ekranı (firma/iş emri/iş adı/CYL/tarih araması, salt okunur geçmiş)
+- Silindir kartında "Bu ziyaret sevk edilerek kapatıldı" uyarısı; sevk edilen sipariş aktif listeden çıkar
+
+### Açık işler
+- Prova: Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrarlanan Tamamla, Müdür kararının uygulanması, takım blokesinin kaldırılması
+- Kademe tekilliği, tekrar Tamamla, uyarı/not aktarımı testleri
+- Aşama 10: muhasebe ekranı (accounting_packages, accounting.process)
