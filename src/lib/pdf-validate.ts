@@ -6,7 +6,8 @@
  */
 export type PdfCheck = { ok: true } | { ok: false; reason: string };
 
-const MIN_BYTES = 400;
+// Geçerli bir PDF çok küçük olabilir (~300 bayt). Yapısal denetimler asıl kontrolü yapar.
+const MIN_BYTES = 64;
 
 function ascii(bytes: Uint8Array): string {
   let s = "";
