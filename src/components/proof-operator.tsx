@@ -481,7 +481,6 @@ function TeamRow({
             {g.priority === "acil" ? "Acil" : "Yüksek"}
           </Badge>
         )}
-        {g.blocked_reason_badge}
         <span className="ml-auto tabular-nums">
           {g.shipment_ready_at
             ? "Sevkiyata Hazır"
