@@ -21,6 +21,11 @@ import {
   type OpNoteKind,
   type OpWork,
 } from "@/lib/operations";
+import {
+  QUALITY_ACTIONS,
+  QUALITY_ACTION_LABELS,
+  type QualityAction,
+} from "@/lib/quality";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +72,10 @@ function ActiveJob() {
   const [stage, setStage] = useState("");
   const [note, setNote] = useState("");
   const [noteBody, setNoteBody] = useState("");
+  const [category, setCategory] = useState("");
+  const [action, setAction] = useState<QualityAction>("bilinmiyor");
+  const [masterNote, setMasterNote] = useState("");
+  const [removedFromMachine, setRemovedFromMachine] = useState(false);
   const [busy, setBusy] = useState(false);
   const [completeKey, setCompleteKey] = useState(() => newIdempotencyKey());
 
@@ -126,12 +135,20 @@ function ActiveJob() {
               .order("measured_at", { ascending: false })
           : { data: [] as any[] };
 
+      const { data: categories } = await supabase
+        .from("defect_categories")
+        .select("code, label")
+        .eq("is_active", true)
+        .eq("assessed_cause_only", false)
+        .order("sort_order");
+
       return {
         op,
         notes: notes ?? [],
         mine: mine ?? [],
         teamMembers: teamMembers ?? [],
         teamMeasurements: teamMeasurements ?? [],
+        categories: categories ?? [],
       };
     },
   });
@@ -340,6 +357,57 @@ function ActiveJob() {
     setNoteBody("");
     setCompleteKey(newIdempotencyKey());
     toast.success(kind === "bloke" ? "İş bloke edildi." : "Kaydedildi.");
+    await qc.invalidateQueries({ queryKey: ["op-detail", operationId] });
+  }
+
+  async function report(severity: "uyari" | "bloke") {
+    if (!category) {
+      toast.error("Hata kategorisi seçin.");
+      return;
+    }
+    if (!noteBody.trim()) {
+      toast.error("Açıklama zorunludur.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.rpc("quality_report", {
+      _operation_id: operationId,
+      _severity: severity,
+      _category_code: category,
+      _description: noteBody.trim(),
+      _proposed_action: action,
+      _cylinder_removed: removedFromMachine,
+      _idempotency_key: newIdempotencyKey(),
+      ...(masterNote.trim() ? { _master_consult_note: masterNote.trim() } : {}),
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(opErrorText(error.message));
+      return;
+    }
+    setNoteBody("");
+    setMasterNote("");
+    setCategory("");
+    setCompleteKey(newIdempotencyKey());
+    toast.success(
+      severity === "bloke"
+        ? removedFromMachine
+          ? "Bloke edildi ve karar bekleyenlere düştü. Makine bağı serbest bırakıldı."
+          : "Bloke edildi ve karar bekleyenlere düştü. Silindir makinede olduğu için makine işgali sürüyor."
+        : "Uyarı kaydedildi; üretim devam eder ve uyarı sonraki istasyonda görünür.",
+    );
+    await qc.invalidateQueries({ queryKey: ["op-detail", operationId] });
+  }
+
+  async function ackNote(noteId: string) {
+    setBusy(true);
+    const { error } = await supabase.rpc("op_ack_note", { _note_id: noteId });
+    setBusy(false);
+    if (error) {
+      toast.error(opErrorText(error.message));
+      return;
+    }
+    toast.success("Uyarı kontrol edildi olarak kapatıldı.");
     await qc.invalidateQueries({ queryKey: ["op-detail", operationId] });
   }
 
@@ -683,44 +751,111 @@ function ActiveJob() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Not / Uyarı / Bloke</CardTitle>
           <CardDescription>
-            Uyarı işi otomatik bloke etmez. Bloke edilen iş tamamlanmış sayılmaz.
+            Uyarı üretimi durdurmaz; sonraki istasyonda görünür ve "Kontrol Edildi" ile kapanır.
+            Bloke edilen silindirde yeni operasyon başlatılamaz ve iş normal başarıyla sonraki
+            kuyruğa gönderilemez.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <Textarea
-            rows={2}
-            placeholder="Açıklama"
-            value={noteBody}
-            onChange={(e) => setNoteBody(e.target.value)}
-          />
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14"
-              disabled={!canNote || busy}
-              onClick={() => addNote("not")}
-            >
-              Not Ekle
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14"
-              disabled={!canNote || busy}
-              onClick={() => addNote("uyari")}
-            >
-              Uyarı Bırak
-            </Button>
-            <Button
-              variant="destructive"
-              size="lg"
-              className="h-14"
-              disabled={!canNote || busy || !isOpen}
-              onClick={() => addNote("bloke")}
-            >
-              Sorun Var / Bloke Et
-            </Button>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="notbody">Açıklama</Label>
+            <Textarea
+              id="notbody"
+              rows={2}
+              placeholder="Ne gördünüz?"
+              value={noteBody}
+              onChange={(e) => setNoteBody(e.target.value)}
+            />
+          </div>
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-14 w-full"
+            disabled={!canNote || busy}
+            onClick={() => addNote("not")}
+          >
+            Sadece Not Ekle
+          </Button>
+
+          <div className="space-y-3 rounded-md border border-border p-3">
+            <p className="text-sm font-medium">Uyarı / Sorun bildirimi</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="kategori">Hata kategorisi</Label>
+                <select
+                  id="kategori"
+                  className="h-12 w-full rounded-md border border-input bg-background px-3 text-base"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <option value="">Seçin…</option>
+                  {(q.data?.categories ?? []).map((c: any) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oneri">Önerim (karar yerine geçmez)</Label>
+                <select
+                  id="oneri"
+                  className="h-12 w-full rounded-md border border-input bg-background px-3 text-base"
+                  value={action}
+                  onChange={(e) => setAction(e.target.value as QualityAction)}
+                >
+                  {QUALITY_ACTIONS.map((a) => (
+                    <option key={a} value={a}>
+                      {QUALITY_ACTION_LABELS[a]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="usta">Ustaya danışma notu (isteğe bağlı)</Label>
+              <Textarea
+                id="usta"
+                rows={2}
+                placeholder="Ustama danıştım / onay aldım…"
+                value={masterNote}
+                onChange={(e) => setMasterNote(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Acil bloke için ön koşul değildir ve yönetici kararının yerine geçmez.
+              </p>
+            </div>
+            <label className="flex items-center gap-3 rounded-md border border-border p-3 text-base">
+              <Checkbox
+                checked={removedFromMachine}
+                onCheckedChange={(c) => setRemovedFromMachine(!!c)}
+              />
+              Silindir makineden çıkarıldı
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Çıkarılmadıysa makine işgali korunur; makine arızası bu işlemle kapanmaz.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-14"
+                disabled={!canNote || busy}
+                onClick={() => report("uyari")}
+              >
+                Uyarı Bırak
+              </Button>
+              <Button
+                variant="destructive"
+                size="lg"
+                className="h-14"
+                disabled={!canNote || busy || !isOpen}
+                onClick={() => report("bloke")}
+              >
+                Sorun Var / Bloke Et
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2 pt-2 text-sm">
@@ -728,11 +863,26 @@ function ActiveJob() {
               <p className="text-muted-foreground">Kayıt yok.</p>
             ) : (
               q.data!.notes.map((n: any) => (
-                <div key={n.id} className="flex gap-2">
+                <div key={n.id} className="flex flex-wrap items-center gap-2">
                   <Badge variant={n.kind === "not" ? "secondary" : "destructive"}>
                     {OP_NOTE_LABELS[n.kind as never]}
                   </Badge>
                   <span>{n.body}</span>
+                  {n.kind === "uyari" &&
+                    (n.acknowledged_at ? (
+                      <Badge variant="outline">
+                        Kontrol edildi · {new Date(n.acknowledged_at).toLocaleString("tr-TR")}
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!canNote || busy}
+                        onClick={() => ackNote(n.id)}
+                      >
+                        Kontrol Edildi
+                      </Button>
+                    ))}
                   <span className="ml-auto text-xs text-muted-foreground">
                     {new Date(n.created_at).toLocaleString("tr-TR")}
                   </span>

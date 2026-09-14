@@ -397,6 +397,33 @@ export type Database = {
           },
         ]
       }
+      defect_categories: {
+        Row: {
+          assessed_cause_only: boolean
+          code: string
+          created_at: string
+          is_active: boolean
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          assessed_cause_only?: boolean
+          code: string
+          created_at?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          assessed_cause_only?: boolean
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       graphic_assets: {
         Row: {
           byte_size: number
@@ -663,11 +690,14 @@ export type Database = {
       operations: {
         Row: {
           bakir_works: Database["public"]["Enums"]["bakir_work"][]
+          block_resolved_at: string | null
+          block_resolved_by: string | null
           created_at: string
           finished_at: string | null
           finished_by: string | null
           graphic_asset_id: string | null
           id: string
+          machine_held: boolean
           machine_id: string
           note: string | null
           op_label: string
@@ -684,11 +714,14 @@ export type Database = {
         }
         Insert: {
           bakir_works?: Database["public"]["Enums"]["bakir_work"][]
+          block_resolved_at?: string | null
+          block_resolved_by?: string | null
           created_at?: string
           finished_at?: string | null
           finished_by?: string | null
           graphic_asset_id?: string | null
           id?: string
+          machine_held?: boolean
           machine_id: string
           note?: string | null
           op_label: string
@@ -705,11 +738,14 @@ export type Database = {
         }
         Update: {
           bakir_works?: Database["public"]["Enums"]["bakir_work"][]
+          block_resolved_at?: string | null
+          block_resolved_by?: string | null
           created_at?: string
           finished_at?: string | null
           finished_by?: string | null
           graphic_asset_id?: string | null
           id?: string
+          machine_held?: boolean
           machine_id?: string
           note?: string | null
           op_label?: string
@@ -933,6 +969,134 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quality_issues: {
+        Row: {
+          billable: boolean | null
+          category_code: string
+          cylinder_removed: boolean
+          decided_at: string | null
+          decided_by: string | null
+          decision: Database["public"]["Enums"]["quality_decision"] | null
+          decision_reason: string | null
+          description: string
+          detected_station_id: string
+          id: string
+          master_consult_note: string | null
+          note_id: string | null
+          operation_id: string | null
+          proposed_action: Database["public"]["Enums"]["quality_action"]
+          receipt_id: string | null
+          requested_at: string
+          requested_by: string | null
+          resolved_at: string | null
+          responsibility: Database["public"]["Enums"]["quality_responsibility"]
+          root_cause_code: string | null
+          severity: Database["public"]["Enums"]["op_note_kind"]
+          status: Database["public"]["Enums"]["quality_status"]
+          team_member_id: string
+        }
+        Insert: {
+          billable?: boolean | null
+          category_code: string
+          cylinder_removed?: boolean
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: Database["public"]["Enums"]["quality_decision"] | null
+          decision_reason?: string | null
+          description: string
+          detected_station_id: string
+          id?: string
+          master_consult_note?: string | null
+          note_id?: string | null
+          operation_id?: string | null
+          proposed_action?: Database["public"]["Enums"]["quality_action"]
+          receipt_id?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          resolved_at?: string | null
+          responsibility?: Database["public"]["Enums"]["quality_responsibility"]
+          root_cause_code?: string | null
+          severity?: Database["public"]["Enums"]["op_note_kind"]
+          status?: Database["public"]["Enums"]["quality_status"]
+          team_member_id: string
+        }
+        Update: {
+          billable?: boolean | null
+          category_code?: string
+          cylinder_removed?: boolean
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: Database["public"]["Enums"]["quality_decision"] | null
+          decision_reason?: string | null
+          description?: string
+          detected_station_id?: string
+          id?: string
+          master_consult_note?: string | null
+          note_id?: string | null
+          operation_id?: string | null
+          proposed_action?: Database["public"]["Enums"]["quality_action"]
+          receipt_id?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          resolved_at?: string | null
+          responsibility?: Database["public"]["Enums"]["quality_responsibility"]
+          root_cause_code?: string | null
+          severity?: Database["public"]["Enums"]["op_note_kind"]
+          status?: Database["public"]["Enums"]["quality_status"]
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_issues_category_code_fkey"
+            columns: ["category_code"]
+            isOneToOne: false
+            referencedRelation: "defect_categories"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "quality_issues_detected_station_id_fkey"
+            columns: ["detected_station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_issues_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "operation_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_issues_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_issues_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "cylinder_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_issues_root_cause_code_fkey"
+            columns: ["root_cause_code"]
+            isOneToOne: false
+            referencedRelation: "defect_categories"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "quality_issues_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -1629,11 +1793,14 @@ export type Database = {
         Args: { _op_id: string; _station_code: string; _uid: string }
         Returns: {
           bakir_works: Database["public"]["Enums"]["bakir_work"][]
+          block_resolved_at: string | null
+          block_resolved_by: string | null
           created_at: string
           finished_at: string | null
           finished_by: string | null
           graphic_asset_id: string | null
           id: string
+          machine_held: boolean
           machine_id: string
           note: string | null
           op_label: string
@@ -1675,6 +1842,38 @@ export type Database = {
           _skip_queue_reason?: string
           _step_id: string
         }
+        Returns: Json
+      }
+      quality_decide: {
+        Args: {
+          _decision: Database["public"]["Enums"]["quality_decision"]
+          _idempotency_key?: string
+          _issue_id: string
+          _reason: string
+          _responsibility?: Database["public"]["Enums"]["quality_responsibility"]
+          _root_cause_code?: string
+        }
+        Returns: Json
+      }
+      quality_release_machine: {
+        Args: { _issue_id: string }
+        Returns: undefined
+      }
+      quality_report: {
+        Args: {
+          _category_code: string
+          _cylinder_removed?: boolean
+          _description: string
+          _idempotency_key?: string
+          _master_consult_note?: string
+          _operation_id: string
+          _proposed_action?: Database["public"]["Enums"]["quality_action"]
+          _severity: Database["public"]["Enums"]["op_note_kind"]
+        }
+        Returns: Json
+      }
+      quality_resume_flow: {
+        Args: { _idempotency_key?: string; _issue_id: string }
         Returns: Json
       }
       receive_cylinder: {
@@ -1862,6 +2061,23 @@ export type Database = {
         | "mil_cakma"
         | "yuzuk_degisimi"
         | "tamir"
+      quality_action:
+        | "yeniden_kontrol"
+        | "tekrar_islem"
+        | "silindir_degisimi"
+        | "bilinmiyor"
+      quality_decision:
+        | "devam"
+        | "rework"
+        | "silindir_degisimi"
+        | "red"
+        | "ek_bilgi"
+      quality_responsibility: "ic_hata" | "musteri_revizyonu" | "bilinmiyor"
+      quality_status:
+        | "acik"
+        | "bilgi_bekleniyor"
+        | "karar_verildi"
+        | "reddedildi"
       reservation_status: "aktif" | "birakildi"
       route_plan_status: "taslak" | "yururlukte" | "superseded"
       route_step_status:
@@ -2062,6 +2278,26 @@ export const Constants = {
         "mil_cakma",
         "yuzuk_degisimi",
         "tamir",
+      ],
+      quality_action: [
+        "yeniden_kontrol",
+        "tekrar_islem",
+        "silindir_degisimi",
+        "bilinmiyor",
+      ],
+      quality_decision: [
+        "devam",
+        "rework",
+        "silindir_degisimi",
+        "red",
+        "ek_bilgi",
+      ],
+      quality_responsibility: ["ic_hata", "musteri_revizyonu", "bilinmiyor"],
+      quality_status: [
+        "acik",
+        "bilgi_bekleniyor",
+        "karar_verildi",
+        "reddedildi",
       ],
       reservation_status: ["aktif", "birakildi"],
       route_plan_status: ["taslak", "yururlukte", "superseded"],

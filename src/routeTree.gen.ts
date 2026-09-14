@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDepoRouteImport } from './routes/_authenticated/depo'
+import { Route as AuthenticatedKaliteRouteImport } from './routes/_authenticated/kalite'
 import { Route as AuthenticatedKayitlarRouteImport } from './routes/_authenticated/kayitlar'
 import { Route as AuthenticatedKuyrukRouteImport } from './routes/_authenticated/kuyruk'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
@@ -46,6 +47,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthenticatedDepoRoute = AuthenticatedDepoRouteImport.update({
   id: '/depo',
   path: '/depo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedKaliteRoute = AuthenticatedKaliteRouteImport.update({
+  id: '/kalite',
+  path: '/kalite',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKayitlarRoute = AuthenticatedKayitlarRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/depo': typeof AuthenticatedDepoRoute
+  '/kalite': typeof AuthenticatedKaliteRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
   '/kuyruk': typeof AuthenticatedKuyrukRoute
   '/panel': typeof AuthenticatedPanelRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/depo': typeof AuthenticatedDepoRoute
+  '/kalite': typeof AuthenticatedKaliteRoute
   '/kayitlar': typeof AuthenticatedKayitlarRoute
   '/kuyruk': typeof AuthenticatedKuyrukRoute
   '/panel': typeof AuthenticatedPanelRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/depo': typeof AuthenticatedDepoRoute
+  '/_authenticated/kalite': typeof AuthenticatedKaliteRoute
   '/_authenticated/kayitlar': typeof AuthenticatedKayitlarRoute
   '/_authenticated/kuyruk': typeof AuthenticatedKuyrukRoute
   '/_authenticated/panel': typeof AuthenticatedPanelRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/depo'
+    | '/kalite'
     | '/kayitlar'
     | '/kuyruk'
     | '/panel'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/depo'
+    | '/kalite'
     | '/kayitlar'
     | '/kuyruk'
     | '/panel'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/depo'
+    | '/_authenticated/kalite'
     | '/_authenticated/kayitlar'
     | '/_authenticated/kuyruk'
     | '/_authenticated/panel'
@@ -295,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/depo'
       fullPath: '/depo'
       preLoaderRoute: typeof AuthenticatedDepoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kalite': {
+      id: '/_authenticated/kalite'
+      path: '/kalite'
+      fullPath: '/kalite'
+      preLoaderRoute: typeof AuthenticatedKaliteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kayitlar': {
@@ -407,6 +426,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDepoRoute: typeof AuthenticatedDepoRoute
+  AuthenticatedKaliteRoute: typeof AuthenticatedKaliteRoute
   AuthenticatedKayitlarRoute: typeof AuthenticatedKayitlarRoute
   AuthenticatedKuyrukRoute: typeof AuthenticatedKuyrukRoute
   AuthenticatedPanelRoute: typeof AuthenticatedPanelRoute
@@ -425,6 +445,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDepoRoute: AuthenticatedDepoRoute,
+  AuthenticatedKaliteRoute: AuthenticatedKaliteRoute,
   AuthenticatedKayitlarRoute: AuthenticatedKayitlarRoute,
   AuthenticatedKuyrukRoute: AuthenticatedKuyrukRoute,
   AuthenticatedPanelRoute: AuthenticatedPanelRoute,
