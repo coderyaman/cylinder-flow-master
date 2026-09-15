@@ -60,6 +60,15 @@ export const Route = createFileRoute("/_authenticated/uretim")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+    istasyon: typeof search.istasyon === "string" ? search.istasyon : undefined,
+    oncelik: typeof search.oncelik === "string" ? search.oncelik : undefined,
+    geciken: search.geciken === true || search.geciken === "true" ? true : undefined,
+    bloke: search.bloke === true || search.bloke === "true" ? true : undefined,
+    rework: search.rework === true || search.rework === "true" ? true : undefined,
+    kritik: search.kritik === true || search.kritik === "true" ? true : undefined,
+  }),
   component: KanbanScreen,
 });
 
