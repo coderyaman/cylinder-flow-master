@@ -183,6 +183,27 @@
       "when": 1789420438266,
       "tag": "0025_muhasebe_prova_tek_takim_operasyonu",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1789471503531,
+      "tag": "0026_asama11_uretim_kanbani",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1789471622799,
+      "tag": "0027_kanban_rework_turu",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1789472106895,
+      "tag": "0028_op_start_kuyruk_sirasi",
+      "breakpoints": true
     }
   ]
 }

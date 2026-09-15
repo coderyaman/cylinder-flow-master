@@ -54,9 +54,10 @@ function QueuesScreen() {
       const { data, error } = await supabase
         .from("route_steps")
         .select(
-          "id, op_label, queued_at, station_id, stations(code, name, sort_order), route_plans(team_members(kind, planned_ops, cylinder_receipts(cyl_code), teams(team_code, orders(work_order_no, name, priority, critical_note, customers(name)))))",
+          "id, op_label, queued_at, queue_rank, station_id, stations(code, name, sort_order), route_plans(team_members(kind, planned_ops, cylinder_receipts(cyl_code), teams(team_code, orders(work_order_no, name, priority, critical_note, customers(name)))))",
         )
         .eq("status", "kuyrukta")
+        .order("queue_rank", { ascending: true, nullsFirst: false })
         .order("queued_at");
       if (error) throw error;
       return data ?? [];

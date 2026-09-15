@@ -1505,6 +1505,7 @@ export type Database = {
           id: string
           op_label: string
           plan_id: string
+          queue_rank: number | null
           queued_at: string | null
           round_no: number
           seq: number
@@ -1518,6 +1519,7 @@ export type Database = {
           id?: string
           op_label: string
           plan_id: string
+          queue_rank?: number | null
           queued_at?: string | null
           round_no?: number
           seq: number
@@ -1531,6 +1533,7 @@ export type Database = {
           id?: string
           op_label?: string
           plan_id?: string
+          queue_rank?: number | null
           queued_at?: string | null
           round_no?: number
           seq?: number
@@ -2230,6 +2233,8 @@ export type Database = {
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      kanban_board: { Args: never; Returns: Json }
+      kanban_order_detail: { Args: { _order_id: string }; Returns: Json }
       op_ack_note: { Args: { _note_id: string }; Returns: undefined }
       op_add_note: {
         Args: {
@@ -2423,6 +2428,10 @@ export type Database = {
       quality_resume_flow: {
         Args: { _idempotency_key?: string; _issue_id: string }
         Returns: Json
+      }
+      queue_reorder: {
+        Args: { _station_id: string; _step_ids: string[] }
+        Returns: number
       }
       receive_cylinder: {
         Args: {
