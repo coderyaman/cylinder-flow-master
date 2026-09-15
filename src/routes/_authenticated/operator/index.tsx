@@ -153,10 +153,12 @@ function OperatorHome() {
       const { data, error } = await supabase
         .from("route_steps")
         .select(
-          `id, op_label, queued_at, station_id, stations(code, name, sort_order), route_plans(team_members(${MEMBER_SELECT}))`,
+          `id, op_label, queued_at, queue_rank, station_id, stations(code, name, sort_order), route_plans(team_members(${MEMBER_SELECT}))`,
         )
         .eq("status", "kuyrukta")
         .eq("station_id", stationId!)
+        // Pano'da verilen sıra ile aynı kaynak: önce queue_rank, sonra kuyruğa giriş.
+        .order("queue_rank", { ascending: true, nullsFirst: false })
         .order("queued_at");
       if (error) throw error;
       const { data: started, error: e2 } = await supabase
