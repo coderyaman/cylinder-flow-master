@@ -241,3 +241,37 @@
 - Önceki aşamalardan devam: Prova'nın Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrarlanan
   Tamamla idempotency, `proof_release_hold` canlı denemesi, üretime alınmış üyede kontrollü rota düzeltme,
   iptal kaynaklı muhasebe paketinin canlı denenmesi.
+
+## Aşama 12 — Müdür/Asistan ve Patron dashboardları (prototip, canlı denendi)
+
+- Migration 0030: `tr_day`, `tr_start` (Europe/Istanbul), `dash_production()`, `dash_business(_from,_to)`.
+  0031–0032: `dash_business_billing(t0,t1)` ayrı fonksiyona alındı; `accounting_items` dizi dönmediğinde
+  "cannot extract elements from an object" hatası veriyordu, artık tip kontrolü yapılıyor.
+- `/panel` artık geliştirme aşaması kartları yerine role göre özet açar:
+  `team.manage` / `production.release` → Üretim özeti; patron / müdür / admin / muhasebe → Yönetici özeti;
+  admin iki görünüm arasında düğmeyle geçer. Operatör/depo/grafik rolleri kendi çalışma ekranı kısayollarını görür.
+- Üretim özeti (anlık): aktif sipariş, üretimdeki fiziksel silindir, planlanan imalat (ayrı), bugün
+  tamamlanan operasyon, blokeli silindir, geciken/bugün terminli sipariş, bugün depoya giren, bugün/hafta/ay
+  işlenen tekil silindir, çalışan/aktif makine. Altında istasyon yoğunluğu (grafik + tablo: kuyrukta/işlemde/
+  bloke, açık kuyruk yaşı, 7 günlük ortalama işlem süresi), makine tablosu, bekleyen işler ve bekleme süreleri,
+  termin kovaları (geciken / bugün / 1–3 gün), müdahale bekleyen kalite kararları, takımı bekleten üyeler.
+- Göstergeler filtrelenmiş listeye gider: `/uretim?bloke=true`, `?geciken=true`, `?istasyon=KOD`,
+  `/kalite?issue=…`, `/siparis/$orderId`. `uretim.tsx` artık `validateSearch` ile bu parametreleri okur.
+- Yönetici özeti: Bugün / bu hafta / bu ay / özel tarih; tamamlanan ve sevk edilen sipariş ayrı, sevk edilen
+  takım/silindir, işlenen tekil CYL, tamamlanan operasyon, gerçekleşen iş kalemi, Prova turu (takım başına 1),
+  iç hata / müşteri revizyonu rework olayları, rework operasyonu, ticari gruplar, muhasebe durumu,
+  istasyon grafiği, müşteri tablosu, dönemdeki sevkiyatlar. TL/ciro/kârlılık hesaplanmaz.
+- Anlık göstergeler ile dönem toplamları ayrı etiketlenir; hesaplanamayan metrikler "Veri eksik" der
+  (makine çalışma yüzdesi, duruş, verimlilik). Son güncellenme zamanı ekranda; veri alınamadı ile
+  gerçek sıfır ayrıdır. Dashboard yetki genişletmez (`can_read_orders`, `accounting_items` kendi kontrolü).
+
+### Canlı doğrulama (admin oturumu, 2026-09-15)
+- `dash_production`: aktif sipariş 8, WIP 6, planlanan imalat 1, bugün tamamlanan operasyon 1,
+  blokeli 1, bugün depoya giren 2, çalışan/aktif makine 1/9 — kaynak sorgularla eşleşti (WIP 6).
+- `dash_business` (01–15 Eylül): tamamlanan operasyon 37, tekil CYL 8, Prova turu 3 (üye sayısıyla
+  çoğaltılmadı; 4 silindir kapsandı), sevkiyat 1 takım / 2 silindir — SQL karşılaştırması birebir aynı.
+- "Blokeli silindir" göstergesine basınca `/uretim?bloke=true` açıldı ve yalnızca blokeli kayıt listelendi.
+
+### Açık işler
+- Muhasebe kalemi olmayan/iptal kaynaklı paketlerde ticari grup sayımının canlı denenmesi.
+- Grafikler tek renk paletiyle; trend (zaman serisi) grafiği ve dışa aktarma yok (sonraki aşama).
