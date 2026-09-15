@@ -37,7 +37,7 @@ function AppShell() {
 
   async function handleSignOut() {
     await signOut();
-    navigate({ to: "/auth", search: {}, replace: true });
+    navigate({ to: "/auth", search: { redirect: undefined }, replace: true });
   }
 
   return (
