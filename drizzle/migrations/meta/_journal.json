@@ -232,6 +232,20 @@
       "when": 1789474929746,
       "tag": "0032_dash_business_billing_kullan",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1789476501122,
+      "tag": "0033_secure_selected_database_surfaces",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1789476512520,
+      "tag": "0034_tighten_graphics_storage_direct_access",
+      "breakpoints": true
     }
   ]
 }
