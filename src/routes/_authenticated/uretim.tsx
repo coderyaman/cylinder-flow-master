@@ -193,6 +193,15 @@ function KanbanScreen() {
   }
 
   const visible = columns.filter((c) => station === ALL || c.code === station);
+  const filtering =
+    !!term ||
+    priority !== ALL ||
+    machine !== ALL ||
+    operator !== ALL ||
+    late ||
+    blockedOnly ||
+    reworkOnly ||
+    criticalOnly;
 
   function move(col: KanbanColumn, stepId: string, dir: -1 | 1) {
     const ids = (col.queued as KanbanCard[]).map((x) => x.step_id!).filter(Boolean);
