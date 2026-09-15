@@ -36,7 +36,9 @@ function Panel() {
   const canProduction = hasPermission("team.manage") || hasPermission("production.release");
   const canBusiness =
     hasRole("patron") || hasRole("admin") || hasRole("mudur") || hasPermission("accounting.process");
-  const [view, setView] = useState<"uretim" | "ticari">(canProduction ? "uretim" : "ticari");
+  const [picked, setPicked] = useState<"uretim" | "ticari" | null>(null);
+  const view: "uretim" | "ticari" = picked ?? (canProduction ? "uretim" : "ticari");
+  const setView = setPicked;
 
   const title = `Hoş geldiniz${profile?.full_name ? `, ${profile.full_name}` : ""}`;
 
