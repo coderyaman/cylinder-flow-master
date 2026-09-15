@@ -336,6 +336,7 @@ function KanbanScreen() {
                 col={col}
                 now={now}
                 filter={matchesTeam}
+                filtering={filtering}
                 onSelect={(t) => setTeam(t)}
               />
             ) : (
@@ -344,6 +345,7 @@ function KanbanScreen() {
                 col={col}
                 now={now}
                 filter={matches}
+                filtering={filtering}
                 canManage={canManage}
                 onSelect={setCard}
                 onMove={(id, dir) => move(col, id, dir)}
