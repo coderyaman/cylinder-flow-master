@@ -205,3 +205,39 @@
 - Prova tek takım operasyonu sayılır (migration 0025: CYL bazlı eski PROVA operasyonları ticari kalem değil).
 - Canlı: 562341 → 7 kalem (6 operasyon + 1 Prova turu), İşlendi, tekrar gönderim ikinci kayıt üretmedi, ticari istisna sonrası "Yeniden İnceleme Gerekli".
 - Açık: gerçek sipariş ticari kararları değiştirilmedi; iptal kaynaklı paket canlı denenmedi.
+
+## Aşama 11 — Üretim Kanbanı ve canlı sipariş görünümü (prototip, canlı denendi)
+- Menüde **Üretim** (`team.manage`), rota `/uretim`.
+- `kanban_board()` (0026/0027): istasyon sütunları sort_order sırasıyla; her sütunda İşlemde / Kuyrukta /
+  Bloke-Karar Bekliyor. Kaynak yalnızca mevcut `operations` ve `route_steps` (status='kuyrukta',
+  yürürlükteki plan) — ayrı Kanban durumu yok, planlı adımlar kuyrukta gösterilmez.
+  Sipariş filtresi: `closure_status='acik' AND shipped_at IS NULL` (sevk edilenler panoda yok).
+- Kartlar: firma, iş emri, CYL veya "Planlanan imalat", kademe, termin, öncelik, bekleme/geçen süre,
+  uyarı sayısı, rework turu, bekletme etiketi (yönetim / karar / bloke); İşlemdeyse makine ve operatör.
+  Renk durumu anlatır (gecikti / termin yaklaşıyor / bloke), Acil ayrıca metinle. Karta basınca yan panel.
+- Prova sütunu takım kartıdır: Provada / Prova Kuyruğu / Bloke-Karar Bekliyor / Hazırlık Bekleyenler /
+  Sevkiyata Hazır. "1 takım" ile "N silindir" ayrı yazılır; hazırlık bekleyenler kuyruk sayısına eklenmez.
+- `kanban_order_detail(_order_id)`: aktif üyelerin güncel dağılımı, üye başına durum/istasyon/eksik,
+  kalite kaydı bağlantısı, tarihsel (değiştirilmiş) üyeler. Yüzde veya tahmini bitiş verilmez.
+- Filtreler: arama (firma / iş emri / iş adı / CYL), istasyon, öncelik, makine, operatör, Geciken,
+  Bloke-karar, Rework, "Kritik İşler". Vardiya filtresi eklenmedi (veri yok).
+- Kuyruk sırası: `route_steps.queue_rank` + `queue_reorder(station_id, step_ids)` (`team.manage`, audit).
+  Operatör ekranı, Kuyruklar ekranı ve `op_start`'ın "sıradaki iş" kuralı (0028) aynı sırayı kullanır.
+- Sürükleyerek rota atlama veya operasyon tamamlama yok; yan panelden ilgili ekranlara yönlendirme var.
+
+### Canlı doğrulama (test kayıtları: DORA / KANBAN-TEST-1, TAKIM-2026-0006, CYL-2026-00015/16)
+- İki fiziksel üyeli test siparişi açıldı, rota kaydedildi, üretime alındı → iki kart Sökme kuyruğunda.
+- Panoda sıra değiştirildi (00016 üste) → operatör ekranında "Sıradaki önerilen" 00016 oldu;
+  0028'den önce `op_start` eski sırayı kullanıyordu, düzeltildi.
+- Sökme başlatıldı → kart Kuyrukta'dan İşlemde'ye geçti (makine, operatör, süre);
+  tamamlandı → yalnızca Bakır Kaplama kuyruğuna taşındı.
+- İkinci üyede bloke seviyesinde kalite kaydı → kart Bloke/Karar Bekliyor bölümünde
+  "Karar bekliyor" + "Makine bağlı" etiketiyle göründü.
+- Gerçek iş 4342341523 ve diğer gerçek siparişler değiştirilmedi.
+
+### Açık işler
+- Test kaydı KANBAN-TEST-1'de açık bir bloke/kalite kaydı bırakıldı (bilerek, pano gösterimi için).
+- Vardiya filtresi (veri yok), kartların sürükle-bırak ile sıralanması (şu an ok tuşları).
+- Önceki aşamalardan devam: Prova'nın Tekrar Prova / Takım Yeniden Yapılacak sonuçları, tekrarlanan
+  Tamamla idempotency, `proof_release_hold` canlı denemesi, üretime alınmış üyede kontrollü rota düzeltme,
+  iptal kaynaklı muhasebe paketinin canlı denenmesi.
