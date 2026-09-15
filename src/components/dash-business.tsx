@@ -30,9 +30,9 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
 
 function Stat({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{value}</p>
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">{value}</p>
       {hint ? <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p> : null}
     </div>
   );
@@ -65,14 +65,15 @@ export function DashBusinessView() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-wrap gap-1">
+    <div className="space-y-7">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="grid gap-4 lg:grid-cols-[auto_1fr_auto] lg:items-end">
+        <div className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
           {PERIODS.map((p) => (
             <Button
               key={p.key}
               size="sm"
-              variant={period === p.key ? "default" : "outline"}
+               variant={period === p.key ? "default" : "ghost"}
               onClick={() => setPeriod(p.key)}
             >
               {p.label}
@@ -91,10 +92,11 @@ export function DashBusinessView() {
             </div>
           </div>
         ) : null}
-        <p className="ml-auto text-xs text-muted-foreground">
-          Dönem: {trDateOnly(range.from)} – {trDateOnly(range.to)} (Türkiye saati)
+        <p className="text-right text-xs text-muted-foreground">
+          Gösterilen dönem: <strong className="font-semibold text-foreground">{trDateOnly(range.from)} – {trDateOnly(range.to)}</strong> (Türkiye saati)
           {d ? ` · Son güncellenme: ${trTime(d.generated_at)}` : ""}
         </p>
+        </div>
       </div>
 
       {query.isLoading ? <p className="text-sm text-muted-foreground">Özet yükleniyor…</p> : null}
@@ -110,7 +112,7 @@ export function DashBusinessView() {
 
       {d ? (
         <>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
+          <section className="space-y-3"><div><h2 className="text-sm font-semibold text-foreground">Üretim ve sevkiyat</h2><p className="text-xs text-muted-foreground">Seçilen dönemde gerçekleşen faaliyetler</p></div><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Stat
               label="Tamamlanan sipariş"
               value={d.totals.completed_orders}
@@ -139,21 +141,16 @@ export function DashBusinessView() {
               value={d.totals.proof_runs}
               hint={`${d.totals.proof_cylinders} silindir kapsandı`}
             />
-            <Stat label="Rework operasyonu" value={d.totals.rework_operations} hint="Olaydan farklı kavram" />
-            <Stat label="İç hata rework olayı" value={d.totals.rework_events_internal} hint="Ücretsiz" />
-            <Stat
-              label="Müşteri revizyonu rework olayı"
-              value={d.totals.rework_events_customer}
-              hint="Faturalandırılabilir"
-            />
             <Stat
               label="Zamanında sevk"
               value={`${d.totals.on_time_shipments} / ${d.totals.shipped_teams}`}
               hint="Termin gününe kadar sevk"
             />
-          </div>
+          </div></section>
 
-          <div className="grid gap-4 xl:grid-cols-3">
+          <section className="space-y-3"><div><h2 className="text-sm font-semibold text-foreground">Kalite ve rework</h2><p className="text-xs text-muted-foreground">Rework olayı ile operasyonu ayrı izlenir</p></div><div className="grid gap-3 sm:grid-cols-3"><Stat label="Rework operasyonu" value={d.totals.rework_operations} hint="Olaydan farklı kavram" /><Stat label="İç hata rework olayı" value={d.totals.rework_events_internal} hint="Ücretsiz" /><Stat label="Müşteri revizyonu rework olayı" value={d.totals.rework_events_customer} hint="Faturalandırılabilir" /></div></section>
+
+          <section className="space-y-3"><div><h2 className="text-sm font-semibold text-foreground">Ticari işler ve muhasebe</h2><p className="text-xs text-muted-foreground">Dönem faaliyeti ve anlık muhasebe durumu ayrı gösterilir</p></div><div className="grid gap-5 xl:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Ticari değerlendirme</CardTitle>
@@ -222,16 +219,16 @@ export function DashBusinessView() {
                         <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} height={56} textAnchor="end" />
                         <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                         <Tooltip />
-                        <Bar dataKey="Operasyon" fill="hsl(var(--primary))" />
+                         <Bar dataKey="Operasyon" fill="var(--chart-1)" radius={[4,4,0,0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 )}
               </CardContent>
             </Card>
-          </div>
+          </div></section>
 
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Müşteri bazında özet</CardTitle>
               <CardDescription>Dönemde gerçekleşen üretim ve sevkiyat.</CardDescription>
@@ -272,7 +269,7 @@ export function DashBusinessView() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Dönemdeki sevkiyatlar</CardTitle>
               <CardDescription>Sevk tarihine göre; Sevkiyata Hazır ile karıştırılmaz.</CardDescription>

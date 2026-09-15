@@ -12,13 +12,13 @@ import { DashBusinessView } from "@/components/dash-business";
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
     meta: [
-      { title: "Genel Panel — Rotagravür MES" },
+      { title: "Genel Bakış — Operon" },
       {
         name: "description",
         content:
           "Rolünüze göre üretim özeti: aktif siparişler, istasyon yoğunluğu, bekleyen kararlar ve dönemsel üretim/sevkiyat toplamları.",
       },
-      { property: "og:title", content: "Genel Panel — Rotagravür MES" },
+      { property: "og:title", content: "Genel Bakış — Operon" },
       {
         property: "og:description",
         content: "Üretim ve ticari özetler tek ekranda; rakamlar kaynak kayıtlarla aynı kapsamı kullanır.",
@@ -40,40 +40,30 @@ function Panel() {
   const view: "uretim" | "ticari" = picked ?? (canProduction ? "uretim" : "ticari");
   const setView = setPicked;
 
-  const title = `Hoş geldiniz${profile?.full_name ? `, ${profile.full_name}` : ""}`;
-
   return (
-    <div className="space-y-6">
-      <section className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-7">
+      <section className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {roles.length === 0 ? (
-              <Badge variant="outline">Rol atanmadı</Badge>
-            ) : (
-              roles.map((r) => (
-                <Badge key={r} variant="secondary">
-                  {ROLE_LABELS[r]}
-                </Badge>
-              ))
-            )}
-          </div>
+          <p className="text-xs font-semibold text-primary">GENEL BAKIŞ</p>
+          <h1 className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">
+            {view === "uretim" ? "Üretim Özeti" : "Yönetici Özeti"}
+          </h1>
         </div>
         {canProduction && canBusiness ? (
-          <div className="flex gap-1">
+          <div className="flex rounded-lg border border-border bg-card p-1 shadow-sm">
             <Button
               size="sm"
-              variant={view === "uretim" ? "default" : "outline"}
+              variant={view === "uretim" ? "default" : "ghost"}
               onClick={() => setView("uretim")}
             >
-              Üretim özeti
+              Üretim
             </Button>
             <Button
               size="sm"
-              variant={view === "ticari" ? "default" : "outline"}
+              variant={view === "ticari" ? "default" : "ghost"}
               onClick={() => setView("ticari")}
             >
-              Yönetici özeti
+              Yönetici
             </Button>
           </div>
         ) : null}
