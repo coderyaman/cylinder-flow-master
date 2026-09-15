@@ -211,6 +211,13 @@
       "when": 1789474389702,
       "tag": "0029_asama12_dashboardlar",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1789474478033,
+      "tag": "0030_asama12_dashboard_fonksiyonlari",
+      "breakpoints": true
     }
   ]
 }

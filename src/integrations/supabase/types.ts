@@ -2215,6 +2215,8 @@ export type Database = {
         Args: { _idempotency_key?: string; _order_id: string }
         Returns: Json
       }
+      dash_business: { Args: { _from: string; _to: string }; Returns: Json }
+      dash_production: { Args: never; Returns: Json }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
         Args: { _permission: string; _user_id: string }
@@ -2547,6 +2549,8 @@ export type Database = {
         Returns: Json
       }
       team_sync_new_items: { Args: { _order_id: string }; Returns: number }
+      tr_day: { Args: { _ts: string }; Returns: string }
+      tr_start: { Args: { _d: string }; Returns: string }
       update_cylinder_receipt: {
         Args: {
           _idempotency_key?: string
