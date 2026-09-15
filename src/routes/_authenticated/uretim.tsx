@@ -60,15 +60,19 @@ export const Route = createFileRoute("/_authenticated/uretim")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-    istasyon: typeof search.istasyon === "string" ? search.istasyon : undefined,
-    oncelik: typeof search.oncelik === "string" ? search.oncelik : undefined,
-    geciken: search.geciken === true || search.geciken === "true" ? true : undefined,
-    bloke: search.bloke === true || search.bloke === "true" ? true : undefined,
-    rework: search.rework === true || search.rework === "true" ? true : undefined,
-    kritik: search.kritik === true || search.kritik === "true" ? true : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+    const flag = (v: unknown) => (v === true || v === "true" ? true : undefined);
+    return {
+      q: str(search["q"]),
+      istasyon: str(search["istasyon"]),
+      oncelik: str(search["oncelik"]),
+      geciken: flag(search["geciken"]),
+      bloke: flag(search["bloke"]),
+      rework: flag(search["rework"]),
+      kritik: flag(search["kritik"]),
+    };
+  },
   component: KanbanScreen,
 });
 
