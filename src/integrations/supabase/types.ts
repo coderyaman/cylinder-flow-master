@@ -2216,6 +2216,10 @@ export type Database = {
         Returns: Json
       }
       dash_business: { Args: { _from: string; _to: string }; Returns: Json }
+      dash_business_billing: {
+        Args: { _t0: string; _t1: string }
+        Returns: Json
+      }
       dash_production: { Args: never; Returns: Json }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
