@@ -23,13 +23,13 @@ export const Route = createFileRoute("/_authenticated/operator/is/$stepId")({
   }),
   head: () => ({
     meta: [
-      { title: "İş Kartı — Operatör — Rotagravür MES" },
+      { title: "İş Kartı — Operatör — Operon" },
       {
         name: "description",
         content:
           "İş bilgilerini görün, fiziksel silindirde QR eşleşmesini sağlayın, makine seçip işi başlatın.",
       },
-      { property: "og:title", content: "İş Kartı — Operatör — Rotagravür MES" },
+      { property: "og:title", content: "İş Kartı — Operatör — Operon" },
       { property: "og:description", content: "Makine seçimi ve operasyon başlatma ekranı." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

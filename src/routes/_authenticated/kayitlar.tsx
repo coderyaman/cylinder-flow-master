@@ -16,9 +16,9 @@ import {
 export const Route = createFileRoute("/_authenticated/kayitlar")({
   head: () => ({
     meta: [
-      { title: "Denetim Kaydı — Rotagravür MES" },
+      { title: "Denetim Kaydı — Operon" },
       { name: "description", content: "Silinemez denetim kaydı: kim, ne zaman, neyi değiştirdi." },
-      { property: "og:title", content: "Denetim Kaydı — Rotagravür MES" },
+      { property: "og:title", content: "Denetim Kaydı — Operon" },
       { property: "og:description", content: "Silinemez sistem denetim kaydı." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

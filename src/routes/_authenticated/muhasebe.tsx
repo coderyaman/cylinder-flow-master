@@ -32,13 +32,13 @@ import {
 export const Route = createFileRoute("/_authenticated/muhasebe")({
   head: () => ({
     meta: [
-      { title: "Muhasebe — Rotagravür MES" },
+      { title: "Muhasebe — Operon" },
       {
         name: "description",
         content:
           "Sevk edilen ve üretim görmüş iptal siparişlerinin gerçekleşen işlerini ticari gruplarıyla görün, Muhasebede İşlendi olarak kapatın.",
       },
-      { property: "og:title", content: "Muhasebe — Rotagravür MES" },
+      { property: "og:title", content: "Muhasebe — Operon" },
       {
         property: "og:description",
         content: "Gerçekleşen işlerin ticari değerlendirmesi ve muhasebe işleme kaydı.",

@@ -40,13 +40,13 @@ export const Route = createFileRoute("/_authenticated/kalite")({
   }),
   head: () => ({
     meta: [
-      { title: "Kalite / Karar Bekleyenler — Rotagravür MES" },
+      { title: "Kalite / Karar Bekleyenler — Operon" },
       {
         name: "description",
         content:
           "Bildirilen uyarı ve blokeleri inceleyin; devam, onaylı rework, silindir değiştirme, red veya ek bilgi kararını gerekçesiyle kaydedin.",
       },
-      { property: "og:title", content: "Kalite / Karar Bekleyenler — Rotagravür MES" },
+      { property: "og:title", content: "Kalite / Karar Bekleyenler — Operon" },
       {
         property: "og:description",
         content: "Tespit istasyonu, gözlenen hata, kaynak neden ve ticari sorumluluk ayrı kayıtlar.",

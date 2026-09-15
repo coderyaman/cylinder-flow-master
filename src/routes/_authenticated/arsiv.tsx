@@ -17,13 +17,13 @@ export const Route = createFileRoute("/_authenticated/arsiv")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Arşiv — Rotagravür MES" },
+      { title: "Arşiv — Operon" },
       {
         name: "description",
         content:
           "Sevk edilmiş siparişlerin geçmişi: takım üyeleri, silindir kodları, ölçüler, Prova turları ve sevk bilgileri salt okunur.",
       },
-      { property: "og:title", content: "Arşiv — Rotagravür MES" },
+      { property: "og:title", content: "Arşiv — Operon" },
       {
         property: "og:description",
         content: "Sevk edilmiş siparişlerde firma, iş emri, iş adı, CYL ve sevk tarihiyle arama.",

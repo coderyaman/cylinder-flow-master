@@ -45,13 +45,13 @@ import {
 export const Route = createFileRoute("/_authenticated/uretim")({
   head: () => ({
     meta: [
-      { title: "Üretim Kanbanı — Rotagravür MES" },
+      { title: "Üretim Kanbanı — Operon" },
       {
         name: "description",
         content:
           "İstasyon sırasına göre işlemde, kuyrukta ve bloke işler; Prova sütununda takım kartları ve sipariş bazlı canlı dağılım.",
       },
-      { property: "og:title", content: "Üretim Kanbanı — Rotagravür MES" },
+      { property: "og:title", content: "Üretim Kanbanı — Operon" },
       {
         property: "og:description",
         content: "İşlerin nerede olduğunu ve hangi siparişin neden beklediğini tek ekranda görün.",
