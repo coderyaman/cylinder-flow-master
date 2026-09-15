@@ -109,9 +109,9 @@ export function DashProductionView() {
 
   return (
     <div className="space-y-7">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3">
+      <div className="flex flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3">
         <div className="min-w-0"><h2 className="text-sm font-semibold text-foreground">Anlık üretim durumu</h2><p className="mt-1 text-xs text-muted-foreground">Aktif siparişler, fiziksel üretim ve termin görünümü</p></div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground sm:text-right">
           Son güncellenme: {trTime(d.generated_at)} · Türkiye saati
         </p>
       </div>
