@@ -225,6 +225,13 @@
       "when": 1789474845056,
       "tag": "0031_dash_business_billing_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1789474929746,
+      "tag": "0032_dash_business_billing_kullan",
+      "breakpoints": true
     }
   ]
 }
