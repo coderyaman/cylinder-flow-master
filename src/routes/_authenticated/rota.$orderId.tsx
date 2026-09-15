@@ -16,13 +16,13 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/_authenticated/rota/$orderId")({
   head: () => ({
     meta: [
-      { title: "Rotaları Hazırla — Rotagravür MES" },
+      { title: "Rotaları Hazırla — Operon" },
       {
         name: "description",
         content:
           "Takım üyelerinin rota adımlarını önizleyin, düzenleyin ve hazır üyeleri ilk gerekli istasyon kuyruğuna bırakın.",
       },
-      { property: "og:title", content: "Rotaları Hazırla — Rotagravür MES" },
+      { property: "og:title", content: "Rotaları Hazırla — Operon" },
       {
         property: "og:description",
         content: "Rota önizleme, atlama gerekçesi ve üretime alma ekranı.",

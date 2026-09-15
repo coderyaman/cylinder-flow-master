@@ -25,13 +25,13 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/_authenticated/silindir-hazirla/$orderId")({
   head: () => ({
     meta: [
-      { title: "Silindirleri Hazırla — Rotagravür MES" },
+      { title: "Silindirleri Hazırla — Operon" },
       {
         name: "description",
         content:
           "Sipariş için depodaki uygun silindirleri seçin, rezerve edin ve eksik adedi yeni imalatla planlayın.",
       },
-      { property: "og:title", content: "Silindirleri Hazırla — Rotagravür MES" },
+      { property: "og:title", content: "Silindirleri Hazırla — Operon" },
       {
         property: "og:description",
         content: "Sepet, rezervasyon ve takım oluşturma ekranı.",

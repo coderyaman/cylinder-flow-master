@@ -53,12 +53,12 @@ export const Route = createFileRoute("/_authenticated/depo")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Depo Kabulü — Rotagravür MES" },
+      { title: "Depo Kabulü — Operon" },
       {
         name: "description",
         content: "Müşteri silindirlerinin fabrika kabulü, ölçüleri ve CYL kimlikleri.",
       },
-      { property: "og:title", content: "Depo Kabulü — Rotagravür MES" },
+      { property: "og:title", content: "Depo Kabulü — Operon" },
       { property: "og:description", content: "Silindir kabul listesi ve yeni kabul kaydı." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

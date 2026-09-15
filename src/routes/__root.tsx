@@ -79,11 +79,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Rotagravür MES" },
-      { name: "description", content: "Silindir bazlı üretim takip ve yönetim sistemi." },
-      { name: "author", content: "Rotagravür MES" },
-      { property: "og:title", content: "Rotagravür MES" },
-      { property: "og:description", content: "Silindir bazlı üretim takip ve yönetim sistemi." },
+      { title: "Operon — Üretim Yönetim Platformu" },
+      { name: "description", content: "Rotagravür üretimi için siparişten sevkiyata yönetim platformu." },
+      { name: "author", content: "Operon" },
+      { property: "og:title", content: "Operon — Üretim Yönetim Platformu" },
+      { property: "og:description", content: "Rotagravür üretimini tek yerde yönetin." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
@@ -93,7 +93,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
+      },
+      { rel: "icon", href: "/operon-mark.svg", type: "image/svg+xml" },
     ],
   }),
   shellComponent: RootShell,
@@ -104,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <head>
         <HeadContent />
       </head>

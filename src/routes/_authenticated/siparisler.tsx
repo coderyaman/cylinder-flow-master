@@ -55,12 +55,12 @@ export const Route = createFileRoute("/_authenticated/siparisler")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Siparişler — Rotagravür MES" },
+      { title: "Siparişler — Operon" },
       {
         name: "description",
         content: "Müşteri siparişleri, grafik durumu, termin ve öncelik takibi.",
       },
-      { property: "og:title", content: "Siparişler — Rotagravür MES" },
+      { property: "og:title", content: "Siparişler — Operon" },
       { property: "og:description", content: "Sipariş listesi ve yeni sipariş açma." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

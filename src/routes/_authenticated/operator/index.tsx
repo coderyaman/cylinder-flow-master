@@ -25,13 +25,13 @@ import {
 export const Route = createFileRoute("/_authenticated/operator/")({
   head: () => ({
     meta: [
-      { title: "Operatör Ekranı — Rotagravür MES" },
+      { title: "Operatör Ekranı — Operon" },
       {
         name: "description",
         content:
           "Seçili istasyonun aktif işleri, kuyruğu, blokeli işleri ve bugün tamamlananları tek dokunmatik ekranda.",
       },
-      { property: "og:title", content: "Operatör Ekranı — Rotagravür MES" },
+      { property: "og:title", content: "Operatör Ekranı — Operon" },
       {
         property: "og:description",
         content: "İstasyon bağlamında sade operatör akışı: QR oku, makine seç, başlat, tamamla.",

@@ -23,13 +23,13 @@ import {
 export const Route = createFileRoute("/_authenticated/sevkiyat")({
   head: () => ({
     meta: [
-      { title: "Sevkiyat — Rotagravür MES" },
+      { title: "Sevkiyat — Operon" },
       {
         name: "description",
         content:
           "Prova onayı almış takımları sevke hazır listesinde görün, sunucu kontrolleriyle Sevk Et ve sevk edilenleri izleyin.",
       },
-      { property: "og:title", content: "Sevkiyat — Rotagravür MES" },
+      { property: "og:title", content: "Sevkiyat — Operon" },
       {
         property: "og:description",
         content: "Sevkiyata hazır ve sevk edilen siparişler, takım üyeleri ve sevk kayıtları.",

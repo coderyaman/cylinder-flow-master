@@ -37,13 +37,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 export const Route = createFileRoute("/_authenticated/operator/aktif/$operationId")({
   head: () => ({
     meta: [
-      { title: "Aktif İş — Operatör — Rotagravür MES" },
+      { title: "Aktif İş — Operatör — Operon" },
       {
         name: "description",
         content:
           "Devam eden operasyonu izleyin; istasyon formuyla tamamlayın, not ekleyin, uyarı bırakın veya bloke edin.",
       },
-      { property: "og:title", content: "Aktif İş — Operatör — Rotagravür MES" },
+      { property: "og:title", content: "Aktif İş — Operatör — Operon" },
       {
         property: "og:description",
         content: "Torna, Sökme, Bakır, Taşlama, CFM, Gravür ve Krom tamamlama formları.",

@@ -1,19 +1,19 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import { OperonSymbol } from "@/components/operon-mark";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Rotagravür MES — Silindir Bazlı Üretim Takibi" },
+      { title: "Operon — Üretim Yönetim Platformu" },
       {
         name: "description",
         content:
           "Rotagravür silindir işlemeciliği için sipariş, silindir, istasyon ve sevkiyat takibi yapan üretim yönetim sistemi.",
       },
-      { property: "og:title", content: "Rotagravür MES — Silindir Bazlı Üretim Takibi" },
+      { property: "og:title", content: "Operon — Üretim Yönetim Platformu" },
       {
         property: "og:description",
         content: "Her silindiri kabulden sevkiyata kadar tek tek izleyen üretim yönetim sistemi.",
@@ -30,28 +30,14 @@ function Index() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && session) navigate({ to: "/panel", replace: true });
+    if (!loading) navigate({ to: session ? "/panel" : "/auth", replace: true });
   }, [loading, session, navigate]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <div className="w-full max-w-xl text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">Rotagravür</p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-foreground">
-          Üretim Yönetim Sistemi
-        </h1>
-        <p className="mt-4 text-muted-foreground">
-          Her silindir, fabrikaya kabul edildiği andan sevk edildiği ana kadar tek tek izlenir.
-          Sipariş durumu gerçekleşen operasyonlardan hesaplanır.
-        </p>
-        <div className="mt-8">
-          <Button asChild size="lg">
-            <Link to="/auth">Giriş yap</Link>
-          </Button>
-        </div>
-        <p className="mt-6 text-xs text-muted-foreground">
-          Aşama 1: kullanıcılar, roller, istasyon yetkileri ve denetim kaydı.
-        </p>
+    <main className="grid min-h-screen place-items-center bg-background" aria-busy="true">
+      <div className="flex flex-col items-center gap-4 text-muted-foreground">
+        <OperonSymbol className="size-10 animate-pulse" />
+        <span className="text-sm font-medium">Oturum kontrol ediliyor…</span>
       </div>
     </main>
   );

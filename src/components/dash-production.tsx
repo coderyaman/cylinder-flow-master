@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ArrowUpRight, CircleAlert, Info } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,13 +36,16 @@ const TONE: Record<string, string> = {
 function Kpi({ label, value, hint, to, search, tone = "normal" }: KpiProps) {
   const body = (
     <div
-      className={`h-full rounded-lg border p-3 transition-colors ${TONE[tone]} ${
-        to ? "hover:bg-accent" : ""
+      className={`group h-full min-h-28 rounded-xl border bg-card p-4 shadow-sm transition-all ${TONE[tone]} ${
+        to ? "hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md" : ""
       }`}
     >
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{value}</p>
-      {hint ? <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p> : null}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+        {to ? <ArrowUpRight className="size-3.5 text-muted-foreground transition-colors group-hover:text-primary" /> : hint ? <Info className="size-3.5 text-muted-foreground" aria-label={hint} /> : null}
+      </div>
+      <p className="mt-3 text-3xl font-bold tabular-nums text-foreground">{value}</p>
+      {hint ? <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p> : null}
     </div>
   );
   if (!to) return body;
@@ -83,7 +87,7 @@ export function DashProductionView() {
   );
 
   if (query.isLoading) {
-    return <p className="text-sm text-muted-foreground">Özet yükleniyor…</p>;
+    return <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Üretim özeti yükleniyor"><div className="h-28 animate-pulse rounded-xl bg-muted" /><div className="h-28 animate-pulse rounded-xl bg-muted" /><div className="h-28 animate-pulse rounded-xl bg-muted" /></div>;
   }
   if (query.isError || !d) {
     return (
@@ -104,28 +108,20 @@ export function DashProductionView() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Anlık durum (şu an)
-        </h2>
-        <p className="text-xs text-muted-foreground">
+    <div className="space-y-7">
+      <div className="flex flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3">
+        <div className="min-w-0"><h2 className="text-sm font-semibold text-foreground">Anlık üretim durumu</h2><p className="mt-1 text-xs text-muted-foreground">Aktif siparişler, fiziksel üretim ve termin görünümü</p></div>
+        <p className="text-xs text-muted-foreground sm:text-right">
           Son güncellenme: {trTime(d.generated_at)} · Türkiye saati
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <Kpi label="Aktif sipariş" value={k.active_orders} hint="Sevk veya iptal olmamış" to="/siparisler" />
         <Kpi
           label="Üretimdeki fiziksel silindir"
           value={k.wip_cylinders}
           hint="Kuyruk + işlem + bloke"
-          to="/uretim"
-        />
-        <Kpi
-          label="Planlanan imalat"
-          value={k.planned_manufacture}
-          hint="Fiziksel silindir değil"
           to="/uretim"
         />
         <Kpi label="Bugün tamamlanan operasyon" value={k.ops_today} hint="Tamamlanma tarihine göre" />
@@ -149,7 +145,13 @@ export function DashProductionView() {
           value={k.due_today_orders}
           tone={k.due_today_orders > 0 ? "warn" : "normal"}
         />
-        <Kpi label="Bugün depoya giren silindir" value={k.received_today} to="/depo" />
+      </div>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">Üretim hareketi</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <Kpi label="Planlanan imalat" value={k.planned_manufacture} hint="Fiziksel silindir değil" to="/uretim" />
+        <Kpi label="Bugün depoya giren" value={k.received_today} hint="Silindir" to="/depo" />
         <Kpi label="Bugün işlenen tekil silindir" value={k.cyl_today} hint="Dönem toplamı" />
         <Kpi label="Bu hafta işlenen tekil silindir" value={k.cyl_week} hint="Dönem toplamı" />
         <Kpi label="Bu ay işlenen tekil silindir" value={k.cyl_month} hint="Dönem toplamı" />
@@ -158,10 +160,11 @@ export function DashProductionView() {
           value={`${k.machines_busy} / ${k.machines_active}`}
           hint="Şu an operasyonu olan makineler"
         />
-      </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
+      <div className="grid gap-5 xl:grid-cols-3">
+        <Card className="overflow-hidden xl:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">İstasyon yoğunluğu</CardTitle>
             <CardDescription>Kuyrukta, işlemde ve bloke adetleri (anlık).</CardDescription>
@@ -178,9 +181,9 @@ export function DashProductionView() {
                     <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="Kuyrukta" stackId="a" fill="hsl(var(--primary))" />
-                    <Bar dataKey="İşlemde" stackId="a" fill="hsl(var(--chart-2, var(--muted-foreground)))" />
-                    <Bar dataKey="Bloke" stackId="a" fill="hsl(var(--destructive))" />
+                     <Bar dataKey="Kuyrukta" stackId="a" fill="var(--chart-1)" radius={[3,3,0,0]} />
+                     <Bar dataKey="İşlemde" stackId="a" fill="var(--chart-2)" radius={[3,3,0,0]} />
+                     <Bar dataKey="Bloke" stackId="a" fill="var(--destructive)" radius={[3,3,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -224,7 +227,7 @@ export function DashProductionView() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Makineler</CardTitle>
             <CardDescription>
@@ -270,8 +273,8 @@ export function DashProductionView() {
         </Card>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Bekleyen işler ve bekleme süreleri</CardTitle>
             <CardDescription>
@@ -319,7 +322,7 @@ export function DashProductionView() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Termin durumu</CardTitle>
             <CardDescription>Geciken / bugün / önümüzdeki 1–3 gün.</CardDescription>
@@ -367,10 +370,10 @@ export function DashProductionView() {
         </Card>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Müdahale bekleyen kalite ve rework kararları</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base"><CircleAlert className="size-4 text-destructive" />Müdahale bekleyen kalite ve rework kararları</CardTitle>
             <CardDescription>{d.quality.length} açık kayıt.</CardDescription>
           </CardHeader>
           <CardContent className="max-h-[320px] overflow-auto p-0">
@@ -423,7 +426,7 @@ export function DashProductionView() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Takımı bekleten üyeler</CardTitle>
             <CardDescription>

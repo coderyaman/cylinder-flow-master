@@ -15,9 +15,9 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/_authenticated/admin/istasyonlar")({
   head: () => ({
     meta: [
-      { title: "İstasyon ve Makine Tanımları — Rotagravür MES" },
+      { title: "İstasyon ve Makine Tanımları — Operon" },
       { name: "description", content: "Üretim istasyonları ve istasyonlara bağlı makine tanımları." },
-      { property: "og:title", content: "İstasyon ve Makine Tanımları — Rotagravür MES" },
+      { property: "og:title", content: "İstasyon ve Makine Tanımları — Operon" },
       { property: "og:description", content: "Üretim istasyonu ve makine tanımlarının yönetimi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

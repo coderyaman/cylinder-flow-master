@@ -8,13 +8,13 @@ export const Route = createFileRoute("/_authenticated/operator/prova")({
   }),
   head: () => ({
     meta: [
-      { title: "Prova ve Son Kontrol — Rotagravür MES" },
+      { title: "Prova ve Son Kontrol — Operon" },
       {
         name: "description",
         content:
           "Takım bazlı Prova: hazırlık kapısı, aktif üyeler, makine seçimi ve tek Başlat/Tamamla akışı.",
       },
-      { property: "og:title", content: "Prova ve Son Kontrol — Rotagravür MES" },
+      { property: "og:title", content: "Prova ve Son Kontrol — Operon" },
       {
         property: "og:description",
         content: "Takımın Prova hazırlığını görün, Prova'yı başlatın ve sonucu kaydedin.",

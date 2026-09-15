@@ -25,9 +25,9 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/kullanicilar")({
   head: () => ({
     meta: [
-      { title: "Kullanıcı ve Yetki Yönetimi — Rotagravür MES" },
+      { title: "Kullanıcı ve Yetki Yönetimi — Operon" },
       { name: "description", content: "Kullanıcı davetleri, roller, istasyon yetkileri ve kişiye özel izinler." },
-      { property: "og:title", content: "Kullanıcı ve Yetki Yönetimi — Rotagravür MES" },
+      { property: "og:title", content: "Kullanıcı ve Yetki Yönetimi — Operon" },
       { property: "og:description", content: "Davet, rol, istasyon yetkisi ve kişiye özel izin yönetimi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

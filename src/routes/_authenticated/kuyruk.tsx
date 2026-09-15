@@ -11,13 +11,13 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/_authenticated/kuyruk")({
   head: () => ({
     meta: [
-      { title: "İstasyon Kuyrukları — Rotagravür MES" },
+      { title: "İstasyon Kuyrukları — Operon" },
       {
         name: "description",
         content:
           "Üretime alınmış silindirlerin bekledikleri ilk istasyon kuyruklarını firma, iş emri, işlem ve bekleme süresiyle görün.",
       },
-      { property: "og:title", content: "İstasyon Kuyrukları — Rotagravür MES" },
+      { property: "og:title", content: "İstasyon Kuyrukları — Operon" },
       {
         property: "og:description",
         content: "İstasyon bazında bekleyen işler ve öncelikler.",

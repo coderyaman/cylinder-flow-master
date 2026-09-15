@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/_authenticated/silindir/$cylCode")({
   head: ({ params }) => ({
     meta: [
-      { title: `${params.cylCode} — Silindir Kartı — Rotagravür MES` },
+      { title: `${params.cylCode} — Silindir Kartı — Operon` },
       {
         name: "description",
         content: "Silindir kabul bilgileri, ölçüm geçmişi, notlar ve etiket yazdırma.",

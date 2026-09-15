@@ -34,12 +34,12 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/_authenticated/siparis/$orderId")({
   head: () => ({
     meta: [
-      { title: "Sipariş Kartı — Rotagravür MES" },
+      { title: "Sipariş Kartı — Operon" },
       {
         name: "description",
         content: "Sipariş bilgileri, grafik durumu ve PDF revizyon geçmişi.",
       },
-      { property: "og:title", content: "Sipariş Kartı — Rotagravür MES" },
+      { property: "og:title", content: "Sipariş Kartı — Operon" },
       { property: "og:description", content: "Sipariş kartı ve grafik dosya yönetimi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

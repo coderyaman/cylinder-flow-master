@@ -15,9 +15,9 @@ import { Switch } from "@/components/ui/switch";
 export const Route = createFileRoute("/_authenticated/admin/musteriler")({
   head: () => ({
     meta: [
-      { title: "Müşteri Tanımları — Rotagravür MES" },
+      { title: "Müşteri Tanımları — Operon" },
       { name: "description", content: "Sipariş açılabilen firmaların tanımı ve aktiflik yönetimi." },
-      { property: "og:title", content: "Müşteri Tanımları — Rotagravür MES" },
+      { property: "og:title", content: "Müşteri Tanımları — Operon" },
       { property: "og:description", content: "Firma tanımları ve aktiflik yönetimi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
