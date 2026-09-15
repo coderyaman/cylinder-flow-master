@@ -417,6 +417,7 @@ function StationColumn({
   col,
   now,
   filter,
+  filtering,
   canManage,
   onSelect,
   onMove,
@@ -424,6 +425,7 @@ function StationColumn({
   col: KanbanColumn;
   now: number;
   filter: (c: KanbanCard) => boolean;
+  filtering: boolean;
   canManage: boolean;
   onSelect: (c: KanbanCard) => void;
   onMove: (stepId: string, dir: -1 | 1) => void;
@@ -437,7 +439,7 @@ function StationColumn({
     <section className="w-72 shrink-0 space-y-3 rounded-lg border border-border bg-muted/30 p-3">
       <h2 className="text-sm font-bold text-foreground">{col.name}</h2>
       {empty ? (
-        <p className="text-xs text-muted-foreground">Filtreye uyan iş yok.</p>
+        <p className="text-xs text-muted-foreground">{filtering ? "Filtreye uyan iş yok." : "Bu istasyonda iş yok."}</p>
       ) : (
         <>
           <Section title="İşlemde" count={inProgress.length}>
@@ -538,11 +540,13 @@ function ProofColumn({
   col,
   now,
   filter,
+  filtering,
   onSelect,
 }: {
   col: KanbanColumn;
   now: number;
   filter: (t: KanbanTeamCard) => boolean;
+  filtering: boolean;
   onSelect: (t: KanbanTeamCard) => void;
 }) {
   const running = (col.in_progress as KanbanTeamCard[]).filter(filter);
@@ -559,7 +563,7 @@ function ProofColumn({
         Prova takım operasyonudur; silindir sayısı takım sayısıyla toplanmaz.
       </p>
       {empty ? (
-        <p className="text-xs text-muted-foreground">Filtreye uyan takım yok.</p>
+        <p className="text-xs text-muted-foreground">{filtering ? "Filtreye uyan takım yok." : "Açık takım yok."}</p>
       ) : (
         <>
           <Section title="Provada" count={running.length}>
