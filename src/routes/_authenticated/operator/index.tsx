@@ -453,16 +453,23 @@ function OperatorHome() {
             blocked.map((op: any) => {
               const info = jobInfo(op.team_members);
               return (
-                <div key={op.id} className="rounded-lg border border-destructive/40 p-4">
+                <Link
+                  key={op.id}
+                  to="/operator/aktif/$operationId"
+                  params={{ operationId: op.id }}
+                  className="block rounded-lg border border-destructive/40 p-4 transition-colors hover:bg-destructive/5"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-mono text-sm">{info.ident}</span>
                     <Badge variant="destructive">Bloke</Badge>
+                    <span className="ml-auto text-xs font-medium text-primary">Detayı aç →</span>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {info.customer} · {info.workOrder} · {info.job}
                   </p>
+                  <p className="text-sm">{op.op_label}</p>
                   {op.note && <p className="text-sm">{op.note}</p>}
-                </div>
+                </Link>
               );
             })
           )}
