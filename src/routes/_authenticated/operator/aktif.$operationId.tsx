@@ -878,10 +878,10 @@ function ActiveJob() {
                 variant="destructive"
                 size="lg"
                 className="h-14"
-                disabled={!canNote || busy || !isOpen}
+                disabled={!canNote || busy || !(isOpen || blockedWithoutIssue)}
                 onClick={() => report("bloke")}
               >
-                Sorun Var / Bloke Et
+                {blockedWithoutIssue ? "Karara Gönder" : "Sorun Var / Bloke Et"}
               </Button>
             </div>
           </div>
