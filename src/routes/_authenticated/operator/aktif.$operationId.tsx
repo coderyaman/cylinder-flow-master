@@ -480,7 +480,7 @@ function ActiveJob() {
               {isBlocked && openIssue && (
                 <p className="rounded-md border border-destructive/40 p-3">
                   Bloke, yönetici kararıyla kaldırılır. Karar talebi Kalite ekranında bekliyor.{" "}
-                  <Link to="/kalite" className="font-medium text-primary underline">
+                  <Link to="/kalite" search={{ issue: openIssue.id }} className="font-medium text-primary underline">
                     Kalite ekranını aç
                   </Link>
                 </p>
