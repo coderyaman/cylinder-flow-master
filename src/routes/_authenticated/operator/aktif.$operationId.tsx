@@ -142,7 +142,13 @@ function ActiveJob() {
         .eq("assessed_cause_only", false)
         .order("sort_order");
 
+      const { data: issues } = await supabase
+        .from("quality_issues")
+        .select("id, status, decision, severity")
+        .eq("operation_id", operationId);
+
       return {
+        issues: issues ?? [],
         op,
         notes: notes ?? [],
         mine: mine ?? [],
@@ -158,6 +164,11 @@ function ActiveJob() {
   const order = member?.teams?.orders;
   const stationCode = op?.stations?.code as string | undefined;
   const isOpen = op?.status === "devam";
+  const isBlocked = op?.status === "bloke";
+  const openIssue = (q.data?.issues ?? []).find(
+    (i: any) => i.status === "acik" || i.status === "bilgi_bekleniyor",
+  );
+  const blockedWithoutIssue = isBlocked && !op?.block_resolved_at && !openIssue;
 
   const needsMeasure = stationCode === "BAKIR" || stationCode === "TASLAMA";
   const hasForm =
