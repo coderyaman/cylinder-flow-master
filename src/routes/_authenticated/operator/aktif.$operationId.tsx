@@ -142,7 +142,13 @@ function ActiveJob() {
         .eq("assessed_cause_only", false)
         .order("sort_order");
 
+      const { data: issues } = await supabase
+        .from("quality_issues")
+        .select("id, status, decision, severity")
+        .eq("operation_id", operationId);
+
       return {
+        issues: issues ?? [],
         op,
         notes: notes ?? [],
         mine: mine ?? [],
@@ -158,6 +164,11 @@ function ActiveJob() {
   const order = member?.teams?.orders;
   const stationCode = op?.stations?.code as string | undefined;
   const isOpen = op?.status === "devam";
+  const isBlocked = op?.status === "bloke";
+  const openIssue = (q.data?.issues ?? []).find(
+    (i: any) => i.status === "acik" || i.status === "bilgi_bekleniyor",
+  );
+  const blockedWithoutIssue = isBlocked && !op?.block_resolved_at && !openIssue;
 
   const needsMeasure = stationCode === "BAKIR" || stationCode === "TASLAMA";
   const hasForm =
@@ -457,13 +468,30 @@ function ActiveJob() {
             </p>
           )}
           {!isOpen && (
-            <div className="sm:col-span-2">
-              <Badge variant={op.status === "bloke" ? "destructive" : "secondary"}>
-                {op.status === "bloke" ? "Bloke" : "Tamamlandı"}
-              </Badge>{" "}
-              <span className="text-muted-foreground">
-                Tamamlanan kayıt operatör tarafından değiştirilemez.
-              </span>
+            <div className="sm:col-span-2 space-y-2">
+              <div>
+                <Badge variant={isBlocked ? "destructive" : "secondary"}>
+                  {isBlocked ? "Bloke" : "Tamamlandı"}
+                </Badge>{" "}
+                <span className="text-muted-foreground">
+                  Kayıt operatör tarafından değiştirilemez.
+                </span>
+              </div>
+              {isBlocked && openIssue && (
+                <p className="rounded-md border border-destructive/40 p-3">
+                  Bloke, yönetici kararıyla kaldırılır. Karar talebi Kalite ekranında bekliyor.{" "}
+                  <Link to="/kalite" search={{ issue: openIssue.id }} className="font-medium text-primary underline">
+                    Kalite ekranını aç
+                  </Link>
+                </p>
+              )}
+              {blockedWithoutIssue && (
+                <p className="rounded-md border border-destructive/40 p-3">
+                  Bu bloke için henüz karar talebi yok. Aşağıdaki "Uyarı / Sorun bildirimi"
+                  bölümünde kategori ve açıklama girip <b>Karara Gönder</b> düğmesine basın;
+                  talep Kalite ekranına düşer ve yönetici blokeyi oradan kaldırır.
+                </p>
+              )}
             </div>
           )}
         </CardContent>
@@ -850,10 +878,10 @@ function ActiveJob() {
                 variant="destructive"
                 size="lg"
                 className="h-14"
-                disabled={!canNote || busy || !isOpen}
+                disabled={!canNote || busy || !(isOpen || blockedWithoutIssue)}
                 onClick={() => report("bloke")}
               >
-                Sorun Var / Bloke Et
+                {blockedWithoutIssue ? "Karara Gönder" : "Sorun Var / Bloke Et"}
               </Button>
             </div>
           </div>
