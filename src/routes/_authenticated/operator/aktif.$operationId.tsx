@@ -468,13 +468,30 @@ function ActiveJob() {
             </p>
           )}
           {!isOpen && (
-            <div className="sm:col-span-2">
-              <Badge variant={op.status === "bloke" ? "destructive" : "secondary"}>
-                {op.status === "bloke" ? "Bloke" : "Tamamlandı"}
-              </Badge>{" "}
-              <span className="text-muted-foreground">
-                Tamamlanan kayıt operatör tarafından değiştirilemez.
-              </span>
+            <div className="sm:col-span-2 space-y-2">
+              <div>
+                <Badge variant={isBlocked ? "destructive" : "secondary"}>
+                  {isBlocked ? "Bloke" : "Tamamlandı"}
+                </Badge>{" "}
+                <span className="text-muted-foreground">
+                  Kayıt operatör tarafından değiştirilemez.
+                </span>
+              </div>
+              {isBlocked && openIssue && (
+                <p className="rounded-md border border-destructive/40 p-3">
+                  Bloke, yönetici kararıyla kaldırılır. Karar talebi Kalite ekranında bekliyor.{" "}
+                  <Link to="/kalite" className="font-medium text-primary underline">
+                    Kalite ekranını aç
+                  </Link>
+                </p>
+              )}
+              {blockedWithoutIssue && (
+                <p className="rounded-md border border-destructive/40 p-3">
+                  Bu bloke için henüz karar talebi yok. Aşağıdaki "Uyarı / Sorun bildirimi"
+                  bölümünde kategori ve açıklama girip <b>Karara Gönder</b> düğmesine basın;
+                  talep Kalite ekranına düşer ve yönetici blokeyi oradan kaldırır.
+                </p>
+              )}
             </div>
           )}
         </CardContent>
