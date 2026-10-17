@@ -160,6 +160,24 @@ export type Database = {
           },
         ]
       }
+      ai_gateway_access_state: {
+        Row: {
+          blocked_at: string
+          model: string
+          reason: string
+        }
+        Insert: {
+          blocked_at?: string
+          model: string
+          reason: string
+        }
+        Update: {
+          blocked_at?: string
+          model?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string

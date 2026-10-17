@@ -246,6 +246,13 @@
       "when": 1789476512520,
       "tag": "0034_tighten_graphics_storage_direct_access",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792225987979,
+      "tag": "0035_ai_gateway_access_state",
+      "breakpoints": true
     }
   ]
 }
