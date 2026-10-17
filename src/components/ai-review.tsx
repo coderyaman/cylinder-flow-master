@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import ReactMarkdown from "react-markdown";
 import { ClipboardCheck, FileText, LoaderCircle, Square, Activity } from "lucide-react";
 import { generateAiSupport } from "@/lib/ai-support.functions";
 import type { AiRequest } from "@/lib/ai-policy";
@@ -153,8 +154,8 @@ export function AiReview({ kind, recordId }: { kind: AiRequest["kind"]; recordId
           </p>
         )}
         {text && (
-          <div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">
-            {text}
+          <div className="space-y-3 break-words text-sm leading-7 text-foreground [&_h2]:text-base [&_h2]:font-bold [&_h3]:pt-2 [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mt-1">
+            <ReactMarkdown components={{ a: ({ children }) => <span>{children}</span> }}>{text}</ReactMarkdown>
           </div>
         )}
         {text && (
