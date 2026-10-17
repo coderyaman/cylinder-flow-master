@@ -27,9 +27,15 @@ export async function handleAiSupport(input: AiRequest, db: SupabaseClient<Datab
     source = res.data;
     task = "Üretim brifingi: mevcut durumu özetle; blokeli/karar bekleyen işler, geciken siparişler ve bekleme darboğazlarını önceliklendir. Kaynakta görünen iş emri kodlarıyla 3-5 somut yönetici kontrolü öner. Verinin oluşturulma zamanını belirt.";
   } else if (input.kind === "quality") {
-    const res = await db.from("quality_issues").select("id,description,severity,status,category_code,proposed_action,master_consult_note,root_cause_code,responsibility,cylinder_removed,decision,decision_reason,requested_at,resolved_at,stations(name,code),cylinder_receipts(cyl_code),team_members(stage_no,teams(team_code,orders(work_order_no,name)))").eq("id", input.recordId).maybeSingle();
+    const res = await db.from("quality_issues").select("id,team_member_id,description,severity,status,category_code,proposed_action,master_consult_note,root_cause_code,responsibility,cylinder_removed,decision,decision_reason,requested_at,resolved_at,stations(name,code),cylinder_receipts(cyl_code),team_members(stage_no,teams(team_code,orders(work_order_no,name)))").eq("id", input.recordId).maybeSingle();
     if (res.error || !res.data) return errorResponse("Kalite kaydı bulunamadı veya erişiminiz yok.", 404);
-    source = res.data;
+    const [operations, measurements, notes] = await Promise.all([
+      db.from("operations").select("id,status,result,started_at,completed_at,stations(name),machines(name)").eq("team_member_id", res.data.team_member_id).order("started_at", { ascending: false }).limit(30),
+      db.from("operation_measurements").select("*").eq("team_member_id", res.data.team_member_id).order("measured_at", { ascending: false }).limit(30),
+      db.from("operation_notes").select("*").eq("team_member_id", res.data.team_member_id).order("created_at", { ascending: false }).limit(30),
+    ]);
+    if (operations.error || measurements.error || notes.error) return errorResponse("Kalite geçmişi alınamadı.", 400);
+    source = { issue: res.data, operations: operations.data, measurements: measurements.data, notes: notes.data, history_limit_per_type: 30 };
     task = "Kalite karar desteği: kayıtlı bloke/uyarıyı açıkla, doğrulanmamış nedenleri kesinleştirme; yönetici incelemesi için kanıtlar, eksik bilgiler ve güvenli kontrol listesi sun. Mevcut karar varsa onu aynen özetle. Bloke kaldırma veya devam etme talimatı verme; yetkili kişinin kalite ekranında karar vermesi gerekir.";
   } else {
     const res = await db.from("orders").select("id,work_order_no,name,quantity,due_on,graphic_status,supply_status,priority,note,critical_note,nominal_circumference_mm,target_length_mm,cancelled_at").eq("id", input.recordId).maybeSingle();
