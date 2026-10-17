@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { AiReview } from "@/components/ai-review";
 
 export const Route = createFileRoute("/_authenticated/siparis/$orderId")({
   head: () => ({
@@ -316,6 +317,7 @@ function OrderDetail() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
+          {canEdit && <AiReview key={order.id} kind="order" recordId={order.id} />}
           {cancelled && <Badge variant="destructive">İptal edildi</Badge>}
           <Badge variant="secondary">{GRAPHIC_STATUS_LABELS[order.graphic_status]}</Badge>
           <Badge variant="outline">{SUPPLY_STATUS_LABELS[order.supply_status]}</Badge>
