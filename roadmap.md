@@ -8,6 +8,13 @@
 
 ## Korunan açık kontroller
 
+## OpenAI destek araçları
+
+- [ ] Üretim özeti, kalite karar desteği ve sipariş hazırlık taslağı (salt okunur)
+- [ ] Yetki ve kayıt koruma testleri; üç aracın gerçek oturumla doğrulanması
+
+## Korunan açık kontroller (devam)
+
 - [ ] Prova sonuçları ve tekrarlanan Tamamla işlemini canlı veride doğrula
 - [ ] Bloke kaldırma akışını canlı veride doğrula
 - [ ] Üretim sonrası kontrollü rota düzeltmesini canlı veride doğrula
