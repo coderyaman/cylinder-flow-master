@@ -155,7 +155,9 @@ export function AiReview({ kind, recordId }: { kind: AiRequest["kind"]; recordId
         )}
         {text && (
           <div className="space-y-3 break-words text-sm leading-7 text-foreground [&_h2]:text-base [&_h2]:font-bold [&_h3]:pt-2 [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mt-1">
-            <ReactMarkdown components={{ a: ({ children }) => <span>{children}</span> }}>{text}</ReactMarkdown>
+            <ReactMarkdown components={{ a: ({ children }) => <span>{children}</span> }}>
+              {text}
+            </ReactMarkdown>
           </div>
         )}
         {text && (

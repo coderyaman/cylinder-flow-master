@@ -64,7 +64,9 @@ export async function handleAiSupport(
         .limit(30),
       db
         .from("operation_measurements")
-        .select("circumference_mm,coating_thickness_um,diameter_mm,measured_at,note,round_no,station_code")
+        .select(
+          "circumference_mm,coating_thickness_um,diameter_mm,measured_at,note,round_no,station_code",
+        )
         .eq("team_member_id", res.data.team_member_id)
         .order("measured_at", { ascending: false })
         .limit(30),
@@ -197,7 +199,8 @@ export async function handleAiSupport(
   });
   return new Response(body, {
     headers: getLovableAiGatewayResponseHeaders(undefined, {
-      "Content-Type": "application/x-ndjson", "Cache-Control": "no-store",
+      "Content-Type": "application/x-ndjson",
+      "Cache-Control": "no-store",
       ...(getRunId() ? { "X-Lovable-AIG-Run-ID": getRunId() ?? "" } : {}),
     }),
   });
