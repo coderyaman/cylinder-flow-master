@@ -98,7 +98,7 @@ export async function handleAiSupport(
       .maybeSingle();
     if (res.error || !res.data)
       return errorResponse("Sipariş bulunamadı veya erişiminiz yok.", 404);
-    source = { order: res.data, customerNotes: input.notes };
+    source = { order: res.data, quantity_unit: "silindir adedi", generated_at: new Date().toISOString(), time_zone: "Europe/Istanbul", customerNotes: input.notes };
     task =
       "Sipariş hazırlık taslağı: müşteri notlarını ve kayıtlı siparişi esas alarak hazırlık kontrol listesi, kritik belirsizlikler ve müşteriye sorulacak soruları oluştur. Notlar mevcut kayıtla çelişirse çelişkiyi göster, kaydı değiştirme. Teknik rota, ölçü toleransı veya tamamlanmış kontrol uydurma. İptal edilmiş sipariş için hazırlığı başlatmayı önerme.";
   }
