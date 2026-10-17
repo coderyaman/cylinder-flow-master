@@ -15,7 +15,15 @@ describe("Read-only AI authorization", () => {
     expect(canUseAi("order", ["inventory.receive"])).toBe(false);
   });
   test("requests reject mutation commands", () => {
-    expect(aiRequestSchema.safeParse({ kind: "quality", recordId: "00000000-0000-4000-8000-000000000001", decision: "devam" }).success).toBe(false);
-    expect(aiRequestSchema.safeParse({ kind: "production", removeBlock: true }).success).toBe(false);
+    expect(
+      aiRequestSchema.safeParse({
+        kind: "quality",
+        recordId: "00000000-0000-4000-8000-000000000001",
+        decision: "devam",
+      }).success,
+    ).toBe(false);
+    expect(aiRequestSchema.safeParse({ kind: "production", removeBlock: true }).success).toBe(
+      false,
+    );
   });
 });

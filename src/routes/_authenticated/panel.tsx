@@ -22,7 +22,8 @@ export const Route = createFileRoute("/_authenticated/panel")({
       { property: "og:title", content: "Genel Bakış — Operon" },
       {
         property: "og:description",
-        content: "Üretim ve ticari özetler tek ekranda; rakamlar kaynak kayıtlarla aynı kapsamı kullanır.",
+        content:
+          "Üretim ve ticari özetler tek ekranda; rakamlar kaynak kayıtlarla aynı kapsamı kullanır.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -36,7 +37,10 @@ function Panel() {
 
   const canProduction = hasPermission("team.manage") || hasPermission("production.release");
   const canBusiness =
-    hasRole("patron") || hasRole("admin") || hasRole("mudur") || hasPermission("accounting.process");
+    hasRole("patron") ||
+    hasRole("admin") ||
+    hasRole("mudur") ||
+    hasPermission("accounting.process");
   const [picked, setPicked] = useState<"uretim" | "ticari" | null>(null);
   const view: "uretim" | "ticari" = picked ?? (canProduction ? "uretim" : "ticari");
   const setView = setPicked;
@@ -51,25 +55,25 @@ function Panel() {
           </h1>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-        {canProduction ? <AiReview kind="production" /> : null}
-        {canProduction && canBusiness ? (
-          <div className="flex rounded-lg border border-border bg-card p-1 shadow-sm">
-            <Button
-              size="sm"
-              variant={view === "uretim" ? "default" : "ghost"}
-              onClick={() => setView("uretim")}
-            >
-              Üretim
-            </Button>
-            <Button
-              size="sm"
-              variant={view === "ticari" ? "default" : "ghost"}
-              onClick={() => setView("ticari")}
-            >
-              Yönetici
-            </Button>
-          </div>
-        ) : null}
+          {canProduction ? <AiReview kind="production" /> : null}
+          {canProduction && canBusiness ? (
+            <div className="flex rounded-lg border border-border bg-card p-1 shadow-sm">
+              <Button
+                size="sm"
+                variant={view === "uretim" ? "default" : "ghost"}
+                onClick={() => setView("uretim")}
+              >
+                Üretim
+              </Button>
+              <Button
+                size="sm"
+                variant={view === "ticari" ? "default" : "ghost"}
+                onClick={() => setView("ticari")}
+              >
+                Yönetici
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 

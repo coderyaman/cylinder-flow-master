@@ -6,9 +6,20 @@ import type { AiRequest } from "@/lib/ai-policy";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
-const labels = { production: "AI Üretim Brifingi", quality: "AI Karar Desteği", order: "AI Hazırlık Taslağı" };
+const labels = {
+  production: "AI Üretim Brifingi",
+  quality: "AI Karar Desteği",
+  order: "AI Hazırlık Taslağı",
+};
 const icons = { production: Activity, quality: ClipboardCheck, order: FileText };
 
 export function AiReview({ kind, recordId }: { kind: AiRequest["kind"]; recordId?: string }) {
@@ -26,10 +37,18 @@ export function AiReview({ kind, recordId }: { kind: AiRequest["kind"]; recordId
   async function run() {
     if (busy) return;
     if (kind !== "production" && !recordId) return;
-    const data: AiRequest = kind === "production" ? { kind } : kind === "quality" && recordId ? { kind, recordId } : { kind: "order", recordId: recordId ?? "", notes };
+    const data: AiRequest =
+      kind === "production"
+        ? { kind }
+        : kind === "quality" && recordId
+          ? { kind, recordId }
+          : { kind: "order", recordId: recordId ?? "", notes };
     const controller = new AbortController();
     abort.current = controller;
-    setBusy(true); setText(""); setError(""); setCreated("");
+    setBusy(true);
+    setText("");
+    setError("");
+    setCreated("");
     try {
       const response = await generate({ data, signal: controller.signal });
       if (!response.ok) {
@@ -55,27 +74,94 @@ export function AiReview({ kind, recordId }: { kind: AiRequest["kind"]; recordId
       }
       setCreated(new Date().toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" }));
     } catch (err) {
-      setError(controller.signal.aborted ? "Durduruldu. Kayıtlar değiştirilmedi." : err instanceof Error ? err.message : "AI yanıtı alınamadı.");
-    } finally { setBusy(false); abort.current = null; }
+      setError(
+        controller.signal.aborted
+          ? "Durduruldu. Kayıtlar değiştirilmedi."
+          : err instanceof Error
+            ? err.message
+            : "AI yanıtı alınamadı.",
+      );
+    } finally {
+      setBusy(false);
+      abort.current = null;
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { if (!next) abort.current?.abort(); setOpen(next); }}>
-      <DialogTrigger asChild><Button variant="outline" size="sm"><Icon />{labels[kind]}</Button></DialogTrigger>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) abort.current?.abort();
+        setOpen(next);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Icon />
+          {labels[kind]}
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 pr-6 text-left"><Icon className="size-5 text-primary" />{labels[kind]}</DialogTitle>
-          <DialogDescription className="text-left">OpenAI · İnceleme taslağı · Kayıtlar değişmez, bloke otomatik kaldırılmaz.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2 pr-6 text-left">
+            <Icon className="size-5 text-primary" />
+            {labels[kind]}
+          </DialogTitle>
+          <DialogDescription className="text-left">
+            OpenAI · İnceleme taslağı · Kayıtlar değişmez, bloke otomatik kaldırılmaz.
+          </DialogDescription>
         </DialogHeader>
-        {kind === "order" && <div className="space-y-2"><Label htmlFor="ai-customer-notes">Müşteri notları</Label><Textarea id="ai-customer-notes" value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={6000} disabled={busy} placeholder="İncelenecek müşteri notları…" className="min-h-28" /></div>}
+        {kind === "order" && (
+          <div className="space-y-2">
+            <Label htmlFor="ai-customer-notes">Müşteri notları</Label>
+            <Textarea
+              id="ai-customer-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              maxLength={6000}
+              disabled={busy}
+              placeholder="İncelenecek müşteri notları…"
+              className="min-h-28"
+            />
+          </div>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3">
-          <span className="text-xs text-muted-foreground">{created || "Mevcut yetkilerinizle erişilen kayıtlar"}</span>
-          {busy ? <Button variant="outline" size="sm" onClick={() => abort.current?.abort()}><Square />Durdur</Button> : <Button size="sm" onClick={run}><Icon />{text ? "Güncel kayıtlarla yeniden oluştur" : "Taslak oluştur"}</Button>}
+          <span className="text-xs text-muted-foreground">
+            {created || "Mevcut yetkilerinizle erişilen kayıtlar"}
+          </span>
+          {busy ? (
+            <Button variant="outline" size="sm" onClick={() => abort.current?.abort()}>
+              <Square />
+              Durdur
+            </Button>
+          ) : (
+            <Button size="sm" onClick={run}>
+              <Icon />
+              {text ? "Güncel kayıtlarla yeniden oluştur" : "Taslak oluştur"}
+            </Button>
+          )}
         </div>
-        {busy && !text && <div role="status" className="flex items-center gap-2 py-5 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />Kayıtlar inceleniyor…</div>}
-        {error && <p role="alert" className="break-words text-sm text-destructive">{error}</p>}
-        {text && <div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">{text}</div>}
-        {text && <p className="border-t border-border pt-3 text-xs text-muted-foreground">AI önerisi · Son karar yetkili kişiye aittir.</p>}
+        {busy && !text && (
+          <div role="status" className="flex items-center gap-2 py-5 text-sm text-muted-foreground">
+            <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
+            Kayıtlar inceleniyor…
+          </div>
+        )}
+        {error && (
+          <p role="alert" className="break-words text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        {text && (
+          <div className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground">
+            {text}
+          </div>
+        )}
+        {text && (
+          <p className="border-t border-border pt-3 text-xs text-muted-foreground">
+            AI önerisi · Son karar yetkili kişiye aittir.
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );
