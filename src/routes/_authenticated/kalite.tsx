@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AiReview } from "@/components/ai-review";
 
 export const Route = createFileRoute("/_authenticated/kalite")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -302,6 +303,7 @@ function IssueDetail({
         <CardDescription>
           {order?.customers?.name} · {order?.work_order_no} · {order?.name}
         </CardDescription>
+        {canDecide && <div className="pt-2"><AiReview key={issue.id} kind="quality" recordId={issue.id} /></div>}
       </CardHeader>
       <CardContent className="space-y-5 text-sm">
         <div className="grid gap-3 sm:grid-cols-3">

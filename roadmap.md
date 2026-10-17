@@ -6,6 +6,11 @@
 - [x] Yönetici Özeti ve ortak bileşen tutarlılığı
 - [x] Masaüstü, tablet, mobil ve rol bazlı doğrulama
 
+## OpenAI destek araçları
+
+- [x] Üretim özeti, kalite karar desteği ve sipariş hazırlık taslağı (salt okunur)
+- [x] Yetki ve kayıt koruma testleri; üç aracın gerçek oturumla doğrulanması
+
 ## Korunan açık kontroller
 
 - [ ] Prova sonuçları ve tekrarlanan Tamamla işlemini canlı veride doğrula
